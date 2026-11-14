@@ -37,6 +37,7 @@ When a "not created yet" document is added, update this table.
 4. If a substep is blocked, write `> Blocked: <reason>` under it and stop to resolve it; do not jump ahead.
 5. Do not change scope, the stack, or the plan without asking the user. If the plan is wrong, say so and propose an edit.
 6. Never use a paid tool or service.
+7. **The UI design is locked** (git tag `design-v1`: app layout and the `/welcome` landing page). Don't change the look, colours, fonts or landing content without asking; new screens should reuse the existing styles in `apps/web/src/components/ui.ts`.
 
 ## Project-specific guidelines
 
