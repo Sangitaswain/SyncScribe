@@ -3,6 +3,7 @@ import TopBar from "./TopBar";
 import StatusBar from "./StatusBar";
 import Toaster from "./Toaster";
 import ReauthModal from "./ReauthModal";
+import Sidebar from "./Sidebar";
 import { useUi } from "../stores/ui";
 
 /** Sidebar + top bar + main area + status bar (FP-7). */
@@ -19,7 +20,7 @@ export default function AppShell() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <p className="text-sm text-slate-500">Documents</p>
+        <Sidebar />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onMenu={() => setSidebarOpen(!sidebarOpen)} />

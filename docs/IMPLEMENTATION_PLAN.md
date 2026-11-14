@@ -170,8 +170,9 @@
 
 ## Step 8 — Sidebar, tree and document organization · FP-7, B1–B9
 
-- [ ] **8.1** Build `TreeView`/`TreeNode` from `resolveTree` with expand/collapse and active-doc highlight (B4).
+- [x] **8.1** Build `TreeView`/`TreeNode` from `resolveTree` with expand/collapse and active-doc highlight (B4).
   - Done when: the Welcome doc shows in the sidebar.
+  > Note: the Welcome doc is seeded on the server and reaches the device once sync exists (Steps 10–11). Verified for now with locally created folders and docs (component test).
   - Commit: `feat(web): render workspace tree in sidebar`
 - [ ] **8.2** Add `NewMenu` (new doc, new folder) and context menu actions: rename, move to…, duplicate, delete (to Trash placeholder) (B3, C1, C8, C9).
   - Done when: all actions work offline and survive reload.
