@@ -23,7 +23,7 @@
 | --- | --- | --- | --- |
 | 1 | Repository and tooling setup | 1 | [x] |
 | 2 | Shared package | 1 | [x] |
-| 3 | Backend foundation: server, database, health | 1 | [ ] |
+| 3 | Backend foundation: server, database, health | 1 | [x] |
 | 4 | Backend authentication and seeding | 1 | [ ] |
 | 5 | Frontend shell, routing, PWA | 1 | [ ] |
 | 6 | Frontend auth and offline session | 1 | [ ] |
@@ -85,7 +85,7 @@
 - [x] **3.3** Add Helmet, CORS restricted to `APP_URL`, JSON body limit, a central error handler that returns `{ error: { code, message } }`.
   - Done when: an unknown route returns a JSON 404 error.
   - Commit: `feat(server): add security middleware and error handling`
-- [ ] **3.4** Add `GET /api/health` (BP-5.8).
+- [x] **3.4** Add `GET /api/health` (BP-5.8).
   - Done when: `curl localhost:4000/api/health` returns `{ ok: true }`.
   - Commit: `feat(server): add health check endpoint`
 
