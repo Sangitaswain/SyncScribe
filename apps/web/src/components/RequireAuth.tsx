@@ -7,7 +7,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   const status = useSession((s) => s.status);
   if (status === "loading") return null;
   if (status !== "signedOut") return children;
-  if (navigator.onLine) return <Navigate to="/login" replace />;
+  if (navigator.onLine) return <Navigate to="/welcome" replace />; // signed-out visitors see the landing page
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center text-muted">
       <WifiOff className="size-10 text-muted/60" />

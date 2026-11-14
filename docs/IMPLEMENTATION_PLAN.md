@@ -202,7 +202,7 @@
   - Done when: counts update while typing.
   - Commit: `feat(web): add editor status bar with word count`
 
-> Note (user request): UI restyled with a clean, AFFiNE-inspired layout — sidebar with workspace switcher, Search / All docs / Settings, Recent, Organize, Trash and profile; page header with breadcrumb and view switch; "All docs" home page; Inter font bundled for offline use. SyncScribe keeps its own name and logo.
+> Note (user request): UI restyled with a clean, AFFiNE-inspired layout — sidebar with workspace switcher, Search / All docs / Settings, Recent, Organize, Trash and profile; page header with breadcrumb and view switch; "All docs" home page; Inter font bundled for offline use. SyncScribe keeps its own name and logo. Added a public landing page at `/welcome` (nav, hero with app mock-up, tech strip, features, how it works, FAQ, CTA, footer); signed-out visitors are sent there.
 
 **→ Day 1 checkpoint:** the app works fully offline for a single user: sign in, create, organize, edit, preview, reload.
 

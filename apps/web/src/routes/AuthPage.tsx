@@ -15,12 +15,12 @@ export function AuthCard({ title, children }: { title: string; children: React.R
   return (
     <div className="flex min-h-dvh items-center justify-center bg-panel p-4 dark:bg-[#141414]">
       <div className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-[0_8px_30px_rgb(0_0_0/0.06)] dark:bg-[#1c1c1c]">
-        <div className="mb-8 flex items-center gap-2 text-[15px] font-semibold">
+        <Link to="/welcome" className="mb-8 flex items-center gap-2 text-[15px] font-semibold">
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand text-white">
             <NotebookPen className="size-4" />
           </span>
           SyncScribe
-        </div>
+        </Link>
         <h1 className="mb-6 text-2xl font-bold tracking-tight">{title}</h1>
         {children}
       </div>

@@ -6,6 +6,7 @@ import ResetPage from "./routes/ResetPage";
 import SettingsPage from "./routes/SettingsPage";
 import DocPage from "./routes/DocPage";
 import AllDocsPage from "./routes/AllDocsPage";
+import LandingPage from "./routes/LandingPage";
 import NotFound from "./routes/NotFound";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/welcome" element={<LandingPage />} />
         <Route path="/signup" element={<AuthPage mode="signup" />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/forgot" element={<ForgotPage />} />
