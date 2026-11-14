@@ -2,3 +2,5 @@
 
 /* Dark mode is toggled with a "dark" class on <html> (C15) */
 @custom-variant dark (&:where(.dark, .dark *));
+
+@plugin "@tailwindcss/typography";

@@ -195,7 +195,7 @@
 - [x] **9.3** Add `DocTitle` inline rename writing to `meta.title`; empty title shows "Untitled"; new docs open with the cursor in the title (C8, EC36, 4.3).
   - Done when: renaming updates the sidebar.
   - Commit: `feat(web): add inline document title editing`
-- [ ] **9.4** Add `MarkdownPreview` (react-markdown, remark-gfm, rehype-sanitize, rehype-highlight) with error boundary and debounce, plus edit / split / preview `ModeSwitch` saved in settings (C3, EC31, EC33, EC37).
+- [x] **9.4** Add `MarkdownPreview` (react-markdown, remark-gfm, rehype-sanitize, rehype-highlight) with error boundary and debounce, plus edit / split / preview `ModeSwitch` saved in settings (C3, EC31, EC33, EC37).
   - Done when: a `<script>` tag in markdown is shown as text and never runs; modes persist.
   - Commit: `feat(web): add sanitized live preview with view modes`
 - [ ] **9.5** Add `StatusBar` text ("Saved on this device"), word count and reading time (C6, C12).
