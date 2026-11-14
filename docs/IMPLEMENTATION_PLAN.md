@@ -152,7 +152,7 @@
 - [x] **7.1** Implement the Doc Registry (`getDoc`, `releaseDoc`, ref counting) with `y-indexeddb` persistence named `${userId}:${docName}` (D3, EC21).
   - Done when: a test doc survives a page reload.
   - Commit: `feat(web): add Yjs document registry with IndexedDB persistence`
-- [ ] **7.2** Add React hooks to subscribe to Y.Map / Y.Text / Y.Array changes (`useYMap`, `useYText`).
+- [x] **7.2** Add React hooks to subscribe to Y.Map / Y.Text / Y.Array changes (`useYMap`, `useYText`).
   - Done when: a demo component re-renders on Yjs changes.
   - Commit: `feat(web): add React hooks for Yjs data`
 - [ ] **7.3** Implement workspace tree operations in `crdt/tree.ts`: createDoc, createFolder, rename, move, setTags, duplicate (FP-8.2), each in one transaction.
