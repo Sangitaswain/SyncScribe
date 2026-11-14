@@ -67,7 +67,7 @@
 - [x] **2.2** Add `roles.ts`: `Role` type, rank order, `can(role, capability)` per the BP-4.2 capability table; unit tests.
   - Done when: Vitest tests for every role × capability pass.
   - Commit: `feat(shared): add roles and capability helpers`
-- [ ] **2.3** Add `ydoc-keys.ts`: doc name builders (`wsDoc`, `docDoc`, `cmDoc`, `userDoc`) and field key constants (FP-4).
+- [x] **2.3** Add `ydoc-keys.ts`: doc name builders (`wsDoc`, `docDoc`, `cmDoc`, `userDoc`) and field key constants (FP-4).
   - Done when: exported and type-checked.
   - Commit: `feat(shared): add Yjs document names and keys`
 - [ ] **2.4** Add `types.ts` and `schemas.ts` (Zod): signup, login, profile, share, share link, workspace, version, notification, mention payloads.
