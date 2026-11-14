@@ -76,7 +76,7 @@
 
 ## Step 3 — Backend foundation · BP-2, BP-3, BP-5.8, BP-8, BP-11
 
-- [ ] **3.1** Scaffold `apps/server` with Express, `tsx` dev runner, `config.ts` (Zod-validated env) and `.env.example`.
+- [x] **3.1** Scaffold `apps/server` with Express, `tsx` dev runner, `config.ts` (Zod-validated env) and `.env.example`.
   - Done when: `npm run dev -w apps/server` starts on port 4000.
   - Commit: `feat(server): scaffold Express server with config`
 - [ ] **3.2** Add `db.ts` (better-sqlite3, WAL, foreign keys) and `schema.sql` with all BP-3 tables; apply schema on boot.
