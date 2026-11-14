@@ -91,7 +91,7 @@
 
 ## Step 4 — Backend authentication and seeding · BP-4.1, BP-5.1, BP-6.5
 
-- [ ] **4.1** Add `password.ts` (bcryptjs) and `jwt.ts` (jose HS256, 7-day expiry) plus `requireAuth` middleware.
+- [x] **4.1** Add `password.ts` (bcryptjs) and `jwt.ts` (jose HS256, 7-day expiry) plus `requireAuth` middleware.
   - Done when: unit test signs and verifies a token; expired token is rejected.
   - Commit: `feat(server): add password hashing and JWT auth`
 - [ ] **4.2** Add `seed.ts`: build a personal `ws:` Y.Doc with a "Welcome to SyncScribe" item and its `doc:` Y.Doc (offline tips, sync status, data-clearing warning); store both in `ydoc_state`.
