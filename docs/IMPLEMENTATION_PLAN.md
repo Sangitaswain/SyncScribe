@@ -189,7 +189,7 @@
 - [x] **9.1** Create the CodeMirror editor bound to `Y.Text` via `y-codemirror.next` with GFM markdown highlighting, line wrapping (C2).
   - Done when: typing in a doc persists across reload offline (C6, US3).
   - Commit: `feat(web): add markdown editor bound to Yjs`
-- [ ] **9.2** Add `Y.UndoManager` with local-origin tracking for undo/redo (C7, EC14).
+- [x] **9.2** Add `Y.UndoManager` with local-origin tracking for undo/redo (C7, EC14).
   - Done when: Cmd+Z / Cmd+Shift+Z work.
   - Commit: `feat(web): add CRDT-aware undo and redo`
 - [ ] **9.3** Add `DocTitle` inline rename writing to `meta.title`; empty title shows "Untitled"; new docs open with the cursor in the title (C8, EC36, 4.3).

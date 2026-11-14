@@ -4,7 +4,7 @@ import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { yCollab } from "y-codemirror.next";
+import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type * as Y from "yjs";
 
 const theme = EditorView.theme({
@@ -29,7 +29,8 @@ export default function MarkdownEditor({ ytext }: { ytext: Y.Text }) {
           EditorView.lineWrapping,
           drawSelection(),
           placeholder("Start writing in markdown…"),
-          keymap.of([...defaultKeymap, indentWithTab]),
+          // Undo/redo only this user's edits, never a collaborator's (C7, EC14)
+          keymap.of([...yUndoManagerKeymap, ...defaultKeymap, indentWithTab]),
           yCollab(ytext, null),
           theme,
         ],
