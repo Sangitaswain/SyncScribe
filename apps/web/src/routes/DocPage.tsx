@@ -1,18 +1,24 @@
 import { useEffect } from "react";
 import { useParams } from "react-router";
+import { DOC, docDoc } from "@syncscribe/shared";
 import { addRecent, usePrefs } from "../crdt/prefs";
+import { useDoc } from "../crdt/hooks";
+import MarkdownEditor from "../editor/MarkdownEditor";
 
-/** Document screen. The editor arrives in Step 9; for now it records the visit in Recents (B9). */
+/** Document screen: editor for one doc, opened from the device (works offline). */
 export default function DocPage() {
   const { docId } = useParams();
   const { doc: prefs } = usePrefs();
+  const doc = useDoc(docId ? docDoc(docId) : undefined);
+
   useEffect(() => {
     if (prefs && docId) addRecent(prefs, docId);
   }, [prefs, docId]);
+
+  if (!doc) return null;
   return (
-    <div className="p-8">
-      <h1 className="text-xl font-semibold">Document</h1>
-      <p className="mt-2 text-sm text-slate-500">{docId}</p>
+    <div className="h-full">
+      <MarkdownEditor key={docId} ytext={doc.getText(DOC.content)} />
     </div>
   );
 }

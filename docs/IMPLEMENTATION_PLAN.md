@@ -186,7 +186,7 @@
 
 ## Step 9 — Markdown editor and preview · FP-9
 
-- [ ] **9.1** Create the CodeMirror editor bound to `Y.Text` via `y-codemirror.next` with GFM markdown highlighting, line wrapping (C2).
+- [x] **9.1** Create the CodeMirror editor bound to `Y.Text` via `y-codemirror.next` with GFM markdown highlighting, line wrapping (C2).
   - Done when: typing in a doc persists across reload offline (C6, US3).
   - Commit: `feat(web): add markdown editor bound to Yjs`
 - [ ] **9.2** Add `Y.UndoManager` with local-origin tracking for undo/redo (C7, EC14).
