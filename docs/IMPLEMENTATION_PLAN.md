@@ -109,7 +109,7 @@
 
 ## Step 5 — Frontend shell, routing, PWA · FP-2, FP-6, FP-7, FP-16
 
-- [ ] **5.1** Scaffold `apps/web` with Vite + React + TypeScript; Tailwind with `dark` class mode; lucide-react.
+- [x] **5.1** Scaffold `apps/web` with Vite + React + TypeScript; Tailwind with `dark` class mode; lucide-react.
   - Done when: `npm run dev -w apps/web` shows a styled page at :5173.
   - Commit: `feat(web): scaffold React app with Vite and Tailwind`
 - [ ] **5.2** Add React Router with all FP-6 routes as placeholder screens and a Not Found page.
