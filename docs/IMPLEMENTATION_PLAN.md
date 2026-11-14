@@ -172,7 +172,7 @@
 
 - [x] **8.1** Build `TreeView`/`TreeNode` from `resolveTree` with expand/collapse and active-doc highlight (B4).
   - Done when: the Welcome doc shows in the sidebar.
-  > Note: the Welcome doc is seeded on the server and reaches the device once sync exists (Steps 10–11). Verified for now with locally created folders and docs (component test).
+  > Note: added `GET /api/sync/bootstrap` + client `bootstrap()` (downloads the user's workspaces and documents at sign-in and on start-up), so the Welcome doc shows right after sign-up. This is an early form of 11.8; live sync replaces it later.
   - Commit: `feat(web): render workspace tree in sidebar`
 - [x] **8.2** Add `NewMenu` (new doc, new folder) and context menu actions: rename, move to…, duplicate, delete (to Trash placeholder) (B3, C1, C8, C9).
   - Done when: all actions work offline and survive reload.
