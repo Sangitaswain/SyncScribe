@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import Placeholder from "./routes/Placeholder";
 import NotFound from "./routes/NotFound";
 import AppShell from "./components/AppShell";
+import UpdateAvailableToast from "./components/UpdateAvailableToast";
 
 // Screens from FRONTEND_PLAN.md FP-6
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <UpdateAvailableToast />
     </BrowserRouter>
   );
 }

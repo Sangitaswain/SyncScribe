@@ -121,7 +121,7 @@
 - [x] **5.4** Add Zustand stores from FP-5 (session, network, docStatus, ui, notification, presence) with initial state.
   - Done when: stores are importable and typed.
   - Commit: `feat(web): add client state stores`
-- [ ] **5.5** Configure `vite-plugin-pwa`: precache app shell, manifest + icons, `registerType: "prompt"`, network-only for `/api/*`; add `UpdateAvailableToast` (D2, D5, EC30).
+- [x] **5.5** Configure `vite-plugin-pwa`: precache app shell, manifest + icons, `registerType: "prompt"`, network-only for `/api/*`; add `UpdateAvailableToast` (D2, D5, EC30).
   - Done when: after one visit, DevTools → Offline → reload still loads the app; Chrome shows an install option.
   - Commit: `feat(web): make app installable and loadable offline`
 - [ ] **5.6** Add the boot fallback message "Connect once to set up SyncScribe" for first visits with no connection (EC4).
