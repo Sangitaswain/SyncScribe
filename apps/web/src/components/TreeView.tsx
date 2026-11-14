@@ -9,7 +9,7 @@ import { getDoc, releaseDoc } from "../crdt/registry";
 import { resolveTree, type SortMode, type TreeNode } from "../crdt/resolveTree";
 import { dropParent, move, renameFolder, setTitle, trash, type TreeItem } from "../crdt/tree";
 import { duplicateDocument } from "../crdt/actions";
-import { useDocTitle, useTitles } from "../crdt/titles";
+import { useDocTitle, useEditedAt, useTitles } from "../crdt/titles";
 import { useDocStatus } from "../stores/docStatus";
 import { useSession } from "../stores/session";
 import { toast } from "../stores/ui";
@@ -196,9 +196,14 @@ export default function TreeView({
   const ws = useDoc(wsDoc(workspaceId));
   const raw = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items));
   const titles = useTitles();
+  const editedAt = useEditedAt();
   if (!ws || !raw) return null;
   const items = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
-  const { roots } = resolveTree(items, { sort, nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? "") });
+  const { roots } = resolveTree(items, {
+    sort,
+    nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? ""),
+    editedAt: (i) => editedAt[i.id],
+  });
   if (!roots.length) return <p className="px-2 py-1 text-sm text-slate-500">No documents yet</p>;
 
   // Drop on a folder = move into it; drop on empty space = move to top level (B5)

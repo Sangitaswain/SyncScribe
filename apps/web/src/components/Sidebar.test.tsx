@@ -1,0 +1,35 @@
+// @vitest-environment jsdom
+import "fake-indexeddb/auto";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { expect, it } from "vitest";
+import { USER, userDoc, wsDoc } from "@syncscribe/shared";
+import Sidebar from "./Sidebar";
+import { getDoc } from "../crdt/registry";
+import { newDocument } from "../crdt/actions";
+import { addRecent } from "../crdt/prefs";
+import { trash } from "../crdt/tree";
+import { useSession } from "../stores/session";
+
+useSession.setState({
+  user: { id: "u1", email: "", name: "Priya", color: "", personalWorkspaceId: "w1" },
+  workspaces: [{ id: "w1", name: "Priya's workspace", kind: "personal", role: "owner" }],
+  activeWorkspaceId: "w1",
+});
+
+it("lists recent docs (not trashed ones) and saves the sort choice", async () => {
+  const kept = await newDocument("w1", null, "", "Kept note");
+  const gone = await newDocument("w1", null, "", "Gone note");
+  const prefs = await getDoc(userDoc("u1"));
+  addRecent(prefs, gone);
+  addRecent(prefs, kept);
+  trash(await getDoc(wsDoc("w1")), gone, "u1");
+
+  render(<MemoryRouter><Sidebar /></MemoryRouter>);
+  expect(await screen.findByText("Recent")).toBeTruthy();
+  await waitFor(() => expect(screen.getAllByText("Kept note")).toHaveLength(2)); // in Recent and in the tree
+  expect(screen.queryByText("Gone note")).toBeNull();
+
+  fireEvent.change(screen.getByLabelText("Sort documents"), { target: { value: "name" } });
+  expect(prefs.getMap(USER.settings).get("sort")).toBe("name");
+});

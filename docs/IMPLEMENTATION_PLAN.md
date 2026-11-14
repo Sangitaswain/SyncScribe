@@ -28,7 +28,7 @@
 | 5 | Frontend shell, routing, PWA | 1 | [x] |
 | 6 | Frontend auth and offline session | 1 | [x] |
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [x] |
-| 8 | Sidebar, tree and document organization | 1 | [ ] |
+| 8 | Sidebar, tree and document organization | 1 | [x] |
 | 9 | Markdown editor and preview | 1 | [ ] |
 | 10 | Sync server (Hocuspocus) | 1–2 | [ ] |
 | 11 | Frontend sync engine and network status | 2 | [ ] |
@@ -180,7 +180,7 @@
 - [x] **8.3** Add drag-and-drop moves with `@dnd-kit/core` (B5).
   - Done when: dragging a doc into a folder updates the tree.
   - Commit: `feat(web): add drag-and-drop for documents and folders`
-- [ ] **8.4** Add `SortMenu` and Recent section (B6, B9).
+- [x] **8.4** Add `SortMenu` and Recent section (B6, B9).
   - Done when: sort choice persists; recents list updates when docs are opened.
   - Commit: `feat(web): add sorting and recent documents`
 

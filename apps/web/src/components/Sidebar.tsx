@@ -7,10 +7,14 @@ import { getDoc } from "../crdt/registry";
 import { createFolder } from "../crdt/tree";
 import { newDocument } from "../crdt/actions";
 import TreeView from "./TreeView";
+import SortMenu from "./SortMenu";
+import RecentSection from "./RecentSection";
+import { setSetting, usePrefs } from "../crdt/prefs";
 
 export default function Sidebar() {
   const { workspaces, activeWorkspaceId, user } = useSession();
   const [renaming, setRenaming] = useState<string | null>(null);
+  const { doc: prefs, recents, settings } = usePrefs();
   const navigate = useNavigate();
   const ws = workspaces.find((w) => w.id === activeWorkspaceId);
   if (!activeWorkspaceId || !user) return null;
@@ -30,8 +34,15 @@ export default function Sidebar() {
           <FolderPlus className="size-4" /> New folder
         </button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <TreeView workspaceId={activeWorkspaceId} renaming={renaming} setRenaming={setRenaming} />
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        <RecentSection workspaceId={activeWorkspaceId} recents={recents} />
+        <section className="flex-1">
+          <div className="flex items-center justify-between px-2 pb-1">
+            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Documents</p>
+            <SortMenu value={settings.sort ?? "manual"} onChange={(m) => prefs && setSetting(prefs, "sort", m)} />
+          </div>
+          <TreeView workspaceId={activeWorkspaceId} sort={settings.sort ?? "manual"} renaming={renaming} setRenaming={setRenaming} />
+        </section>
       </div>
     </div>
   );
