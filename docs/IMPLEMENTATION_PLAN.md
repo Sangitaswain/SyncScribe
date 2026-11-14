@@ -131,7 +131,7 @@
 
 ## Step 6 — Frontend auth and offline session · FP-11, FP-4.7
 
-- [ ] **6.1** Add the REST client (`services/api.ts`) with base URL from env, bearer token, typed errors, 401 → `needsReauth`.
+- [x] **6.1** Add the REST client (`services/api.ts`) with base URL from env, bearer token, typed errors, 401 → `needsReauth`.
   - Done when: a call to `/api/health` works from the app.
   - Commit: `feat(web): add typed REST client`
 - [ ] **6.2** Build Sign up and Sign in screens with Zod validation; on success save `session` to idb-keyval and the store (A1, A2).
