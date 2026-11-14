@@ -1,69 +1,206 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router";
-import { ChevronRight, FileText, Folder, FolderOpen } from "lucide-react";
-import { WS, wsDoc } from "@syncscribe/shared";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
+import { ChevronRight, FileText, Folder, FolderOpen, MoreHorizontal } from "lucide-react";
+import type * as Y from "yjs";
+import { WS, docDoc, wsDoc } from "@syncscribe/shared";
 import { useDoc, useY } from "../crdt/hooks";
+import { getDoc, releaseDoc } from "../crdt/registry";
 import { resolveTree, type SortMode, type TreeNode } from "../crdt/resolveTree";
-import type { TreeItem } from "../crdt/tree";
+import { move, renameFolder, setTitle, trash, type TreeItem } from "../crdt/tree";
+import { duplicateDocument } from "../crdt/actions";
 import { useDocTitle, useTitles } from "../crdt/titles";
 import { useDocStatus } from "../stores/docStatus";
+import { useSession } from "../stores/session";
+import { toast } from "../stores/ui";
+import MoveToDialog from "./MoveToDialog";
 
-function DocRow({ item, depth, active }: { item: TreeItem; depth: number; active: boolean }) {
-  const title = useDocTitle(item.id);
-  const pending = useDocStatus((s) => s[`doc:${item.id}`]?.pending);
+interface Ctx {
+  ws: Y.Doc;
+  workspaceId: string;
+  items: TreeItem[];
+  renaming: string | null;
+  setRenaming: (id: string | null) => void;
+}
+const TreeCtx = createContext<Ctx>(null!);
+
+/** Keeps clicks in menus, dialogs and inputs from opening the row underneath. */
+const stop = (e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+};
+
+/** Inline rename box; Enter or blur saves, Escape cancels. */
+function RenameInput({ initial, onDone }: { initial: string; onDone: (value: string | null) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => ref.current?.select(), []);
   return (
-    <Link
-      to={`/doc/${item.id}`}
-      style={{ paddingLeft: 8 + depth * 14 + 18 }}
-      className={`flex items-center gap-1.5 rounded py-1 pr-2 text-sm ${
-        active ? "bg-indigo-100 font-medium text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-100" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"
-      }`}
-    >
-      <FileText className="size-4 shrink-0 text-slate-400" />
-      <span className="truncate">{title || "Untitled"}</span>
-      {pending && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-amber-500" title="Not synced yet" />}
-    </Link>
+    <input
+      ref={ref}
+      defaultValue={initial}
+      aria-label="New name"
+      className="min-w-0 flex-1 rounded border border-indigo-400 bg-white px-1 text-sm outline-none dark:bg-slate-900"
+      onBlur={(e) => onDone(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") onDone(null);
+      }}
+      onClick={stop}
+    />
   );
 }
+
+/** "⋯" menu (also opens on right-click): rename, move, duplicate, delete. */
+function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string; open: boolean; setOpen: (o: boolean) => void }) {
+  const { ws, workspaceId, items, setRenaming } = useContext(TreeCtx);
+  const [moving, setMoving] = useState(false);
+  const navigate = useNavigate();
+  const { docId } = useParams();
+  const userId = useSession((s) => s.user!.id);
+  const act = (fn: () => void) => () => {
+    setOpen(false);
+    fn();
+  };
+  const itemClass = "block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700";
+  return (
+    <span onClick={stop} className="contents">
+      <button
+        onClick={() => setOpen(!open)}
+        className="ml-auto shrink-0 rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-slate-300 focus:opacity-100 dark:hover:bg-slate-600"
+        aria-label={`Actions for ${title}`}
+      >
+        <MoreHorizontal className="size-4" />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 z-40 w-40 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+          <button className={itemClass} onClick={act(() => setRenaming(item.id))}>Rename</button>
+          <button className={itemClass} onClick={act(() => setMoving(true))}>Move to…</button>
+          {item.type === "doc" && (
+            <button className={itemClass} onClick={act(async () => navigate(`/doc/${await duplicateDocument(workspaceId, item.id)}`))}>
+              Duplicate
+            </button>
+          )}
+          <button
+            className={`${itemClass} text-rose-600`}
+            onClick={act(() => {
+              trash(ws, item.id, userId);
+              toast(`"${title}" moved to Trash`);
+              if (item.id === docId) navigate("/");
+            })}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+      {moving && (
+        <MoveToDialog
+          item={item}
+          items={items}
+          onClose={() => setMoving(false)}
+          onMove={(parentId) => {
+            move(ws, item.id, parentId);
+            setMoving(false);
+          }}
+        />
+      )}
+    </span>
+  );
+}
+
+function Row({ item, depth, children }: { item: TreeItem; depth: number; children: React.ReactNode }) {
+  const { ws, renaming, setRenaming } = useContext(TreeCtx);
+  const [menu, setMenu] = useState(false);
+  const docTitle = useDocTitle(item.type === "doc" ? item.id : undefined);
+  const title = item.type === "doc" ? docTitle || "Untitled" : item.name || "Untitled folder";
+
+  async function rename(value: string | null) {
+    setRenaming(null);
+    if (value === null) return;
+    if (item.type === "folder") return renameFolder(ws, item.id, value.trim());
+    const doc = await getDoc(docDoc(item.id));
+    setTitle(doc, value.trim());
+    releaseDoc(docDoc(item.id));
+  }
+
+  return (
+    <div
+      className="group relative flex items-center gap-1.5"
+      style={{ paddingLeft: 8 + depth * 14 }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setMenu(true);
+      }}
+      onMouseLeave={() => setMenu(false)}
+    >
+      {children}
+      {renaming === item.id ? (
+        <RenameInput initial={item.type === "doc" ? docTitle : item.name ?? ""} onDone={rename} />
+      ) : (
+        <span className="truncate">{title}</span>
+      )}
+      <RowMenu item={item} title={title} open={menu} setOpen={setMenu} />
+    </div>
+  );
+}
+
+const rowClass = (active = false) =>
+  `flex items-center rounded py-1 pr-1 text-sm ${
+    active ? "bg-indigo-100 font-medium text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-100" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"
+  }`;
 
 function Node({ node, depth, activeId }: { node: TreeNode; depth: number; activeId?: string }) {
   const [open, setOpen] = useState(true);
   const { item, children } = node;
-  if (item.type === "doc") return <DocRow item={item} depth={depth} active={item.id === activeId} />;
+  const pending = useDocStatus((s) => s[`doc:${item.id}`]?.pending);
+
+  if (item.type === "doc")
+    return (
+      <Link to={`/doc/${item.id}`} className={rowClass(item.id === activeId)}>
+        <Row item={item} depth={depth}>
+          <FileText className="ml-[18px] size-4 shrink-0 text-slate-400" />
+          {pending && <span className="absolute top-1/2 left-1 size-1.5 -translate-y-1/2 rounded-full bg-amber-500" title="Not synced yet" />}
+        </Row>
+      </Link>
+    );
   return (
     <div>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{ paddingLeft: 8 + depth * 14 }}
-        className="flex w-full items-center gap-1 rounded py-1 pr-2 text-left text-sm hover:bg-slate-200/70 dark:hover:bg-slate-700"
-        aria-expanded={open}
-      >
-        <ChevronRight className={`size-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
-        {open ? <FolderOpen className="size-4 shrink-0 text-amber-500" /> : <Folder className="size-4 shrink-0 text-amber-500" />}
-        <span className="truncate">{item.name || "Untitled folder"}</span>
-      </button>
+      <div className={rowClass()} onClick={() => setOpen(!open)} role="button" aria-expanded={open}>
+        <Row item={item} depth={depth}>
+          <ChevronRight className={`size-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
+          {open ? <FolderOpen className="size-4 shrink-0 text-amber-500" /> : <Folder className="size-4 shrink-0 text-amber-500" />}
+        </Row>
+      </div>
       {open && children.map((c) => <Node key={c.item.id} node={c} depth={depth + 1} activeId={activeId} />)}
     </div>
   );
 }
 
-/** Folder/document tree of one workspace (B4). */
-export default function TreeView({ workspaceId, sort = "manual" }: { workspaceId: string; sort?: SortMode }) {
+/** Folder/document tree of one workspace (B3–B5). */
+export default function TreeView({
+  workspaceId,
+  sort = "manual",
+  renaming,
+  setRenaming,
+}: {
+  workspaceId: string;
+  sort?: SortMode;
+  renaming: string | null;
+  setRenaming: (id: string | null) => void;
+}) {
   const { docId } = useParams();
   const ws = useDoc(wsDoc(workspaceId));
-  const items = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items));
+  const raw = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items));
   const titles = useTitles();
-  if (!items) return null;
-  const { roots } = resolveTree(
-    Object.entries(items).map(([id, v]) => ({ id, ...v })),
-    { sort, nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? "") },
-  );
+  if (!ws || !raw) return null;
+  const items = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+  const { roots } = resolveTree(items, { sort, nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? "") });
   if (!roots.length) return <p className="px-2 py-1 text-sm text-slate-500">No documents yet</p>;
   return (
-    <nav aria-label="Documents">
-      {roots.map((n) => (
-        <Node key={n.item.id} node={n} depth={0} activeId={docId} />
-      ))}
-    </nav>
+    <TreeCtx.Provider value={{ ws, workspaceId, items, renaming, setRenaming }}>
+      <nav aria-label="Documents">
+        {roots.map((n) => (
+          <Node key={n.item.id} node={n} depth={0} activeId={docId} />
+        ))}
+      </nav>
+    </TreeCtx.Provider>
   );
 }

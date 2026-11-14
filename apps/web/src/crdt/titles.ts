@@ -7,12 +7,12 @@ import { useDoc, useY } from "./hooks";
 export const useTitles = create<Record<string, string>>(() => ({}));
 
 /** Live title of a document (empty titles display as "Untitled", EC36). */
-export function useDocTitle(id: string) {
-  const doc = useDoc(docDoc(id));
+export function useDocTitle(id: string | undefined) {
+  const doc = useDoc(id ? docDoc(id) : undefined);
   const meta = useY<{ title?: string }>(doc?.getMap(DOC.meta));
-  const title = meta?.title ?? useTitles.getState()[id] ?? "";
+  const title = meta?.title ?? (id ? useTitles.getState()[id] : "") ?? "";
   useEffect(() => {
-    if (meta) useTitles.setState({ [id]: meta.title ?? "" });
+    if (id && meta) useTitles.setState({ [id]: meta.title ?? "" });
   }, [id, meta]);
   return title;
 }

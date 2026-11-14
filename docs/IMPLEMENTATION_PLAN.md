@@ -174,7 +174,7 @@
   - Done when: the Welcome doc shows in the sidebar.
   > Note: the Welcome doc is seeded on the server and reaches the device once sync exists (Steps 10–11). Verified for now with locally created folders and docs (component test).
   - Commit: `feat(web): render workspace tree in sidebar`
-- [ ] **8.2** Add `NewMenu` (new doc, new folder) and context menu actions: rename, move to…, duplicate, delete (to Trash placeholder) (B3, C1, C8, C9).
+- [x] **8.2** Add `NewMenu` (new doc, new folder) and context menu actions: rename, move to…, duplicate, delete (to Trash placeholder) (B3, C1, C8, C9).
   - Done when: all actions work offline and survive reload.
   - Commit: `feat(web): add create, rename, duplicate and move actions`
 - [ ] **8.3** Add drag-and-drop moves with `@dnd-kit/core` (B5).

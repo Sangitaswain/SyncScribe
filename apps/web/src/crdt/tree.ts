@@ -105,3 +105,14 @@ export const readItem = (ws: Y.Doc, id: string) => {
   const item = itemsOf(ws).get(id);
   return item ? ({ id, ...item.toJSON() } as TreeItem) : undefined;
 };
+
+/** Moves an item to Trash; nothing is erased (B10). Full trash/restore arrives in Step 14. */
+export function trash(ws: Y.Doc, id: string, userId: string) {
+  const item = itemsOf(ws).get(id);
+  if (!item) return;
+  ws.transact(() => {
+    item.set("trashParentId", item.get("parentId"));
+    item.set("deletedAt", Date.now());
+    item.set("deletedBy", userId);
+  });
+}
