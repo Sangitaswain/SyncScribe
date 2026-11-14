@@ -22,7 +22,7 @@
 | # | Step | Day | Status |
 | --- | --- | --- | --- |
 | 1 | Repository and tooling setup | 1 | [x] |
-| 2 | Shared package | 1 | [ ] |
+| 2 | Shared package | 1 | [x] |
 | 3 | Backend foundation: server, database, health | 1 | [ ] |
 | 4 | Backend authentication and seeding | 1 | [ ] |
 | 5 | Frontend shell, routing, PWA | 1 | [ ] |
@@ -70,7 +70,7 @@
 - [x] **2.3** Add `ydoc-keys.ts`: doc name builders (`wsDoc`, `docDoc`, `cmDoc`, `userDoc`) and field key constants (FP-4).
   - Done when: exported and type-checked.
   - Commit: `feat(shared): add Yjs document names and keys`
-- [ ] **2.4** Add `types.ts` and `schemas.ts` (Zod): signup, login, profile, share, share link, workspace, version, notification, mention payloads.
+- [x] **2.4** Add `types.ts` and `schemas.ts` (Zod): signup, login, profile, share, share link, workspace, version, notification, mention payloads.
   - Done when: schemas compile and a sample payload parses in a test.
   - Commit: `feat(shared): add shared types and Zod schemas`
 
