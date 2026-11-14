@@ -2,11 +2,12 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ChevronRight, FileText, Folder, FolderOpen, MoreHorizontal } from "lucide-react";
 import type * as Y from "yjs";
+import { DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { WS, docDoc, wsDoc } from "@syncscribe/shared";
 import { useDoc, useY } from "../crdt/hooks";
 import { getDoc, releaseDoc } from "../crdt/registry";
 import { resolveTree, type SortMode, type TreeNode } from "../crdt/resolveTree";
-import { move, renameFolder, setTitle, trash, type TreeItem } from "../crdt/tree";
+import { dropParent, move, renameFolder, setTitle, trash, type TreeItem } from "../crdt/tree";
 import { duplicateDocument } from "../crdt/actions";
 import { useDocTitle, useTitles } from "../crdt/titles";
 import { useDocStatus } from "../stores/docStatus";
@@ -151,10 +152,13 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
   const [open, setOpen] = useState(true);
   const { item, children } = node;
   const pending = useDocStatus((s) => s[`doc:${item.id}`]?.pending);
+  const drag = useDraggable({ id: item.id });
+  const drop = useDroppable({ id: item.id, disabled: item.type !== "folder" });
+  const dragProps = { ref: drag.setNodeRef, ...drag.listeners, ...drag.attributes, style: { opacity: drag.isDragging ? 0.4 : 1 } };
 
   if (item.type === "doc")
     return (
-      <Link to={`/doc/${item.id}`} className={rowClass(item.id === activeId)}>
+      <Link to={`/doc/${item.id}`} className={rowClass(item.id === activeId)} {...dragProps}>
         <Row item={item} depth={depth}>
           <FileText className="ml-[18px] size-4 shrink-0 text-slate-400" />
           {pending && <span className="absolute top-1/2 left-1 size-1.5 -translate-y-1/2 rounded-full bg-amber-500" title="Not synced yet" />}
@@ -162,8 +166,8 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
       </Link>
     );
   return (
-    <div>
-      <div className={rowClass()} onClick={() => setOpen(!open)} role="button" aria-expanded={open}>
+    <div ref={drop.setNodeRef} className={drop.isOver ? "rounded bg-indigo-50 ring-2 ring-indigo-400 dark:bg-indigo-900/30" : ""}>
+      <div className={rowClass()} onClick={() => setOpen(!open)} aria-expanded={open} {...dragProps} role="button">
         <Row item={item} depth={depth}>
           <ChevronRight className={`size-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
           {open ? <FolderOpen className="size-4 shrink-0 text-amber-500" /> : <Folder className="size-4 shrink-0 text-amber-500" />}
@@ -187,6 +191,8 @@ export default function TreeView({
   setRenaming: (id: string | null) => void;
 }) {
   const { docId } = useParams();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const root = useDroppable({ id: "root" });
   const ws = useDoc(wsDoc(workspaceId));
   const raw = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items));
   const titles = useTitles();
@@ -194,13 +200,22 @@ export default function TreeView({
   const items = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
   const { roots } = resolveTree(items, { sort, nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? "") });
   if (!roots.length) return <p className="px-2 py-1 text-sm text-slate-500">No documents yet</p>;
+
+  // Drop on a folder = move into it; drop on empty space = move to top level (B5)
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    const parent = dropParent(items, String(active.id), over ? String(over.id) : null);
+    if (parent !== undefined) move(ws, String(active.id), parent);
+  };
+
   return (
     <TreeCtx.Provider value={{ ws, workspaceId, items, renaming, setRenaming }}>
-      <nav aria-label="Documents">
-        {roots.map((n) => (
-          <Node key={n.item.id} node={n} depth={0} activeId={docId} />
-        ))}
-      </nav>
+      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+        <nav aria-label="Documents" ref={root.setNodeRef} className={`min-h-full pb-8 ${root.isOver ? "rounded bg-slate-100 dark:bg-slate-800" : ""}`}>
+          {roots.map((n) => (
+            <Node key={n.item.id} node={n} depth={0} activeId={docId} />
+          ))}
+        </nav>
+      </DndContext>
     </TreeCtx.Provider>
   );
 }

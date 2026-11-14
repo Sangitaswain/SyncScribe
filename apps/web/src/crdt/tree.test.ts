@@ -51,3 +51,19 @@ it("initialises, retitles and duplicates documents", () => {
   expect(dst.getText(DOC.content).toString()).toBe("# Hello");
   expect(dst.getMap(DOC.meta).get("title")).toBe("Copy of Plan v2");
 });
+
+it("decides drag-and-drop targets", async () => {
+  const { dropParent } = await import("./tree");
+  const ws = new Y.Doc();
+  const outer = createFolder(ws, null, "Outer", "u1");
+  const inner = createFolder(ws, outer, "Inner", "u1");
+  const doc = createDocItem(ws, null, "u1");
+  const items = [...itemsOf(ws).keys()].map((id) => readItem(ws, id)!);
+
+  expect(dropParent(items, doc, inner)).toBe(inner); // into a folder
+  expect(dropParent(items, doc, "root")).toBeUndefined(); // already at top level
+  expect(dropParent(items, inner, "root")).toBeNull(); // out to top level
+  expect(dropParent(items, outer, inner)).toBeUndefined(); // not into its own subfolder
+  expect(dropParent(items, doc, doc)).toBeUndefined(); // onto a doc: no move
+  expect(dropParent(items, doc, null)).toBeUndefined(); // dropped outside
+});

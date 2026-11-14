@@ -116,3 +116,21 @@ export function trash(ws: Y.Doc, id: string, userId: string) {
     item.set("deletedBy", userId);
   });
 }
+
+/** True if `targetId` is `itemId` itself or somewhere inside it (a folder can't move into its own subtree). */
+export function isInside(items: TreeItem[], targetId: string, itemId: string) {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  for (let cur = byId.get(targetId); cur; cur = cur.parentId ? byId.get(cur.parentId) : undefined)
+    if (cur.id === itemId) return true;
+  return false;
+}
+
+/** Where a drag-and-drop should move an item: a folder id, null for top level, or undefined for "no move". */
+export function dropParent(items: TreeItem[], activeId: string, overId: string | null): string | null | undefined {
+  const item = items.find((i) => i.id === activeId);
+  if (!item || overId === null) return undefined;
+  if (overId === "root") return item.parentId === null ? undefined : null;
+  const target = items.find((i) => i.id === overId);
+  if (target?.type !== "folder" || target.id === item.parentId || isInside(items, target.id, item.id)) return undefined;
+  return target.id;
+}

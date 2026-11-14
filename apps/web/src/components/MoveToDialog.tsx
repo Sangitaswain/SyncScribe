@@ -1,5 +1,5 @@
 import { Folder, Home } from "lucide-react";
-import type { TreeItem } from "../crdt/tree";
+import { isInside, type TreeItem } from "../crdt/tree";
 
 /** Pick a destination folder (B5). Excludes the item itself and its descendants. */
 export default function MoveToDialog({
@@ -13,13 +13,7 @@ export default function MoveToDialog({
   onMove: (parentId: string | null) => void;
   onClose: () => void;
 }) {
-  const byId = new Map(items.map((i) => [i.id, i]));
-  const insideItem = (f: TreeItem) => {
-    for (let cur: TreeItem | undefined = f; cur; cur = cur.parentId ? byId.get(cur.parentId) : undefined)
-      if (cur.id === item.id) return true;
-    return false;
-  };
-  const folders = items.filter((i) => i.type === "folder" && !i.deletedAt && !insideItem(i));
+  const folders = items.filter((i) => i.type === "folder" && !i.deletedAt && !isInside(items, i.id, item.id));
   const option = "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-700";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>

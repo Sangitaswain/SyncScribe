@@ -177,7 +177,7 @@
 - [x] **8.2** Add `NewMenu` (new doc, new folder) and context menu actions: rename, move to…, duplicate, delete (to Trash placeholder) (B3, C1, C8, C9).
   - Done when: all actions work offline and survive reload.
   - Commit: `feat(web): add create, rename, duplicate and move actions`
-- [ ] **8.3** Add drag-and-drop moves with `@dnd-kit/core` (B5).
+- [x] **8.3** Add drag-and-drop moves with `@dnd-kit/core` (B5).
   - Done when: dragging a doc into a folder updates the tree.
   - Commit: `feat(web): add drag-and-drop for documents and folders`
 - [ ] **8.4** Add `SortMenu` and Recent section (B6, B9).
