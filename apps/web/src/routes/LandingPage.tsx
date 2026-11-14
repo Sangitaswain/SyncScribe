@@ -1,447 +1,551 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
-import { Check, ChevronRight, HardDrive, RefreshCw, WifiOff } from "lucide-react";
+import {
+  ArrowRight, BookOpen, Check, ClipboardList, CloudOff, FileText, Folder, GitMerge, GraduationCap, HardDrive, ListChecks,
+  Lock, MonitorSmartphone, NotebookPen, RefreshCw, Users, WifiOff,
+} from "lucide-react";
 import { useSession } from "../stores/session";
 
-// Public landing page in a clean, product-page style: big type, white space and scroll-driven motion.
+// Public landing page: off-white canvas, white cards, big tight Inter type, blue pills, light motion.
 
-const FONT: CSSProperties = {
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Variable", "Helvetica Neue", sans-serif',
-};
-const clamp = (v: number) => Math.min(1, Math.max(0, v));
-const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const BLUE = "#1e96eb";
 
-/**
- * 0 → 1 progress of an element through the viewport.
- * "view": from its top entering the bottom of the screen until its top reaches `endAt` of the screen height.
- * "sticky": across a tall section whose content is pinned (0 at its top, 1 at its bottom).
- */
-function useScrollProgress(ref: RefObject<HTMLElement | null>, mode: "view" | "sticky" = "view", endAt = 0.35) {
-  const [p, setP] = useState(reducedMotion() ? 1 : 0);
-  useEffect(() => {
-    if (reducedMotion()) return;
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight || 1;
-      setP(mode === "sticky" ? clamp(-r.top / Math.max(1, r.height - vh)) : clamp((vh - r.top) / (vh * (1 - endAt))));
-    };
-    const onScroll = () => (frame ||= requestAnimationFrame(update));
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [ref, mode, endAt]);
-  return p;
-}
-
-/** Fades and lifts its children in as they scroll into view. */
+/** Fades/lifts content in once it scrolls into view. */
 function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const p = useScrollProgress(ref, "view", 0.75);
-  const t = clamp(p * 1.4 - delay);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return setOn(true);
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && (setOn(true), io.disconnect()), { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
-    <div ref={ref} className={className} style={{ opacity: t, transform: `translateY(${(1 - t) * 40}px)` }}>
+    <div
+      ref={ref}
+      data-on={on}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`group/reveal transition-all duration-[900ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"} ${className}`}
+    >
       {children}
     </div>
   );
 }
 
-const blueButton = "inline-flex items-center rounded-full bg-[#0071e3] px-6 py-3 text-[17px] font-normal text-white transition hover:bg-[#0077ed]";
-const blueLink = "inline-flex items-center text-[17px] text-[#0066cc] hover:underline";
-
-/* ───────────── Product mock-ups (our own app, drawn in HTML) ───────────── */
-
-function Window({ children, className = "" }: { children: ReactNode; className?: string }) {
+/** Types words one after another, like someone writing. */
+function Typewriter({ words }: { words: string[] }) {
+  const [i, setI] = useState(0);
+  const [n, setN] = useState(words[0].length);
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    const word = words[i];
+    const t = setTimeout(
+      () => {
+        if (!deleting && n === word.length) return setDeleting(true);
+        if (deleting && n === 0) {
+          setDeleting(false);
+          return setI((i + 1) % words.length);
+        }
+        setN(n + (deleting ? -1 : 1));
+      },
+      !deleting && n === word.length ? 1800 : deleting ? 45 : 90,
+    );
+    return () => clearTimeout(t);
+  }, [i, n, deleting, words]);
   return (
-    <div className={`overflow-hidden rounded-[22px] border border-black/[0.06] bg-white shadow-[0_30px_80px_-20px_rgb(0_0_0/0.25)] ${className}`}>
-      <div className="flex items-center gap-2 border-b border-black/[0.05] bg-[#fbfbfd] px-4 py-3">
-        <span className="size-3 rounded-full bg-[#ff5f57]" />
-        <span className="size-3 rounded-full bg-[#febc2e]" />
-        <span className="size-3 rounded-full bg-[#28c840]" />
+    <span style={{ color: BLUE }}>
+      {words[i].slice(0, n)}
+      <span className="ml-1 inline-block h-[0.82em] w-[0.07em] translate-y-[0.06em] animate-[blink_1s_steps(1)_infinite] rounded-full bg-current align-baseline" />
+    </span>
+  );
+}
+
+/** Hand-drawn underline that draws itself when revealed. */
+const Scribble = ({ children }: { children: ReactNode }) => (
+  <span className="relative inline-block whitespace-nowrap">
+    {children}
+    <svg viewBox="0 0 200 20" preserveAspectRatio="none" className="absolute -bottom-[0.18em] left-0 h-[0.32em] w-full overflow-visible" aria-hidden>
+      <path
+        d="M2 14 C 40 4, 90 4, 120 10 S 180 18, 198 6"
+        fill="none"
+        stroke={BLUE}
+        strokeWidth="5"
+        strokeLinecap="round"
+        pathLength={1}
+        className="[stroke-dasharray:1] [stroke-dashoffset:1] transition-[stroke-dashoffset] delay-300 duration-[1200ms] ease-out group-data-[on=true]/reveal:[stroke-dashoffset:0]"
+      />
+    </svg>
+  </span>
+);
+
+const pill = "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[17px] font-medium transition";
+const bluePill = `${pill} bg-[#1e96eb] text-white shadow-[0_6px_20px_-6px_rgb(30_150_235/0.6)] hover:bg-[#1786d6]`;
+const outlinePill = `${pill} border border-[#1e96eb] text-[#1e96eb] hover:bg-[#1e96eb]/5`;
+const card = "rounded-[28px] border border-black/[0.05] bg-white";
+const eyebrow = "text-[15px] font-semibold tracking-[0.18em] text-[#1e96eb] uppercase";
+const h2 = "text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] text-[#121212] md:text-[64px]";
+
+/* ───────── Mock-ups of our own app ───────── */
+
+function Chrome({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={`overflow-hidden ${card} shadow-[0_40px_80px_-30px_rgb(0_0_0/0.18)] ${className}`}>
+      <div className="flex items-center gap-3 border-b border-black/[0.05] px-5 py-3">
+        <span className="flex gap-1.5">
+          <span className="size-2.5 rounded-full bg-[#ff5f57]" />
+          <span className="size-2.5 rounded-full bg-[#febc2e]" />
+          <span className="size-2.5 rounded-full bg-[#28c840]" />
+        </span>
+        <span className="mx-auto flex items-center gap-1.5 text-[13px] font-medium text-[#121212]">
+          <FileText className="size-3.5 text-[#8a8a8a]" /> {title}
+        </span>
+        <span className="text-[12px] text-[#8a8a8a]">Share</span>
       </div>
       {children}
     </div>
   );
 }
 
-const Cursor = ({ name, color }: { name: string; color: string }) => (
-  <span className="relative mx-0.5 inline-block h-[1.1em] w-[2px] translate-y-[0.15em]" style={{ backgroundColor: color }}>
-    <span className="absolute -top-6 left-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap text-white" style={{ backgroundColor: color }}>
+const Cursor = ({ name, color, className = "" }: { name: string; color: string; className?: string }) => (
+  <span className={`pointer-events-none absolute z-10 flex items-start ${className}`}>
+    <svg width="14" height="16" viewBox="0 0 14 16" fill={color} aria-hidden>
+      <path d="M0 0l14 7-6 2-3 7z" />
+    </svg>
+    <span className="mt-3 -ml-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-white" style={{ backgroundColor: color }}>
       {name}
     </span>
   </span>
 );
 
-function AppMock() {
+function HeroApp() {
   return (
-    <Window>
-      <div className="flex h-[360px] text-left sm:h-[520px]">
-        <aside className="hidden w-56 shrink-0 flex-col gap-1 border-r border-black/[0.05] bg-[#f5f5f7] p-4 text-[13px] sm:flex">
-          <p className="mb-3 font-semibold">Group project</p>
+    <Chrome title="Group report">
+      <div className="flex h-[380px] text-left md:h-[560px]">
+        <aside className="hidden w-60 shrink-0 flex-col gap-1 border-r border-black/[0.05] bg-[#f7f7f7] p-4 text-[13px] md:flex">
+          <p className="mb-4 flex items-center gap-2 font-semibold">
+            <span className="flex size-6 items-center justify-center rounded-md bg-[#1e96eb] text-[11px] text-white">G</span> Group project
+          </p>
           {["All docs", "Recent"].map((t) => (
-            <span key={t} className="rounded-md px-2 py-1 text-[#6e6e73]">{t}</span>
+            <span key={t} className="rounded-md px-2 py-1.5 text-[#5c5c5c]">{t}</span>
           ))}
-          <p className="mt-4 mb-1 px-2 text-[11px] text-[#86868b]">Organize</p>
-          {["Introduction", "Research notes", "Final report"].map((t, i) => (
-            <span key={t} className={`rounded-md px-2 py-1 ${i === 2 ? "bg-black/[0.06] font-medium" : "text-[#1d1d1f]"}`}>{t}</span>
+          <p className="mt-4 mb-1 px-2 text-[11px] text-[#8a8a8a]">Organize</p>
+          <span className="flex items-center gap-2 px-2 py-1.5"><Folder className="size-3.5 text-[#8a8a8a]" /> Research</span>
+          {["Interview notes", "Group report", "Sources"].map((t, i) => (
+            <span key={t} className={`ml-4 flex items-center gap-2 rounded-md px-2 py-1.5 ${i === 1 ? "bg-black/[0.06] font-medium" : ""}`}>
+              <FileText className="size-3.5 text-[#8a8a8a]" /> {t}
+            </span>
           ))}
         </aside>
-        <div className="flex-1 px-8 py-10 sm:px-16 sm:py-14">
-          <div className="flex items-start justify-between gap-4">
-            <p className="text-[28px] font-semibold tracking-tight sm:text-[40px]">Final report</p>
-            <span className="mt-2 flex shrink-0 items-center gap-1 rounded-full bg-[#e8f8ee] px-2.5 py-1 text-[12px] font-medium text-[#1d8f4e]">
+        <div className="relative flex-1 px-8 py-10 md:px-20 md:py-16">
+          <Cursor name="Ali" color="#7c5cfa" className="top-[46%] left-[58%] animate-[drift_7s_ease-in-out_infinite]" />
+          <Cursor name="Priya" color="#ff4d8d" className="top-[70%] left-[24%] animate-[drift_9s_ease-in-out_infinite_reverse]" />
+          <div className="flex items-start justify-between">
+            <p className="text-[30px] font-bold tracking-[-0.02em] md:text-[40px]">Group report</p>
+            <span className="mt-2 flex items-center gap-1 rounded-full bg-[#e9f8ef] px-2.5 py-1 text-[12px] font-medium text-[#1f9254]">
               <Check className="size-3" /> Synced
             </span>
           </div>
-          <p className="mt-1 mb-8 text-[13px] text-[#86868b]">Edited by Priya and Ali · just now</p>
-          <p className="text-[15px] leading-8 text-[#1d1d1f] sm:text-[17px]">
-            Local-first software keeps working without the internet
-            <Cursor name="Priya" color="#ff375f" /> and quietly merges everyone's edits when devices reconnect.
-            <Cursor name="Ali" color="#0a84ff" />
+          <p className="mt-1 mb-8 text-[13px] text-[#8a8a8a]">Research · edited just now</p>
+          <p className="mb-3 text-[17px] font-semibold">Introduction</p>
+          <p className="text-[15px] leading-8 text-[#3a3a3a]">
+            Most collaborative editors stop saving the moment the connection drops.{" "}
+            <mark className="rounded bg-[#ffe1ec] px-0.5 text-inherit">We studied how local-first apps avoid this</mark> by keeping
+            every change on the device and <mark className="rounded bg-[#ebe5ff] px-0.5 text-inherit">merging edits when people reconnect.</mark>
           </p>
           <div className="mt-8 flex flex-col gap-3">
-            {["94%", "86%", "90%", "52%"].map((w) => (
+            {["96%", "88%", "92%", "60%"].map((w) => (
               <div key={w} className="h-2.5 rounded-full bg-black/[0.06]" style={{ width: w }} />
             ))}
           </div>
         </div>
       </div>
-    </Window>
+    </Chrome>
   );
 }
 
-/* ───────────── Sections ───────────── */
-
-/** Hero: headline, then the app window tilting up and settling as you scroll. */
-function Hero({ cta }: { cta: { to: string; label: string } }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const p = useScrollProgress(ref, "view", 0.15);
-  const t = clamp((p - 0.45) / 0.55); // starts tilted, flattens while scrolling
+function WriteVisual() {
   return (
-    <section className="overflow-hidden px-6 pt-20 pb-10 text-center md:pt-28">
-      <p className="text-[21px] font-semibold text-[#1d1d1f] md:text-[24px]">SyncScribe</p>
-      <h1 className="mx-auto mt-2 max-w-[980px] text-[48px] leading-[1.05] font-semibold tracking-[-0.025em] md:text-[96px]">
-        Write anywhere.
-        <br />
-        <span className="bg-gradient-to-r from-[#0071e3] via-[#5e5ce6] to-[#bf5af2] bg-clip-text text-transparent">Sync everywhere.</span>
-      </h1>
-      <p className="mx-auto mt-6 max-w-[640px] text-[21px] leading-snug text-[#6e6e73] md:text-[28px]">
-        A markdown workspace that works offline and merges your team's edits on its own.
-      </p>
-      <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-        <Link to={cta.to} className={blueButton}>{cta.label}</Link>
-        <a href="#how" className={blueLink}>
-          See how it works <ChevronRight className="size-4" />
-        </a>
-      </div>
-      <div ref={ref} className="mx-auto mt-16 max-w-[1100px] [perspective:1600px] md:mt-24">
-        <div
-          style={{
-            transform: `rotateX(${(1 - t) * 22}deg) scale(${0.88 + t * 0.12}) translateY(${(1 - t) * 40}px)`,
-            transformOrigin: "center top",
-          }}
-        >
-          <AppMock />
+    <Chrome title="Lecture 4 · Databases">
+      <div className="grid min-h-[380px] grid-cols-2 divide-x divide-black/[0.05] text-left">
+        <pre className="p-6 font-mono text-[13px] leading-7 text-[#5c5c5c]">{`# Lecture 4\n\n## Normal forms\n- [x] 1NF\n- [x] 2NF\n- [ ] 3NF\n\n> Ask about BCNF\n\n| Key | Type |\n|-----|------|\n| id  | PK   |`}</pre>
+        <div className="p-6 text-[14px] leading-7">
+          <p className="mb-2 text-[22px] font-bold tracking-tight">Lecture 4</p>
+          <p className="mb-1 font-semibold">Normal forms</p>
+          <p>☑ 1NF</p>
+          <p>☑ 2NF</p>
+          <p>☐ 3NF</p>
+          <p className="my-3 border-l-[3px] border-[#1e96eb] pl-3 text-[#5c5c5c]">Ask about BCNF</p>
+          <div className="grid w-40 grid-cols-2 overflow-hidden rounded-lg border border-black/10 text-[12px]">
+            <span className="bg-[#f7f7f7] px-2 py-1 font-semibold">Key</span>
+            <span className="bg-[#f7f7f7] px-2 py-1 font-semibold">Type</span>
+            <span className="px-2 py-1">id</span>
+            <span className="px-2 py-1">PK</span>
+          </div>
         </div>
       </div>
-    </section>
+    </Chrome>
   );
 }
 
-/** A large paragraph whose words light up one by one as you scroll. */
-function Statement() {
-  const ref = useRef<HTMLDivElement>(null);
-  const p = useScrollProgress(ref, "view", 0.2);
-  const words =
-    "Your writing lives on your device first. No spinners. No lost work. No “reconnecting…”. When the Wi-Fi comes back, everything syncs quietly — and every edit from every teammate fits together.".split(
-      " ",
-    );
+function OfflineVisual() {
+  const rows = [
+    { icon: WifiOff, text: "Offline — 3 changes saved on this device", cls: "bg-[#fff6e8] text-[#a2620a]" },
+    { icon: RefreshCw, text: "Connection back — syncing…", cls: "bg-[#e9f4fe] text-[#1373b8]" },
+    { icon: Check, text: "All changes synced", cls: "bg-[#e9f8ef] text-[#1f9254]" },
+  ];
   return (
-    <section className="px-6 py-32 md:py-48">
-      <div ref={ref} className="mx-auto max-w-[980px]">
-        <p className="text-[32px] leading-[1.15] font-semibold tracking-[-0.02em] md:text-[56px]">
-          {words.map((w, i) => (
-            <span key={i} className="transition-colors duration-300" style={{ color: p * 1.25 > i / words.length ? "#1d1d1f" : "#d2d2d7" }}>
-              {w}{" "}
-            </span>
-          ))}
-        </p>
+    <Chrome title="Field notes · Day 3">
+      <div className="flex min-h-[380px] flex-col justify-center gap-4 p-8">
+        {rows.map(({ icon: Icon, text, cls }, i) => (
+          <div
+            key={text}
+            className={`flex items-center gap-3 rounded-2xl px-5 py-4 text-[15px] font-medium opacity-0 transition-all duration-700 group-data-[on=true]/reveal:translate-x-0 group-data-[on=true]/reveal:opacity-100 ${cls} -translate-x-6`}
+            style={{ transitionDelay: `${300 + i * 350}ms` }}
+          >
+            <Icon className="size-4" /> {text}
+          </div>
+        ))}
       </div>
-    </section>
+    </Chrome>
   );
 }
 
-const STEPS = [
-  { title: "Type.", text: "Every keystroke becomes a small change to your document. No Save button." },
-  { title: "Saved on your device.", text: "Changes land in your browser's storage instantly — online or not." },
-  { title: "Synced and merged.", text: "When you're online, changes flow to your team and fit together with theirs." },
-];
-
-function StepVisual({ step }: { step: number }) {
-  const panel = (i: number, content: ReactNode) => (
-    <div className="absolute inset-0 flex items-center justify-center transition-all duration-700" style={{ opacity: step === i ? 1 : 0, transform: `scale(${step === i ? 1 : 0.94})` }}>
-      {content}
-    </div>
-  );
+function MergeVisual() {
   return (
-    <div className="relative aspect-square w-full max-w-[520px] rounded-[32px] bg-[#f5f5f7]">
-      {panel(
-        0,
-        <div className="w-4/5 rounded-2xl bg-white p-7 text-left shadow-sm">
-          <p className="mb-3 text-[13px] text-[#86868b]">Meeting notes</p>
-          <p className="text-[20px] leading-relaxed font-medium">
-            Ship the outline by Friday<span className="ml-0.5 inline-block h-6 w-[2px] animate-pulse bg-[#0071e3] align-middle" />
-          </p>
-        </div>,
-      )}
-      {panel(
-        1,
-        <div className="flex flex-col items-center gap-5 text-center">
-          <span className="flex size-24 items-center justify-center rounded-[28px] bg-white shadow-sm">
-            <HardDrive className="size-10 text-[#0071e3]" strokeWidth={1.5} />
-          </span>
-          <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[15px] shadow-sm">
-            <WifiOff className="size-4 text-[#ff9f0a]" /> Offline — saved on this device
-          </span>
-        </div>,
-      )}
-      {panel(
-        2,
-        <div className="flex w-4/5 flex-col gap-3">
+    <Chrome title="Group report">
+      <div className="relative flex min-h-[380px] flex-col gap-4 p-8 text-left">
+        <div className="grid grid-cols-2 gap-4">
           {[
-            ["Priya", "#ff375f", "Rewrote the introduction"],
-            ["Ali", "#0a84ff", "Added a conclusion"],
+            ["Priya · on the bus", "#ff4d8d", "Rewrote the introduction"],
+            ["Ali · in the library", "#7c5cfa", "Added the conclusion"],
           ].map(([who, color, what]) => (
-            <div key={who} className="rounded-2xl bg-white px-5 py-4 text-left text-[15px] shadow-sm">
-              <span className="font-semibold" style={{ color }}>{who}</span> · {what}
+            <div key={who} className="rounded-2xl border border-black/[0.06] p-4">
+              <p className="mb-1 text-[12px] font-semibold" style={{ color }}>{who}</p>
+              <p className="text-[14px]">{what}</p>
+              <p className="mt-2 flex items-center gap-1 text-[11px] text-[#8a8a8a]"><WifiOff className="size-3" /> offline</p>
             </div>
           ))}
-          <div className="flex items-center justify-center gap-2 rounded-2xl bg-[#e8f8ee] px-5 py-4 text-[15px] font-medium text-[#1d8f4e]">
-            <RefreshCw className="size-4" /> Merged — nothing lost
-          </div>
-        </div>,
-      )}
-    </div>
-  );
-}
-
-/** Pinned section: steps on the left change as you scroll, the picture on the right follows. */
-function HowItWorks() {
-  const ref = useRef<HTMLElement>(null);
-  const p = useScrollProgress(ref, "sticky");
-  const step = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length));
-  return (
-    <section id="how" ref={ref} className="relative h-[300vh] scroll-mt-12 bg-white">
-      <div className="sticky top-0 flex h-dvh items-center px-6">
-        <div className="mx-auto grid w-full max-w-[1100px] items-center gap-12 md:grid-cols-2">
-          <div>
-            <p className="mb-6 text-[17px] font-semibold text-[#6e6e73]">How it works</p>
-            <div className="flex flex-col gap-8">
-              {STEPS.map((s, i) => (
-                <div key={s.title} className="transition-opacity duration-500" style={{ opacity: i === step ? 1 : 0.25 }}>
-                  <h3 className="text-[32px] leading-tight font-semibold tracking-[-0.02em] md:text-[48px]">{s.title}</h3>
-                  <p className="mt-2 max-w-[440px] text-[17px] leading-relaxed text-[#6e6e73] md:text-[19px]">{s.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="hidden justify-center md:flex">
-            <StepVisual step={step} />
-          </div>
+        </div>
+        <div className="flex justify-center">
+          <span className="flex size-11 items-center justify-center rounded-full bg-[#1e96eb]/10 text-[#1e96eb]">
+            <GitMerge className="size-5 rotate-180" />
+          </span>
+        </div>
+        <div className="rounded-2xl bg-[#e9f8ef] p-5">
+          <p className="mb-1 text-[12px] font-semibold text-[#1f9254]">Both back online</p>
+          <p className="text-[15px]">One document. New introduction <b>and</b> new conclusion. No “which version do you want to keep?”</p>
         </div>
       </div>
-    </section>
+    </Chrome>
   );
 }
 
-function Tile({ className = "", children, delay = 0 }: { className?: string; children: ReactNode; delay?: number }) {
-  return (
-    <Reveal delay={delay} className={`overflow-hidden rounded-[28px] bg-white p-8 md:p-10 ${className}`}>
-      {children}
-    </Reveal>
-  );
-}
+/* ───────── Page ───────── */
 
-const TileTitle = ({ eyebrow, children }: { eyebrow: string; children: ReactNode }) => (
-  <>
-    <p className="text-[15px] font-semibold text-[#6e6e73]">{eyebrow}</p>
-    <h3 className="mt-2 text-[28px] leading-tight font-semibold tracking-[-0.02em] md:text-[40px]">{children}</h3>
-  </>
-);
-
-/** Bento grid of features on a light grey background. */
-function Features() {
-  return (
-    <section id="features" className="scroll-mt-12 bg-[#f5f5f7] px-6 py-28 md:py-36">
-      <div className="mx-auto max-w-[1100px]">
-        <Reveal>
-          <h2 className="mb-14 text-center text-[40px] leading-tight font-semibold tracking-[-0.025em] md:text-[64px]">Everything you need.<br />Nothing you don't.</h2>
-        </Reveal>
-        <div className="grid gap-5 md:grid-cols-3">
-          <Tile className="md:col-span-2">
-            <TileTitle eyebrow="Offline">Works with no signal.<br />At all.</TileTitle>
-            <div className="mt-10 flex flex-wrap gap-3">
-              {[
-                ["Offline — saved on this device", "bg-[#fff4e5] text-[#a35a00]"],
-                ["Syncing 3 changes…", "bg-[#e8f2ff] text-[#0058b0]"],
-                ["All changes synced", "bg-[#e8f8ee] text-[#1d8f4e]"],
-              ].map(([t, c]) => (
-                <span key={t} className={`rounded-full px-4 py-2 text-[15px] font-medium ${c}`}>{t}</span>
-              ))}
-            </div>
-          </Tile>
-          <Tile delay={0.1} className="flex flex-col justify-between">
-            <TileTitle eyebrow="Price">Free.</TileTitle>
-            <p className="mt-10 text-[88px] leading-none font-semibold tracking-tight text-[#1d1d1f]">$0</p>
-          </Tile>
-          <Tile>
-            <TileTitle eyebrow="Together">Live cursors.</TileTitle>
-            <p className="mt-8 text-[19px] leading-9">
-              See who's<Cursor name="Ali" color="#0a84ff" /> writing where<Cursor name="Priya" color="#ff375f" />
-            </p>
-          </Tile>
-          <Tile delay={0.1}>
-            <TileTitle eyebrow="Markdown">Write fast.<br />Read beautifully.</TileTitle>
-            <pre className="mt-8 font-mono text-[14px] leading-7 text-[#6e6e73]">{"# Notes\n- [x] Outline\n**Due:** Friday"}</pre>
-          </Tile>
-          <Tile delay={0.2}>
-            <TileTitle eyebrow="History">Every version, kept.</TileTitle>
-            <div className="mt-8 flex flex-col gap-2 text-[15px] text-[#6e6e73]">
-              {["Today, 10:42 — Priya", "Today, 09:15 — Ali", "Yesterday — Submitted draft"].map((v) => (
-                <span key={v} className="border-b border-black/[0.06] pb-2">{v}</span>
-              ))}
-            </div>
-          </Tile>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/** Dark band with a large gradient statement. */
-function ZeroConflicts() {
-  return (
-    <section className="bg-black px-6 py-36 text-center md:py-52">
-      <Reveal>
-        <p className="text-[21px] font-semibold text-[#86868b]">Powered by CRDTs</p>
-        <h2 className="mt-4 bg-gradient-to-b from-white to-[#6e6e73] bg-clip-text text-[64px] leading-none font-semibold tracking-[-0.03em] text-transparent md:text-[140px]">
-          Zero conflicts.
-        </h2>
-        <p className="mx-auto mt-8 max-w-[620px] text-[19px] leading-relaxed text-[#a1a1a6] md:text-[24px]">
-          Two people edit the same paragraph on a plane. They land, reconnect, and both see the same document. Nobody is asked to choose.
-        </p>
-      </Reveal>
-    </section>
-  );
-}
+const USES = [
+  { icon: GraduationCap, label: "Lecture notes" },
+  { icon: Users, label: "Group reports" },
+  { icon: ClipboardList, label: "Meeting minutes" },
+  { icon: BookOpen, label: "Team wiki" },
+  { icon: NotebookPen, label: "Research journal" },
+  { icon: ListChecks, label: "Study checklist" },
+];
 
 const FAQ = [
-  ["Does it really work without internet?", "Yes. After your first visit the whole app is stored on your device. You can create, edit, organise and search with no connection."],
-  ["What if two people edit the same paragraph offline?", "Both changes are kept. Every device ends up with exactly the same document, without a conflict dialog."],
-  ["Where is my data stored?", "On your device first. A copy is kept on the sync server so your teammates and other devices receive your changes."],
-  ["How much does it cost?", "Nothing. SyncScribe is a university project built with free and open-source tools."],
+  ["Do I need internet to use it?", "Only the first time, to set up your account. After that the app lives on your device — write, organise and search with no connection."],
+  ["What if we both edit the same part?", "Nothing is thrown away. Every change is kept and all devices end up showing the same text, without a pop-up asking you to choose."],
+  ["Where do my documents live?", "On your device first, in the browser's storage. A copy goes to the sync server so your other devices and your teammates receive it."],
+  ["Is it free?", "Yes. SyncScribe was built for a university project using only free, open-source tools."],
 ];
 
-function Faq() {
+function Feature({ kicker, title, text, visual, flip }: { kicker: ReactNode; title: ReactNode; text: string; visual: ReactNode; flip?: boolean }) {
   return (
-    <section id="faq" className="scroll-mt-12 px-6 py-28 md:py-36">
-      <div className="mx-auto max-w-[760px]">
-        <Reveal>
-          <h2 className="mb-12 text-center text-[40px] font-semibold tracking-[-0.025em] md:text-[56px]">Questions? Answers.</h2>
-        </Reveal>
-        <div className="border-t border-[#d2d2d7]">
-          {FAQ.map(([q, a]) => (
-            <details key={q} className="group border-b border-[#d2d2d7] py-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-[19px] font-semibold md:text-[21px]">
-                {q}
-                <span className="ml-6 text-[28px] leading-none font-light text-[#86868b] transition-transform duration-300 group-open:rotate-45">+</span>
-              </summary>
-              <p className="mt-3 pr-10 text-[17px] leading-relaxed text-[#6e6e73]">{a}</p>
-            </details>
-          ))}
-        </div>
+    <Reveal className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+      <div className={flip ? "lg:order-2" : ""}>
+        {kicker}
+        <h3 className="mt-4 text-[38px] leading-[1.08] font-semibold tracking-[-0.035em] md:text-[54px]">{title}</h3>
+        <p className="mt-6 max-w-[460px] text-[19px] leading-relaxed text-[#5c5c5c]">{text}</p>
       </div>
-    </section>
+      <div className={flip ? "lg:order-1" : ""}>{visual}</div>
+    </Reveal>
   );
 }
 
 export default function LandingPage() {
   const signedIn = useSession((s) => s.status === "signedIn");
-  const cta = signedIn ? { to: "/", label: "Open SyncScribe" } : { to: "/signup", label: "Get started" };
+  const start = signedIn ? "/" : "/signup";
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
 
   return (
-    <div style={FONT} className="min-h-dvh bg-white text-[#1d1d1f] antialiased">
+    <div className="min-h-dvh bg-[#f7f7f7] font-sans text-[#121212] antialiased">
+      <style>{`
+        @keyframes blink { 50% { opacity: 0 } }
+        @keyframes marquee { to { transform: translateX(-50%) } }
+        @keyframes drift { 0%,100% { transform: translate(0,0) } 33% { transform: translate(28px,-14px) } 66% { transform: translate(-18px,10px) } }
+        @keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important } }
+      `}</style>
+
       {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-white/70 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-6 text-[13px]">
-          <Link to="/welcome" className="font-semibold tracking-tight">SyncScribe</Link>
-          <nav className="hidden items-center gap-8 text-[#1d1d1f]/80 md:flex">
-            <a href="#features" className="hover:text-[#1d1d1f]">Features</a>
-            <a href="#how" className="hover:text-[#1d1d1f]">How it works</a>
-            <a href="#faq" className="hover:text-[#1d1d1f]">FAQ</a>
+      <header className={`sticky top-0 z-50 bg-[#f7f7f7]/85 backdrop-blur-md transition-[border-color] ${scrolled ? "border-b border-black/[0.06]" : "border-b border-transparent"}`}>
+        <div className="mx-auto flex h-[76px] max-w-[1240px] items-center gap-10 px-6">
+          <Link to="/welcome" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-tight">
+            <span className="flex size-8 items-center justify-center rounded-[10px] bg-[#121212] text-white">
+              <NotebookPen className="size-[18px]" />
+            </span>
+            SyncScribe
+          </Link>
+          <nav className="hidden items-center gap-8 text-[16px] lg:flex">
+            {[["Features", "#features"], ["Offline", "#offline"], ["Use cases", "#uses"], ["FAQ", "#faq"]].map(([l, h]) => (
+              <a key={l} href={h} className="hover:text-[#1e96eb]">{l}</a>
+            ))}
           </nav>
-          <div className="flex items-center gap-4">
-            {!signedIn && <Link to="/login" className="text-[#1d1d1f]/80 hover:text-[#1d1d1f]">Sign in</Link>}
-            <Link to={cta.to} className="rounded-full bg-[#0071e3] px-3.5 py-1 text-white hover:bg-[#0077ed]">
-              {signedIn ? "Open" : "Get started"}
+          <div className="ml-auto flex items-center gap-3">
+            {!signedIn && (
+              <Link to="/login" className="rounded-full border border-black/15 px-5 py-2 text-[15px] font-medium hover:bg-white">
+                Sign in
+              </Link>
+            )}
+            <Link to={start} className="rounded-full bg-[#1e96eb] px-5 py-2 text-[15px] font-medium text-white hover:bg-[#1786d6]">
+              {signedIn ? "Open app" : "Get started"}
             </Link>
           </div>
         </div>
       </header>
 
-      <Hero cta={cta} />
-      <Statement />
-      <HowItWorks />
-      <Features />
-      <ZeroConflicts />
-      <Faq />
-
-      {/* Closing call to action */}
-      <section className="px-6 pb-32 text-center">
+      {/* Hero */}
+      <section className="mx-auto max-w-[1240px] px-6 pt-20 text-center md:pt-32">
         <Reveal>
-          <h2 className="text-[40px] leading-tight font-semibold tracking-[-0.025em] md:text-[72px]">Start writing today.</h2>
-          <p className="mx-auto mt-4 max-w-[520px] text-[21px] text-[#6e6e73]">Free account. Ready in seconds. Connection optional.</p>
-          <div className="mt-8">
-            <Link to={cta.to} className={blueButton}>{cta.label}</Link>
+          <h1 className="mx-auto max-w-[1100px] text-[52px] leading-[1.02] font-semibold tracking-[-0.045em] md:text-[104px]">
+            Write together,
+            <br />
+            <span className="inline-flex items-center gap-[0.2em]">
+              <span className="inline-flex size-[0.78em] -rotate-6 items-center justify-center rounded-[0.18em] bg-[#1e96eb] text-white shadow-[0_8px_24px_-8px_rgb(30_150_235/0.7)]">
+                <CloudOff className="size-[0.48em]" strokeWidth={2.5} />
+              </span>
+              <Typewriter words={["offline.", "anywhere.", "in sync."]} />
+            </span>
+          </h1>
+          <p className="mx-auto mt-8 max-w-[680px] text-[20px] leading-relaxed text-[#3a3a3a] md:text-[24px]">
+            A markdown workspace that keeps working without the internet and merges everyone's edits the moment you're back online.
+          </p>
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Link to={start} className={bluePill}>Get started — free</Link>
+            <a href="#features" className={outlinePill}>See how it works</a>
+          </div>
+        </Reveal>
+        <Reveal delay={150} className="mx-auto mt-20 max-w-[1120px] md:mt-24">
+          <HeroApp />
+        </Reveal>
+      </section>
+
+      {/* Bento */}
+      <section className="mx-auto mt-32 grid max-w-[1240px] gap-6 px-6 md:mt-40 lg:grid-cols-[1.1fr_1fr]">
+        <Reveal className={`${card} flex flex-col justify-between overflow-hidden p-10`}>
+          <div className="relative h-[260px]">
+            {[
+              ["Train", "8%", "8%", "#fff6e8", "#a2620a", WifiOff],
+              ["Flight mode", "52%", "4%", "#e9f4fe", "#1373b8", CloudOff],
+              ["Library basement", "18%", "48%", "#f3efff", "#6a4ee0", WifiOff],
+              ["Back online", "58%", "52%", "#e9f8ef", "#1f9254", RefreshCw],
+            ].map(([label, left, top, bg, fg, Icon], i) => {
+              const I = Icon as typeof WifiOff;
+              return (
+                <span
+                  key={label as string}
+                  className="absolute flex items-center gap-2 rounded-2xl px-5 py-3 text-[16px] font-medium shadow-sm"
+                  style={{ left: left as string, top: top as string, background: bg as string, color: fg as string, animation: `floaty ${4 + i}s ease-in-out infinite` }}
+                >
+                  <I className="size-4" /> {label as string}
+                </span>
+              );
+            })}
+          </div>
+          <div>
+            <h3 className="text-[34px] leading-[1.1] font-semibold tracking-[-0.03em] md:text-[44px]">Bad Wi-Fi is no longer your problem</h3>
+            <p className="mt-4 text-[19px] text-[#5c5c5c]">Write on the train, in the air or in the basement. Your notes save instantly and sync later.</p>
+          </div>
+        </Reveal>
+        <div className="grid gap-6">
+          <Reveal delay={100} className={`${card} p-10`}>
+            <div className="mb-8 flex flex-wrap gap-3">
+              {[["Priya", "#ff4d8d"], ["Ali", "#7c5cfa"], ["Sam", "#1e96eb"], ["Mei", "#22b573"]].map(([n, c]) => (
+                <span key={n} className="flex items-center gap-2 rounded-full border border-black/[0.06] py-1.5 pr-4 pl-1.5 text-[15px]">
+                  <span className="flex size-7 items-center justify-center rounded-full text-[12px] font-semibold text-white" style={{ background: c }}>{n[0]}</span>
+                  {n}
+                </span>
+              ))}
+            </div>
+            <h3 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.03em]">Four people, one document, zero conflicts</h3>
+            <p className="mt-3 text-[18px] text-[#5c5c5c]">Edits merge automatically — live when you're online, later when you're not.</p>
+          </Reveal>
+          <Reveal delay={200} className={`${card} flex items-center gap-8 p-10`}>
+            <div className="flex shrink-0 -space-x-4">
+              <span className="flex size-16 items-center justify-center rounded-2xl bg-[#e9f8ef] text-[#1f9254] shadow-sm"><Lock className="size-7" /></span>
+              <span className="flex size-16 items-center justify-center rounded-2xl bg-[#e9f4fe] text-[#1373b8] shadow-sm"><HardDrive className="size-7" /></span>
+            </div>
+            <div>
+              <h3 className="text-[28px] leading-[1.1] font-semibold tracking-[-0.03em]">Your device comes first</h3>
+              <p className="mt-2 text-[18px] text-[#5c5c5c]">Documents are stored with you, not just in the cloud.</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="mx-auto mt-40 flex max-w-[1240px] scroll-mt-24 flex-col gap-40 px-6">
+        <Feature
+          kicker={
+            <p className="text-[52px] leading-none font-bold tracking-[-0.04em] italic md:text-[64px]">
+              Write<span className="ml-1 inline-block h-[0.8em] w-[4px] translate-y-[0.08em] animate-[blink_1s_steps(1)_infinite] rounded-full bg-[#1e96eb]" />
+            </p>
+          }
+          title="in plain markdown, read it beautifully"
+          text="Type headings, lists, tables and checklists in markdown. Flip to preview or work side by side — every keystroke is saved before you finish the sentence."
+          visual={<WriteVisual />}
+        />
+        <div id="offline" className="scroll-mt-24">
+          <Feature
+            flip
+            kicker={<p className={eyebrow}>Offline</p>}
+            title={<>Keep working when the <Scribble>signal</Scribble> doesn't</>}
+            text="SyncScribe opens and saves without a connection. A small status badge always tells you whether you're offline, syncing or fully synced."
+            visual={<OfflineVisual />}
+          />
+        </div>
+        <Feature
+          kicker={<p className={eyebrow}>Collaborate</p>}
+          title={<>Edit at the same time, <Scribble>never</Scribble> overwrite</>}
+          text="See teammates' cursors live. Edit the same document on different devices, even offline. When everyone reconnects, the changes simply fit together."
+          visual={<MergeVisual />}
+        />
+      </section>
+
+      {/* Use cases */}
+      <section id="uses" className="mt-44 scroll-mt-24">
+        <Reveal className="mx-auto flex max-w-[1240px] flex-wrap items-end justify-between gap-8 px-6">
+          <h2 className={`${h2} max-w-[760px]`}>Made for the things students actually write</h2>
+          <Link to={start} className={bluePill}>Start a document</Link>
+        </Reveal>
+        <div className="mt-14 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+          <div className="flex w-max animate-[marquee_40s_linear_infinite] gap-6 px-6 hover:[animation-play-state:paused]">
+            {[...USES, ...USES].map(({ icon: Icon, label }, i) => (
+              <div key={i} className={`${card} flex h-[220px] w-[300px] shrink-0 flex-col justify-between p-8 transition hover:-translate-y-1 hover:shadow-lg`}>
+                <span className="flex size-14 items-center justify-center rounded-2xl bg-[#1e96eb] text-white">
+                  <Icon className="size-7" />
+                </span>
+                <span className="flex items-center justify-between text-[22px] font-medium tracking-tight">
+                  {label} <ArrowRight className="size-5 text-[#8a8a8a]" />
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mx-auto mt-44 max-w-[1240px] scroll-mt-24 px-6">
+        <Reveal className={`${card} grid gap-12 p-10 md:p-16 lg:grid-cols-2`}>
+          <div>
+            <p className={eyebrow}>Local-first workspace</p>
+            <h2 className={`${h2} mt-5`}>Good questions, short answers</h2>
+            <p className="mt-6 text-[19px] leading-relaxed text-[#5c5c5c]">
+              SyncScribe saves to your device first and syncs in the background. Here's what people usually ask before they start.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group rounded-3xl border border-black/[0.06] p-7 open:bg-[#fafafa]">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[20px] font-semibold tracking-tight">
+                  {q}
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f2f2f2] text-[20px] text-[#5c5c5c] transition group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-4 text-[17px] leading-relaxed text-[#5c5c5c]">{a}</p>
+              </details>
+            ))}
           </div>
         </Reveal>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#f5f5f7] px-6 py-10 text-[12px] text-[#6e6e73]">
-        <div className="mx-auto max-w-[1024px]">
-          <p className="border-b border-[#d2d2d7] pb-4">
-            SyncScribe is a local-first collaborative markdown workspace, built as a university project with free and open-source tools.
-          </p>
-          <div className="grid grid-cols-2 gap-8 py-6 md:grid-cols-4">
-            {[
-              ["Explore", [["Features", "#features"], ["How it works", "#how"], ["FAQ", "#faq"]]],
-              ["Account", [["Sign in", "/login"], ["Create account", "/signup"]]],
-              ["Built with", [["Yjs CRDTs", "#how"], ["IndexedDB", "#how"], ["Service Workers", "#how"]]],
-              ["Project", [["University project", "#"]]],
-            ].map(([title, links]) => (
-              <div key={title as string}>
-                <p className="mb-2 font-semibold text-[#1d1d1f]">{title as string}</p>
-                <ul className="flex flex-col gap-1.5">
-                  {(links as string[][]).map(([label, href]) => (
-                    <li key={label}>
-                      {href.startsWith("/") ? <Link to={href} className="hover:underline">{label}</Link> : <a href={href} className="hover:underline">{label}</a>}
-                    </li>
-                  ))}
-                </ul>
+      {/* Devices */}
+      <section className="mx-auto mt-44 max-w-[1240px] px-6">
+        <Reveal className="text-center">
+          <h2 className={h2}>On your laptop. On your phone.</h2>
+          <p className="mt-5 text-[20px] text-[#5c5c5c]">Open it in the browser, or install it like an app — it works offline either way.</p>
+        </Reveal>
+        <div className="mt-14 grid gap-6 lg:grid-cols-2">
+          <Reveal className="rounded-[28px] bg-[#ececec] p-10">
+            <div className="mb-8 flex items-center justify-between">
+              <h3 className="text-[28px] font-semibold tracking-tight">In the browser</h3>
+              <Link to={start} className="rounded-full bg-[#1e96eb] px-5 py-2.5 text-[15px] font-medium text-white">Open now</Link>
+            </div>
+            <div className="h-[260px] overflow-hidden rounded-t-2xl border border-black/[0.06] bg-white p-6 text-left">
+              <p className="text-[24px] font-bold tracking-tight">Welcome to SyncScribe</p>
+              <p className="mt-4 text-[14px] leading-7 text-[#5c5c5c]">Everything you type is saved on this device instantly. When you're offline, keep working — your changes sync when you reconnect.</p>
+              <div className="mt-5 flex flex-col gap-2.5">
+                {["90%", "80%", "70%"].map((w) => <div key={w} className="h-2 rounded-full bg-black/[0.06]" style={{ width: w }} />)}
               </div>
-            ))}
-          </div>
-          <p className="border-t border-[#d2d2d7] pt-4">Copyright © {new Date().getFullYear()} SyncScribe. University project.</p>
+            </div>
+          </Reveal>
+          <Reveal delay={120} className="rounded-[28px] bg-[#ececec] p-10">
+            <div className="mb-8 flex items-center justify-between">
+              <h3 className="text-[28px] font-semibold tracking-tight">As an app</h3>
+              <span className="flex items-center gap-2 rounded-full bg-[#1e96eb] px-5 py-2.5 text-[15px] font-medium text-white"><MonitorSmartphone className="size-4" /> Install</span>
+            </div>
+            <div className="mx-auto h-[260px] w-[240px] overflow-hidden rounded-t-[36px] border-[7px] border-b-0 border-[#121212] bg-white p-5 text-left">
+              <p className="mb-4 text-center text-[12px] font-semibold">9:41</p>
+              <p className="mb-3 text-[15px] font-semibold">Recent</p>
+              {["Group report", "Lecture 4", "Field notes"].map((t) => (
+                <div key={t} className="mb-2 rounded-xl border border-black/[0.06] px-3 py-2.5 text-[13px]">{t}</div>
+              ))}
+            </div>
+          </Reveal>
         </div>
+      </section>
+
+      {/* Blue band */}
+      <section className="mt-44 bg-[#1e96eb] px-6 py-28 text-center text-white md:py-36">
+        <Reveal>
+          <h2 className="mx-auto max-w-[900px] text-[44px] leading-[1.02] font-semibold tracking-[-0.04em] md:text-[80px]">Start writing. The Wi-Fi can wait.</h2>
+          <p className="mx-auto mt-6 max-w-[560px] text-[20px] text-white/80">Free account, ready in seconds.</p>
+          <Link to={start} className={`${pill} mt-10 bg-white text-[#1e96eb] hover:bg-white/90`}>
+            Get started <ArrowRight className="size-4" />
+          </Link>
+        </Reveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#f7f7f7]">
+        <div className="mx-auto grid max-w-[1240px] gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="flex items-center gap-2.5 text-[17px] font-semibold">
+              <span className="flex size-8 items-center justify-center rounded-[10px] bg-[#121212] text-white"><NotebookPen className="size-[18px]" /></span>
+              SyncScribe
+            </p>
+            <p className="mt-4 max-w-[240px] text-[15px] text-[#5c5c5c]">Local-first, collaborative markdown — built for a university project.</p>
+          </div>
+          {[
+            ["Product", [["Features", "#features"], ["Offline", "#offline"], ["Use cases", "#uses"]]],
+            ["Account", [["Sign in", "/login"], ["Create account", "/signup"]]],
+            ["Help", [["FAQ", "#faq"]]],
+          ].map(([title, links]) => (
+            <div key={title as string}>
+              <p className="mb-4 text-[15px] font-semibold">{title as string}</p>
+              <ul className="flex flex-col gap-3 text-[15px] text-[#5c5c5c]">
+                {(links as string[][]).map(([l, h]) => (
+                  <li key={l}>{h.startsWith("/") ? <Link to={h} className="hover:text-[#1e96eb]">{l}</Link> : <a href={h} className="hover:text-[#1e96eb]">{l}</a>}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="border-t border-black/[0.06] py-6 text-center text-[14px] text-[#8a8a8a]">© {new Date().getFullYear()} SyncScribe · University project</p>
       </footer>
     </div>
   );
