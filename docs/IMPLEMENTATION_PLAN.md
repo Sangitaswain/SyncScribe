@@ -158,7 +158,7 @@
 - [x] **7.3** Implement workspace tree operations in `crdt/tree.ts`: createDoc, createFolder, rename, move, setTags, duplicate (FP-8.2), each in one transaction.
   - Done when: unit tests for each operation pass.
   - Commit: `feat(web): add workspace tree operations`
-- [ ] **7.4** Implement `resolveTree` with orphan-to-root, deterministic cycle breaking and sorting (FP-4.6, EC12, B6).
+- [x] **7.4** Implement `resolveTree` with orphan-to-root, deterministic cycle breaking and sorting (FP-4.6, EC12, B6).
   - Done when: unit tests cover orphans, a two-folder cycle resolved identically on two docs, and all sort modes.
   - Commit: `feat(web): add deterministic tree resolution`
 - [ ] **7.5** Track local changes as pending in `{uid}:pending` on every non-provider update (D4).
