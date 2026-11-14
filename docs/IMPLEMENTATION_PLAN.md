@@ -140,7 +140,7 @@
 - [x] **6.3** Implement offline boot: read cached `session` on start and render the app without network; route guard per FP-6 (A3).
   - Done when: signed-in user reloads offline and stays in the app.
   - Commit: `feat(web): keep users signed in offline`
-- [ ] **6.4** Add token refresh on reconnect and `ReauthModal` for expired sessions that keeps local data (EC19).
+- [x] **6.4** Add token refresh on reconnect and `ReauthModal` for expired sessions that keeps local data (EC19).
   - Done when: forcing an expired token shows the modal; signing in resumes without data loss.
   - Commit: `feat(web): handle token refresh and re-authentication`
 - [ ] **6.5** Add Forgot / Reset password screens (A5) and Settings → Profile (name, colour) (A4).

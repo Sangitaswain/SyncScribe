@@ -19,3 +19,20 @@ it("saves, restores and clears the session", async () => {
   await loadSession();
   expect(useSession.getState()).toMatchObject({ status: "signedOut", user: null });
 });
+
+const fakeToken = (expSeconds: number) => `h.${btoa(JSON.stringify({ exp: expSeconds }))}.s`;
+
+it("reads token expiry and asks to sign in when expired", async () => {
+  const { tokenExpiry, refreshIfNeeded } = await import("./session");
+  expect(tokenExpiry(fakeToken(100))).toBe(100_000);
+  expect(tokenExpiry("garbage")).toBe(0);
+
+  await saveSession({ ...auth, token: fakeToken(Date.now() / 1000 - 10) });
+  Object.defineProperty(navigator, "onLine", { value: false, configurable: true });
+  await refreshIfNeeded();
+  expect(useSession.getState().status).toBe("signedIn"); // offline: keep working, ask later
+
+  Object.defineProperty(navigator, "onLine", { value: true, configurable: true });
+  await refreshIfNeeded();
+  expect(useSession.getState().status).toBe("needsReauth");
+});

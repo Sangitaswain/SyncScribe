@@ -2,6 +2,7 @@ import { Outlet } from "react-router";
 import TopBar from "./TopBar";
 import StatusBar from "./StatusBar";
 import Toaster from "./Toaster";
+import ReauthModal from "./ReauthModal";
 import { useUi } from "../stores/ui";
 
 /** Sidebar + top bar + main area + status bar (FP-7). */
@@ -28,6 +29,7 @@ export default function AppShell() {
         <StatusBar />
       </div>
       <Toaster />
+      <ReauthModal />
     </div>
   );
 }

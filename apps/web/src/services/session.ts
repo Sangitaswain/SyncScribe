@@ -1,6 +1,7 @@
 import { del, get, set } from "idb-keyval";
 import type { AuthResponse } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
+import { api } from "./api";
 
 // Cached in IndexedDB so the app can start signed in with no network (A3, FP-4.7)
 const KEY = "session";
@@ -26,4 +27,29 @@ export async function loadSession() {
 export async function clearSession() {
   await del(KEY);
   useSession.setState({ user: null, token: null, workspaces: [], activeWorkspaceId: null, status: "signedOut" });
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** Expiry time (ms) read from the JWT payload; no verification needed on the client. */
+export const tokenExpiry = (token: string) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000;
+  } catch {
+    return 0;
+  }
+};
+
+/** On start-up and reconnect: refresh a token close to expiry; an expired one needs sign-in (EC19). */
+export async function refreshIfNeeded() {
+  const { token, status } = useSession.getState();
+  if (!token || status !== "signedIn" || !navigator.onLine) return;
+  const left = tokenExpiry(token) - Date.now();
+  if (left <= 0) return useSession.setState({ status: "needsReauth" });
+  if (left > DAY) return;
+  try {
+    await saveSession(await api<AuthResponse>("/auth/refresh", { method: "POST" }));
+  } catch {
+    // offline or server down: try again on the next reconnect
+  }
 }
