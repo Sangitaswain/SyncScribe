@@ -97,7 +97,7 @@
 - [x] **4.2** Add `seed.ts`: build a personal `ws:` Y.Doc with a "Welcome to SyncScribe" item and its `doc:` Y.Doc (offline tips, sync status, data-clearing warning); store both in `ydoc_state`.
   - Done when: a test seeds and decodes both docs correctly.
   - Commit: `feat(server): seed personal workspace and welcome document`
-- [ ] **4.3** Add `POST /api/auth/signup` (create user, colour, personal workspace, member row, seed) and `POST /api/auth/login`; rate-limit both.
+- [x] **4.3** Add `POST /api/auth/signup` (create user, colour, personal workspace, member row, seed) and `POST /api/auth/login`; rate-limit both.
   - Done when: supertest signs up, logs in, rejects wrong password and duplicate email.
   - Commit: `feat(server): add signup and login endpoints`
 - [ ] **4.4** Add `POST /api/auth/refresh`, `GET /api/me`, `PATCH /api/me`.
