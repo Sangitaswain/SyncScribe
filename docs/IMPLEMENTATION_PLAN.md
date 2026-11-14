@@ -25,7 +25,7 @@
 | 2 | Shared package | 1 | [x] |
 | 3 | Backend foundation: server, database, health | 1 | [x] |
 | 4 | Backend authentication and seeding | 1 | [x] |
-| 5 | Frontend shell, routing, PWA | 1 | [ ] |
+| 5 | Frontend shell, routing, PWA | 1 | [x] |
 | 6 | Frontend auth and offline session | 1 | [ ] |
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [ ] |
 | 8 | Sidebar, tree and document organization | 1 | [ ] |
@@ -124,8 +124,9 @@
 - [x] **5.5** Configure `vite-plugin-pwa`: precache app shell, manifest + icons, `registerType: "prompt"`, network-only for `/api/*`; add `UpdateAvailableToast` (D2, D5, EC30).
   - Done when: after one visit, DevTools → Offline → reload still loads the app; Chrome shows an install option.
   - Commit: `feat(web): make app installable and loadable offline`
-- [ ] **5.6** Add the boot fallback message "Connect once to set up SyncScribe" for first visits with no connection (EC4).
+- [x] **5.6** Add the boot fallback message "Connect once to set up SyncScribe" for first visits with no connection (EC4).
   - Done when: clearing site data and loading offline shows the message, not a blank page.
+  > Note: on a true first visit with no network the browser cannot fetch `index.html` at all and shows its own offline page; no app code can run. The fallback covers the case where the page loads but the app bundle does not, and Step 6.3's route guard covers "app loaded, never signed in, offline".
   - Commit: `feat(web): show setup message on first offline visit`
 
 ## Step 6 — Frontend auth and offline session · FP-11, FP-4.7

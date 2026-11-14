@@ -9,7 +9,21 @@
     <title>SyncScribe</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <p id="boot" style="font-family: system-ui, sans-serif; text-align: center; margin-top: 30vh; color: #64748b">
+        Loading SyncScribe…
+      </p>
+    </div>
+    <script>
+      // If the app never starts (e.g. first visit while offline), explain instead of a blank page (EC4).
+      setTimeout(function () {
+        var boot = document.getElementById("boot");
+        if (!boot) return; // React has rendered
+        boot.innerHTML = navigator.onLine
+          ? "SyncScribe is taking longer than usual to load. Please refresh the page."
+          : "<strong>Connect once to set up SyncScribe.</strong><br>After your first visit online, it works offline.";
+      }, 6000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
