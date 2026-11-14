@@ -8,6 +8,7 @@ import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import DocTitle from "../editor/DocTitle";
+import { syncWhileOpen } from "../sync/providers";
 
 /** Document screen: title, editor and preview for one doc, opened from the device (works offline). */
 export default function DocPage() {
@@ -19,6 +20,11 @@ export default function DocPage() {
   useEffect(() => {
     if (prefs && docId) addRecent(prefs, docId);
   }, [prefs, docId]);
+
+  // Live sync with the server while the doc is open (E2)
+  useEffect(() => {
+    if (docId) return syncWhileOpen(docDoc(docId));
+  }, [docId]);
 
   // Word count for the status bar, updated while typing (C12)
   const text = useY<string>(doc?.getText(DOC.content));

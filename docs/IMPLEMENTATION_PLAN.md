@@ -223,7 +223,7 @@
 
 ## Step 11 — Frontend sync engine and network status · FP-10.1–10.3
 
-- [ ] **11.1** Implement the Provider Manager: one multiplexed `HocuspocusProviderWebsocket`; always attach `user:` and `ws:` docs; attach open `doc:` after `ws:` is synced (E2).
+- [x] **11.1** Implement the Provider Manager: one multiplexed `HocuspocusProviderWebsocket`; always attach `user:` and `ws:` docs; attach open `doc:` after `ws:` is synced (E2).
   - Done when: edits in one browser profile appear in another after both are online.
   - Commit: `feat(web): add provider manager for background sync`
 - [ ] **11.2** Clear pending flags on `synced` with zero unsynced changes; show `PendingDot` per doc and "All changes synced" toast (D4, E6, 4.4).

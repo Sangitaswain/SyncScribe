@@ -6,6 +6,14 @@ import App from "./App";
 import { loadSession, refreshIfNeeded } from "./services/session";
 import { loadPending } from "./services/pending";
 import { bootstrap } from "./services/bootstrap";
+import { useSession } from "./stores/session";
+import { startSync, stopSync } from "./sync/providers";
+
+// Background sync runs while signed in (FP-10.1); signing out disconnects and closes local docs
+useSession.subscribe((s, prev) => {
+  if (s.status === "signedIn" && (prev.status !== "signedIn" || s.workspaces !== prev.workspaces)) startSync();
+  if (s.status === "signedOut" && prev.status !== "signedOut" && prev.status !== "loading") stopSync();
+});
 
 // Restore the cached session before anything touches the network (A3), then refresh the token if needed
 loadSession().then(async () => {

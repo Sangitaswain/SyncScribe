@@ -2,7 +2,7 @@
 import "fake-indexeddb/auto";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { USER, userDoc } from "@syncscribe/shared";
 import DocPage from "./DocPage";
 import StatusBar from "../components/StatusBar";
@@ -10,6 +10,9 @@ import TopBar from "../components/TopBar";
 import { newDocument } from "../crdt/actions";
 import { getDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
+
+// No sync server in unit tests
+vi.mock("../sync/providers", () => ({ syncWhileOpen: () => () => {} }));
 
 Range.prototype.getClientRects = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
