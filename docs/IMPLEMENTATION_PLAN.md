@@ -79,7 +79,7 @@
 - [x] **3.1** Scaffold `apps/server` with Express, `tsx` dev runner, `config.ts` (Zod-validated env) and `.env.example`.
   - Done when: `npm run dev -w apps/server` starts on port 4000.
   - Commit: `feat(server): scaffold Express server with config`
-- [ ] **3.2** Add `db.ts` (better-sqlite3, WAL, foreign keys) and `schema.sql` with all BP-3 tables; apply schema on boot.
+- [x] **3.2** Add `db.ts` (better-sqlite3, WAL, foreign keys) and `schema.sql` with all BP-3 tables; apply schema on boot.
   - Done when: the server creates `data/syncscribe.db` containing all tables.
   - Commit: `feat(server): add SQLite database and schema`
 - [ ] **3.3** Add Helmet, CORS restricted to `APP_URL`, JSON body limit, a central error handler that returns `{ error: { code, message } }`.

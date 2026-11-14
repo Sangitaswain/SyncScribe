@@ -1,5 +1,6 @@
 import express from "express";
 import { config } from "./config";
+import "./db/db";
 
 export const app = express();
 
