@@ -149,7 +149,7 @@
 
 ## Step 7 — Local-first data layer · FP-4, FP-8.1, FP-8.2
 
-- [ ] **7.1** Implement the Doc Registry (`getDoc`, `releaseDoc`, ref counting) with `y-indexeddb` persistence named `${userId}:${docName}` (D3, EC21).
+- [x] **7.1** Implement the Doc Registry (`getDoc`, `releaseDoc`, ref counting) with `y-indexeddb` persistence named `${userId}:${docName}` (D3, EC21).
   - Done when: a test doc survives a page reload.
   - Commit: `feat(web): add Yjs document registry with IndexedDB persistence`
 - [ ] **7.2** Add React hooks to subscribe to Y.Map / Y.Text / Y.Array changes (`useYMap`, `useYText`).
