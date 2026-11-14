@@ -30,7 +30,7 @@
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [x] |
 | 8 | Sidebar, tree and document organization | 1 | [x] |
 | 9 | Markdown editor and preview | 1 | [x] |
-| 10 | Sync server (Hocuspocus) | 1–2 | [ ] |
+| 10 | Sync server (Hocuspocus) | 1–2 | [x] |
 | 11 | Frontend sync engine and network status | 2 | [ ] |
 | 12 | Real-time collaboration and presence | 2 | [ ] |
 | 13 | Permissions, sharing and workspaces | 2 | [ ] |
@@ -215,7 +215,7 @@
 - [x] **10.3** Implement the tree index: `ws:` changes upsert the `documents` table; `doc:` stores update cached titles; `unknown-doc` reason when not found (BP-6.4).
   - Done when: creating a doc in a `ws:` doc via a test provider creates a `documents` row.
   - Commit: `feat(server): index workspace trees into documents table`
-- [ ] **10.4** Add `GET /api/sync/changed?since=` and `GET /api/sync/all` filtered by access (BP-5.7).
+- [x] **10.4** Add `GET /api/sync/changed?since=` and `GET /api/sync/all` filtered by access (BP-5.7).
   - Done when: supertest shows only accessible docs are returned.
   - Commit: `feat(server): add sync change-listing endpoints`
 
