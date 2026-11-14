@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import Placeholder from "./routes/Placeholder";
+import AuthPage from "./routes/AuthPage";
 import NotFound from "./routes/NotFound";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
@@ -9,8 +10,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/signup" element={<Placeholder title="Sign up" />} />
-        <Route path="/login" element={<Placeholder title="Sign in" />} />
+        <Route path="/signup" element={<AuthPage mode="signup" />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/forgot" element={<Placeholder title="Forgot password" />} />
         <Route path="/reset/:token" element={<Placeholder title="Reset password" />} />
         <Route path="/s/:token" element={<Placeholder title="Accept share link" />} />
