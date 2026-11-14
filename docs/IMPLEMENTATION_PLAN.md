@@ -206,7 +206,7 @@
 
 ## Step 10 — Sync server (Hocuspocus) · BP-6
 
-- [ ] **10.1** Add Hocuspocus on the same HTTP server at `/collab` with SQLite `fetch`/`store` persistence (debounce 2 s / max 10 s, 10 MB payload) (BP-6.1, BP-6.3).
+- [x] **10.1** Add Hocuspocus on the same HTTP server at `/collab` with SQLite `fetch`/`store` persistence (debounce 2 s / max 10 s, 10 MB payload) (BP-6.1, BP-6.3).
   - Done when: a Node test provider writes text, the server restarts, and the text is still there.
   - Commit: `feat(server): add Hocuspocus sync server with SQLite persistence`
 - [ ] **10.2** Implement `onAuthenticate`: verify JWT, reject `token-expired`/`invalid-token`, resolve role (owner/workspace member only for now), set read-only per BP-6.2.
