@@ -2,14 +2,14 @@ import { Router } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { nanoid } from "nanoid";
-import { forgotSchema, loginSchema, resetSchema, signupSchema } from "@syncscribe/shared";
+import { COLORS, forgotSchema, loginSchema, resetSchema, signupSchema } from "@syncscribe/shared";
 import { config } from "../config";
 import { sendMail } from "../mail/mailer";
 import { db } from "../db/db";
 import { HttpError } from "../errors";
 import { hashPassword, verifyPassword } from "../auth/password";
 import { seedWorkspace } from "../collab/seed";
-import { COLORS, authResponse, userByEmail, userById } from "../users";
+import { authResponse, userByEmail, userById } from "../users";
 import { currentUser, requireAuth } from "../auth/middleware";
 
 export const authRouter = Router();

@@ -26,7 +26,7 @@
 | 3 | Backend foundation: server, database, health | 1 | [x] |
 | 4 | Backend authentication and seeding | 1 | [x] |
 | 5 | Frontend shell, routing, PWA | 1 | [x] |
-| 6 | Frontend auth and offline session | 1 | [ ] |
+| 6 | Frontend auth and offline session | 1 | [x] |
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [ ] |
 | 8 | Sidebar, tree and document organization | 1 | [ ] |
 | 9 | Markdown editor and preview | 1 | [ ] |
@@ -143,7 +143,7 @@
 - [x] **6.4** Add token refresh on reconnect and `ReauthModal` for expired sessions that keeps local data (EC19).
   - Done when: forcing an expired token shows the modal; signing in resumes without data loss.
   - Commit: `feat(web): handle token refresh and re-authentication`
-- [ ] **6.5** Add Forgot / Reset password screens (A5) and Settings → Profile (name, colour) (A4).
+- [x] **6.5** Add Forgot / Reset password screens (A5) and Settings → Profile (name, colour) (A4).
   - Done when: both flows work end to end against the server.
   - Commit: `feat(web): add password reset and profile settings`
 

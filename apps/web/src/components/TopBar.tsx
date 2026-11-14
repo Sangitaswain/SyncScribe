@@ -17,13 +17,14 @@ export default function TopBar({ onMenu }: { onMenu: () => void }) {
         {/* sync status, presence, share, notifications go here */}
         {user && (
           <>
-            <span
+            <Link
+              to="/settings"
               className="flex size-7 items-center justify-center rounded-full text-xs font-semibold text-white"
               style={{ backgroundColor: user.color }}
-              title={user.name}
+              title={`${user.name} — Settings`}
             >
               {user.name.slice(0, 1).toUpperCase()}
-            </span>
+            </Link>
             {/* Simple sign-out for now; the safe sign-out dialog comes in 13.10 */}
             <button onClick={clearSession} className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Sign out" title="Sign out">
               <LogOut className="size-4" />

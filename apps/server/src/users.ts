@@ -11,8 +11,6 @@ export interface UserRow {
   personal_workspace_id: string;
 }
 
-export const COLORS = ["#e11d48", "#ea580c", "#ca8a04", "#16a34a", "#0891b2", "#2563eb", "#7c3aed", "#db2777"];
-
 export const toUser = (r: UserRow): User => ({
   id: r.id,
   email: r.email,
