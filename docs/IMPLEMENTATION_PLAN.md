@@ -29,7 +29,7 @@
 | 6 | Frontend auth and offline session | 1 | [x] |
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [x] |
 | 8 | Sidebar, tree and document organization | 1 | [x] |
-| 9 | Markdown editor and preview | 1 | [ ] |
+| 9 | Markdown editor and preview | 1 | [x] |
 | 10 | Sync server (Hocuspocus) | 1–2 | [ ] |
 | 11 | Frontend sync engine and network status | 2 | [ ] |
 | 12 | Real-time collaboration and presence | 2 | [ ] |
@@ -198,7 +198,7 @@
 - [x] **9.4** Add `MarkdownPreview` (react-markdown, remark-gfm, rehype-sanitize, rehype-highlight) with error boundary and debounce, plus edit / split / preview `ModeSwitch` saved in settings (C3, EC31, EC33, EC37).
   - Done when: a `<script>` tag in markdown is shown as text and never runs; modes persist.
   - Commit: `feat(web): add sanitized live preview with view modes`
-- [ ] **9.5** Add `StatusBar` text ("Saved on this device"), word count and reading time (C6, C12).
+- [x] **9.5** Add `StatusBar` text ("Saved on this device"), word count and reading time (C6, C12).
   - Done when: counts update while typing.
   - Commit: `feat(web): add editor status bar with word count`
 

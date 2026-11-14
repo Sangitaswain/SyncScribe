@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { useParams } from "react-router";
 import { DOC, docDoc } from "@syncscribe/shared";
 import { addRecent, setSetting, usePrefs } from "../crdt/prefs";
-import { useDoc } from "../crdt/hooks";
+import { useDoc, useY } from "../crdt/hooks";
+import { useEditorStats } from "../stores/editorStats";
+import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import DocTitle from "../editor/DocTitle";
@@ -18,6 +20,15 @@ export default function DocPage() {
   useEffect(() => {
     if (prefs && docId) addRecent(prefs, docId);
   }, [prefs, docId]);
+
+  // Word count for the status bar, updated while typing (C12)
+  const text = useY<string>(doc?.getText(DOC.content));
+  useEffect(() => {
+    if (text === undefined) return;
+    const t = setTimeout(() => useEditorStats.setState({ words: countWords(text) }), 300);
+    return () => clearTimeout(t);
+  }, [text]);
+  useEffect(() => () => useEditorStats.setState({ words: null }), []);
 
   if (!doc) return null;
   const ytext = doc.getText(DOC.content);
