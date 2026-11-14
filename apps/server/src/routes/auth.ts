@@ -7,6 +7,7 @@ import { HttpError } from "../errors";
 import { hashPassword, verifyPassword } from "../auth/password";
 import { seedWorkspace } from "../collab/seed";
 import { COLORS, authResponse, userByEmail, userById } from "../users";
+import { currentUser, requireAuth } from "../auth/middleware";
 
 export const authRouter = Router();
 const limiter = rateLimit({ windowMs: 60_000, limit: 10 });
@@ -41,5 +42,12 @@ authRouter.post("/login", limiter, async (req, res) => {
   const user = userByEmail(email);
   if (!user || !(await verifyPassword(password, user.password_hash)))
     throw new HttpError(401, "bad_credentials", "Email or password is incorrect");
+  res.json(await authResponse(user));
+});
+
+// Issues a fresh token while the current one is still valid (BP-4.1)
+authRouter.post("/refresh", requireAuth, async (_req, res) => {
+  const user = userById(currentUser(res).id);
+  if (!user) throw new HttpError(401, "unauthenticated", "Please sign in");
   res.json(await authResponse(user));
 });

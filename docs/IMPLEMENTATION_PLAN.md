@@ -100,7 +100,7 @@
 - [x] **4.3** Add `POST /api/auth/signup` (create user, colour, personal workspace, member row, seed) and `POST /api/auth/login`; rate-limit both.
   - Done when: supertest signs up, logs in, rejects wrong password and duplicate email.
   - Commit: `feat(server): add signup and login endpoints`
-- [ ] **4.4** Add `POST /api/auth/refresh`, `GET /api/me`, `PATCH /api/me`.
+- [x] **4.4** Add `POST /api/auth/refresh`, `GET /api/me`, `PATCH /api/me`.
   - Done when: supertest covers all three.
   - Commit: `feat(server): add token refresh and profile endpoints`
 - [ ] **4.5** Add `mailer.ts` (Nodemailer with Ethereal, console fallback) and `POST /api/auth/forgot` + `POST /api/auth/reset` (hashed token, 1 h expiry, always-200 on forgot).

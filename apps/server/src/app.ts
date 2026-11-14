@@ -5,6 +5,7 @@ import { config } from "./config";
 import "./db/db";
 import { errorHandler, notFound } from "./errors";
 import { authRouter } from "./routes/auth";
+import { meRouter } from "./routes/me";
 
 export const app = express();
 app.use(helmet());
@@ -17,6 +18,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/me", meRouter);
 
 app.use(notFound);
 app.use(errorHandler);
