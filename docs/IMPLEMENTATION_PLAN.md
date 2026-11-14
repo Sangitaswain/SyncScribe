@@ -112,7 +112,7 @@
 - [x] **5.1** Scaffold `apps/web` with Vite + React + TypeScript; Tailwind with `dark` class mode; lucide-react.
   - Done when: `npm run dev -w apps/web` shows a styled page at :5173.
   - Commit: `feat(web): scaffold React app with Vite and Tailwind`
-- [ ] **5.2** Add React Router with all FP-6 routes as placeholder screens and a Not Found page.
+- [x] **5.2** Add React Router with all FP-6 routes as placeholder screens and a Not Found page.
   - Done when: every route renders its placeholder.
   - Commit: `feat(web): add routes for all screens`
 - [ ] **5.3** Build `AppShell` layout: sidebar slot, `TopBar`, main area, `StatusBar`, `Toaster`.
