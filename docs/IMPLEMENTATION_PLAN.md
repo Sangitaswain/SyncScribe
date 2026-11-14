@@ -24,7 +24,7 @@
 | 1 | Repository and tooling setup | 1 | [x] |
 | 2 | Shared package | 1 | [x] |
 | 3 | Backend foundation: server, database, health | 1 | [x] |
-| 4 | Backend authentication and seeding | 1 | [ ] |
+| 4 | Backend authentication and seeding | 1 | [x] |
 | 5 | Frontend shell, routing, PWA | 1 | [ ] |
 | 6 | Frontend auth and offline session | 1 | [ ] |
 | 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [ ] |
@@ -103,7 +103,7 @@
 - [x] **4.4** Add `POST /api/auth/refresh`, `GET /api/me`, `PATCH /api/me`.
   - Done when: supertest covers all three.
   - Commit: `feat(server): add token refresh and profile endpoints`
-- [ ] **4.5** Add `mailer.ts` (Nodemailer with Ethereal, console fallback) and `POST /api/auth/forgot` + `POST /api/auth/reset` (hashed token, 1 h expiry, always-200 on forgot).
+- [x] **4.5** Add `mailer.ts` (Nodemailer with Ethereal, console fallback) and `POST /api/auth/forgot` + `POST /api/auth/reset` (hashed token, 1 h expiry, always-200 on forgot).
   - Done when: reset link is printed to the console and resetting the password works.
   - Commit: `feat(server): add password reset with dev mailer`
 

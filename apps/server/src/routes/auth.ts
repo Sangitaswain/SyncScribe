@@ -1,7 +1,10 @@
 import { Router } from "express";
+import { createHash, randomBytes } from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { nanoid } from "nanoid";
-import { loginSchema, signupSchema } from "@syncscribe/shared";
+import { forgotSchema, loginSchema, resetSchema, signupSchema } from "@syncscribe/shared";
+import { config } from "../config";
+import { sendMail } from "../mail/mailer";
 import { db } from "../db/db";
 import { HttpError } from "../errors";
 import { hashPassword, verifyPassword } from "../auth/password";
@@ -50,4 +53,38 @@ authRouter.post("/refresh", requireAuth, async (_req, res) => {
   const user = userById(currentUser(res).id);
   if (!user) throw new HttpError(401, "unauthenticated", "Please sign in");
   res.json(await authResponse(user));
+});
+
+const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
+
+// Always 200 so the response never reveals whether an account exists (BP-8)
+authRouter.post("/forgot", limiter, async (req, res) => {
+  const { email } = forgotSchema.parse(req.body);
+  const user = userByEmail(email);
+  if (user) {
+    const token = randomBytes(32).toString("hex");
+    db.prepare("INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?, ?, ?)").run(
+      sha256(token), user.id, Date.now() + 60 * 60 * 1000,
+    );
+    await sendMail({
+      to: user.email,
+      subject: "Reset your SyncScribe password",
+      text: `Open this link within 1 hour to choose a new password:\n${config.APP_URL}/reset/${token}`,
+    });
+  }
+  res.json({ ok: true });
+});
+
+authRouter.post("/reset", limiter, async (req, res) => {
+  const { token, password } = resetSchema.parse(req.body);
+  const row = db
+    .prepare("SELECT user_id FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?")
+    .get(sha256(token), Date.now()) as { user_id: string } | undefined;
+  if (!row) throw new HttpError(400, "reset_invalid", "This reset link is invalid or has expired");
+  const hash = await hashPassword(password);
+  db.transaction(() => {
+    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, row.user_id);
+    db.prepare("UPDATE password_resets SET used_at = ? WHERE token_hash = ?").run(Date.now(), sha256(token));
+  })();
+  res.json({ ok: true });
 });
