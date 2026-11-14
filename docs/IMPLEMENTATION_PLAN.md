@@ -61,7 +61,7 @@
 
 ## Step 2 — Shared package (`packages/shared`) · FP-2, BP-4.2
 
-- [ ] **2.1** Scaffold `packages/shared` (package.json, tsconfig, `src/index.ts`).
+- [x] **2.1** Scaffold `packages/shared` (package.json, tsconfig, `src/index.ts`).
   - Done when: it builds and can be imported by name from another workspace.
   - Commit: `feat(shared): scaffold shared package`
 - [ ] **2.2** Add `roles.ts`: `Role` type, rank order, `can(role, capability)` per the BP-4.2 capability table; unit tests.
