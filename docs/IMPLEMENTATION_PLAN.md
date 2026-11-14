@@ -226,7 +226,7 @@
 - [x] **11.1** Implement the Provider Manager: one multiplexed `HocuspocusProviderWebsocket`; always attach `user:` and `ws:` docs; attach open `doc:` after `ws:` is synced (E2).
   - Done when: edits in one browser profile appear in another after both are online.
   - Commit: `feat(web): add provider manager for background sync`
-- [ ] **11.2** Clear pending flags on `synced` with zero unsynced changes; show `PendingDot` per doc and "All changes synced" toast (D4, E6, 4.4).
+- [x] **11.2** Clear pending flags on `synced` with zero unsynced changes; show `PendingDot` per doc and "All changes synced" toast (D4, E6, 4.4).
   - Done when: offline edits show dots; reconnecting clears them automatically.
   - Commit: `feat(web): show pending markers and sync completion`
 - [ ] **11.3** On reconnect, sync non-open docs: pending docs plus `/api/sync/changed` results, concurrency 4, with "Syncing X of Y" progress (E2, EC5).

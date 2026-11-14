@@ -3,6 +3,7 @@ import { userDoc, wsDoc } from "@syncscribe/shared";
 import { closeAll, getDoc, releaseDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
 import { API_URL } from "../services/api";
+import { clearPending } from "../services/pending";
 import { remoteOrigins } from "./origins";
 
 // Provider Manager (FP-10.1): the only place network providers are attached to Y.Docs.
@@ -35,6 +36,10 @@ export function attach(name: string): Promise<HocuspocusProvider> {
       token: () => useSession.getState().token ?? "",
     });
     remoteOrigins.add(provider); // changes from the server are not local edits
+    // The server has everything once the doc is synced with no unconfirmed changes (D4, E6)
+    const confirm = () => provider.isSynced && provider.unsyncedChanges === 0 && clearPending(name);
+    provider.on("synced", confirm);
+    provider.on("unsyncedChanges", confirm);
     provider.attach();
     return provider;
   });

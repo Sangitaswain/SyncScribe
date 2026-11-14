@@ -1,11 +1,12 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import * as Y from "yjs";
 import { closeAll, getDoc } from "../crdt/registry";
 import { remoteOrigins } from "../sync/origins";
 import { useSession } from "../stores/session";
 import { useNetwork } from "../stores/network";
 import { useDocStatus } from "../stores/docStatus";
-import { clearPending, loadPending, pendingNames } from "./pending";
+import { useUi } from "../stores/ui";
+import { clearPending, loadPending, markPending, pendingNames } from "./pending";
 
 useSession.setState({ user: { id: "u9", email: "", name: "", color: "", personalWorkspaceId: "w" } });
 const tick = () => new Promise((r) => setTimeout(r, 50));
@@ -38,4 +39,21 @@ it("ignores changes that came from the server", async () => {
   await tick();
   expect(pendingNames()).not.toContain("doc:p2");
   closeAll();
+});
+
+it("announces 'All changes synced' only after changes waited to sync", async () => {
+  const synced = () => useUi.getState().toasts.some((t) => t.message === "All changes synced");
+  await markPending("doc:a");
+  await clearPending("doc:a"); // confirmed right away: normal online typing
+  expect(synced()).toBe(false);
+
+  vi.useFakeTimers({ toFake: ["Date"] });
+  await markPending("doc:a");
+  await markPending("doc:b");
+  vi.setSystemTime(Date.now() + 60_000); // a minute offline
+  await clearPending("doc:a");
+  expect(synced()).toBe(false); // doc:b still waiting
+  await clearPending("doc:b");
+  expect(synced()).toBe(true);
+  vi.useRealTimers();
 });

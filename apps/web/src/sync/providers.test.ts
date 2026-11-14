@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, test, vi } from "vitest";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import * as Y from "yjs";
 import { DOC, WS, docDoc, wsDoc, type AuthResponse } from "@syncscribe/shared";
 
@@ -47,8 +47,11 @@ test("edits sync both ways between the Provider Manager and another device", asy
   await whenSynced(mine);
   const other = await helpers.connect(server.port, docDoc(docId), auth.token);
 
+  const { pendingNames } = await import("../services/pending");
   mine.document.getText(DOC.content).insert(0, "from manager ");
+  expect(pendingNames()).toContain(docDoc(docId));
   await helpers.until(() => other.doc.getText(DOC.content).toString().startsWith("from manager "));
+  await helpers.until(() => !pendingNames().includes(docDoc(docId))); // server confirmed it
 
   other.doc.getText(DOC.content).insert(0, "from other ");
   await helpers.until(() => mine.document.getText(DOC.content).toString().startsWith("from other "));
