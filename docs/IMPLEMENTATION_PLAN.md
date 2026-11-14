@@ -161,7 +161,7 @@
 - [x] **7.4** Implement `resolveTree` with orphan-to-root, deterministic cycle breaking and sorting (FP-4.6, EC12, B6).
   - Done when: unit tests cover orphans, a two-folder cycle resolved identically on two docs, and all sort modes.
   - Commit: `feat(web): add deterministic tree resolution`
-- [ ] **7.5** Track local changes as pending in `{uid}:pending` on every non-provider update (D4).
+- [x] **7.5** Track local changes as pending in `{uid}:pending` on every non-provider update (D4).
   - Done when: editing a doc offline creates a pending entry that persists across reload.
   - Commit: `feat(web): track pending local changes`
 - [ ] **7.6** Add the `user:{uid}` prefs doc helpers: pins, recents (max 20), settings (FP-4.5).

@@ -1,6 +1,8 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { useSession } from "../stores/session";
+import { markPending } from "../services/pending";
+import { remoteOrigins } from "../sync/origins";
 
 // The only place Y.Docs are created (FP-8.1). Every doc is persisted to IndexedDB so it opens offline.
 
@@ -25,6 +27,10 @@ export function getDoc(name: string): Promise<Y.Doc> {
   if (!entry) {
     const doc = new Y.Doc();
     const persistence = new IndexeddbPersistence(dbName(name), doc);
+    // Local edits only: not state loaded from disk, not changes received from the server
+    doc.on("update", (_u: Uint8Array, origin: unknown) => {
+      if (origin !== persistence && !(origin && typeof origin === "object" && remoteOrigins.has(origin))) markPending(name);
+    });
     entry = { doc, persistence, ready: persistence.whenSynced.then(() => doc), refs: 0 };
     entries.set(name, entry);
   }
