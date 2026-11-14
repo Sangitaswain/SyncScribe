@@ -30,7 +30,7 @@ export default function MarkdownPreview({ ytext }: { ytext: Y.Text }) {
   const live = useY<string>(ytext) ?? "";
   const text = useDebounced(live, live.length > 300_000 ? 500 : 150); // big docs refresh less often (EC31)
   return (
-    <div className="prose prose-slate dark:prose-invert mx-auto h-full max-w-[760px] overflow-auto px-6 py-3">
+    <div className="prose prose-neutral dark:prose-invert mx-auto h-full max-w-[800px] overflow-auto px-6 pt-2 pb-24 prose-headings:tracking-tight prose-a:text-brand">
       <RawFallback key={text} text={text}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize, rehypeHighlight]}>
           {text}

@@ -5,7 +5,7 @@ import { readingMinutes } from "../lib/text";
 export default function StatusBar() {
   const words = useEditorStats((s) => s.words);
   return (
-    <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-slate-200 px-3 text-xs text-slate-500 dark:border-slate-700">
+    <footer className="flex h-7 shrink-0 items-center gap-4 px-4 text-[11px] text-muted">
       <span>Saved on this device</span>
       {words !== null && (
         <span className="ml-auto">

@@ -6,12 +6,12 @@ const LABELS: Record<SortMode, string> = { manual: "Manual", name: "Name", creat
 /** Sort the tree (B6); the choice is saved in user preferences. */
 export default function SortMenu({ value, onChange }: { value: SortMode; onChange: (m: SortMode) => void }) {
   return (
-    <label className="flex items-center gap-1 text-xs text-slate-500" title="Sort documents">
+    <label className="flex items-center gap-0.5 text-[12px] text-muted" title="Sort documents">
       <ArrowUpDown className="size-3.5" />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as SortMode)}
-        className="rounded bg-transparent py-0.5 text-xs outline-none hover:bg-slate-200 dark:hover:bg-slate-700"
+        className="rounded bg-transparent py-0.5 text-[12px] outline-none hover:bg-hover"
         aria-label="Sort documents"
       >
         {(Object.keys(LABELS) as SortMode[]).map((m) => (

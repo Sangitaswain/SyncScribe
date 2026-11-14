@@ -1,6 +1,22 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Dark mode is toggled with a "dark" class on <html> (C15) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@plugin "@tailwindcss/typography";
+/* Clean, minimal design tokens (AFFiNE-inspired) */
+@theme {
+  --font-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-brand: #1e96eb;
+  --color-brand-dark: #1782cf;
+  --color-ink: #121212;
+  --color-muted: #7a7a7a;
+  --color-line: #e8e8e8;
+  --color-panel: #f6f6f6;
+  --color-hover: rgb(0 0 0 / 0.045);
+  --color-active: rgb(0 0 0 / 0.07);
+}
+
+body {
+  @apply bg-white text-ink antialiased dark:bg-[#141414] dark:text-[#e8e8e8];
+}

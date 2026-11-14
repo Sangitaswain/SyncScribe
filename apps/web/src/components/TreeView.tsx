@@ -39,7 +39,7 @@ function RenameInput({ initial, onDone }: { initial: string; onDone: (value: str
       ref={ref}
       defaultValue={initial}
       aria-label="New name"
-      className="min-w-0 flex-1 rounded border border-indigo-400 bg-white px-1 text-sm outline-none dark:bg-slate-900"
+      className="min-w-0 flex-1 rounded border border-brand bg-white px-1 text-sm outline-none dark:bg-[#141414]"
       onBlur={(e) => onDone(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur();
@@ -61,18 +61,18 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
     setOpen(false);
     fn();
   };
-  const itemClass = "block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700";
+  const itemClass = "block w-full px-3 py-1.5 text-left text-sm hover:bg-hover dark:hover:bg-white/5";
   return (
     <span onClick={stop} className="contents">
       <button
         onClick={() => setOpen(!open)}
-        className="ml-auto shrink-0 rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-slate-300 focus:opacity-100 dark:hover:bg-slate-600"
+        className="ml-auto shrink-0 rounded p-0.5 text-muted opacity-0 group-hover:opacity-100 hover:bg-active focus:opacity-100"
         aria-label={`Actions for ${title}`}
       >
         <MoreHorizontal className="size-4" />
       </button>
       {open && (
-        <div className="absolute top-full right-0 z-40 w-40 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <div className="absolute top-full right-0 z-40 w-40 rounded-lg border border-line bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#222]">
           <button className={itemClass} onClick={act(() => setRenaming(item.id))}>Rename</button>
           <button className={itemClass} onClick={act(() => setMoving(true))}>Move to…</button>
           {item.type === "doc" && (
@@ -144,8 +144,8 @@ function Row({ item, depth, children }: { item: TreeItem; depth: number; childre
 }
 
 const rowClass = (active = false) =>
-  `flex items-center rounded py-1 pr-1 text-sm ${
-    active ? "bg-indigo-100 font-medium text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-100" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"
+  `flex h-8 items-center rounded-md pr-1 text-[14px] transition-colors ${
+    active ? "bg-active font-medium dark:bg-white/10" : "text-ink/90 hover:bg-hover dark:text-white/85 dark:hover:bg-white/5"
   }`;
 
 function Node({ node, depth, activeId }: { node: TreeNode; depth: number; activeId?: string }) {
@@ -160,17 +160,17 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
     return (
       <Link to={`/doc/${item.id}`} className={rowClass(item.id === activeId)} {...dragProps}>
         <Row item={item} depth={depth}>
-          <FileText className="ml-[18px] size-4 shrink-0 text-slate-400" />
+          <FileText className="ml-[18px] size-4 shrink-0 text-muted" />
           {pending && <span className="absolute top-1/2 left-1 size-1.5 -translate-y-1/2 rounded-full bg-amber-500" title="Not synced yet" />}
         </Row>
       </Link>
     );
   return (
-    <div ref={drop.setNodeRef} className={drop.isOver ? "rounded bg-indigo-50 ring-2 ring-indigo-400 dark:bg-indigo-900/30" : ""}>
+    <div ref={drop.setNodeRef} className={drop.isOver ? "rounded-md bg-brand/10 ring-2 ring-brand/50" : ""}>
       <div className={rowClass()} onClick={() => setOpen(!open)} aria-expanded={open} {...dragProps} role="button">
         <Row item={item} depth={depth}>
-          <ChevronRight className={`size-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
-          {open ? <FolderOpen className="size-4 shrink-0 text-amber-500" /> : <Folder className="size-4 shrink-0 text-amber-500" />}
+          <ChevronRight className={`size-3.5 shrink-0 text-muted transition-transform ${open ? "rotate-90" : ""}`} />
+          {open ? <FolderOpen className="size-4 shrink-0 text-muted" /> : <Folder className="size-4 shrink-0 text-muted" />}
         </Row>
       </div>
       {open && children.map((c) => <Node key={c.item.id} node={c} depth={depth + 1} activeId={activeId} />)}
@@ -204,7 +204,7 @@ export default function TreeView({
     nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? ""),
     editedAt: (i) => editedAt[i.id],
   });
-  if (!roots.length) return <p className="px-2 py-1 text-sm text-slate-500">No documents yet</p>;
+  if (!roots.length) return <p className="px-2 py-1 text-[13px] text-muted">No documents yet</p>;
 
   // Drop on a folder = move into it; drop on empty space = move to top level (B5)
   const onDragEnd = ({ active, over }: DragEndEvent) => {
@@ -215,7 +215,7 @@ export default function TreeView({
   return (
     <TreeCtx.Provider value={{ ws, workspaceId, items, renaming, setRenaming }}>
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-        <nav aria-label="Documents" ref={root.setNodeRef} className={`min-h-full pb-8 ${root.isOver ? "rounded bg-slate-100 dark:bg-slate-800" : ""}`}>
+        <nav aria-label="Documents" ref={root.setNodeRef} className={`min-h-full pb-8 ${root.isOver ? "rounded-md bg-hover" : ""}`}>
           {roots.map((n) => (
             <Node key={n.item.id} node={n} depth={0} activeId={docId} />
           ))}

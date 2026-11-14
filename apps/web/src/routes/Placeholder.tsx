@@ -4,9 +4,9 @@ import { useParams } from "react-router";
 export default function Placeholder({ title }: { title: string }) {
   const params = useParams();
   return (
-    <div className="p-8">
-      <h1 className="text-xl font-semibold">{title}</h1>
-      {Object.keys(params).length > 0 && <pre className="mt-2 text-sm text-slate-500">{JSON.stringify(params)}</pre>}
+    <div className="mx-auto max-w-[800px] px-6 pt-10">
+      <h1 className="text-[32px] font-bold tracking-tight">{title}</h1>
+      {Object.keys(params).length > 0 && <pre className="mt-2 text-sm text-muted">{JSON.stringify(params)}</pre>}
     </div>
   );
 }

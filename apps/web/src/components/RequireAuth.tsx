@@ -9,9 +9,9 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   if (status !== "signedOut") return children;
   if (navigator.onLine) return <Navigate to="/login" replace />;
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-      <WifiOff className="size-10 text-slate-400" />
-      <p className="text-lg font-semibold">Connect once to set up SyncScribe</p>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center text-muted">
+      <WifiOff className="size-10 text-muted/60" />
+      <p className="text-lg font-semibold text-ink dark:text-white">Connect once to set up SyncScribe</p>
       <p className="text-sm">Sign in while online on this device. After that, it works offline.</p>
     </div>
   );

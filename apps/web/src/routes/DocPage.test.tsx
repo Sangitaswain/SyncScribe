@@ -6,6 +6,7 @@ import { expect, it } from "vitest";
 import { USER, userDoc } from "@syncscribe/shared";
 import DocPage from "./DocPage";
 import StatusBar from "../components/StatusBar";
+import TopBar from "../components/TopBar";
 import { newDocument } from "../crdt/actions";
 import { getDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
@@ -18,6 +19,7 @@ it("opens a document with title, editor, preview modes and word count", async ()
   const id = await newDocument("w1", null, "# Plan\n\none two three", "Trip plan");
   render(
     <MemoryRouter initialEntries={[`/doc/${id}`]}>
+      <TopBar />
       <Routes>
         <Route path="/doc/:docId" element={<DocPage />} />
       </Routes>

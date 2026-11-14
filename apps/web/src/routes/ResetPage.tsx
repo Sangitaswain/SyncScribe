@@ -25,12 +25,12 @@ export default function ResetPage() {
     <AuthCard title="Choose a new password">
       {done ? (
         <p className="text-sm">
-          Password updated. <Link to="/login" className="text-indigo-600 hover:underline">Sign in</Link>
+          Password updated. <Link to="/login" className="text-brand hover:underline">Sign in</Link>
         </p>
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <input name="password" type="password" placeholder="New password (at least 8 characters)" className={inputClass} />
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {error && <p className="text-[13px] text-rose-600">{error}</p>}
           <button className={buttonClass}>Update password</button>
         </form>
       )}

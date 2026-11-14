@@ -25,11 +25,11 @@ export default function ForgotPage() {
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <input name="email" type="email" required placeholder="Email" className={inputClass} />
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {error && <p className="text-[13px] text-rose-600">{error}</p>}
           <button className={buttonClass}>Send reset link</button>
         </form>
       )}
-      <Link to="/login" className="mt-4 inline-block text-sm text-indigo-600 hover:underline">Back to sign in</Link>
+      <Link to="/login" className="mt-4 inline-block text-sm text-brand hover:underline">Back to sign in</Link>
     </AuthCard>
   );
 }

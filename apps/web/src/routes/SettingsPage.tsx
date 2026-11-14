@@ -4,7 +4,7 @@ import { useSession } from "../stores/session";
 import { api } from "../services/api";
 import { saveSession } from "../services/session";
 import { toast } from "../stores/ui";
-import { inputClass } from "./AuthPage";
+import { inputClass, primaryButton } from "../components/ui";
 
 /** Profile: display name and cursor colour shown to collaborators (A4). */
 export default function SettingsPage() {
@@ -23,9 +23,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg p-6">
-      <h1 className="mb-6 text-xl font-semibold">Settings</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 p-5 dark:border-slate-700">
+    <div className="mx-auto max-w-[640px] px-6 pt-10">
+      <h1 className="mb-8 text-[32px] font-bold tracking-tight">Settings</h1>
+      <form onSubmit={onSubmit} className="flex flex-col gap-4 rounded-2xl border border-line p-6 dark:border-white/10">
         <h2 className="font-semibold">Profile</h2>
         <label className="flex flex-col gap-1 text-sm">
           Name
@@ -40,14 +40,14 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => setColor(c)}
                 aria-label={`Colour ${c}`}
-                className={`size-7 rounded-full ${c === color ? "ring-2 ring-slate-900 ring-offset-2 dark:ring-white" : ""}`}
+                className={`size-7 rounded-full ${c === color ? "ring-2 ring-brand ring-offset-2 dark:ring-offset-[#141414]" : ""}`}
                 style={{ backgroundColor: c }}
               />
             ))}
           </div>
         </div>
-        <p className="text-xs text-slate-500">Email: {user.email}. Changing your profile needs a connection.</p>
-        <button className="self-start rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+        <p className="text-xs text-muted">Email: {user.email}. Changing your profile needs a connection.</p>
+        <button className={`${primaryButton} self-start`}>
           Save
         </button>
       </form>

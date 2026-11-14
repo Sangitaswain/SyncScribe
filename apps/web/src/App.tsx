@@ -5,6 +5,7 @@ import ForgotPage from "./routes/ForgotPage";
 import ResetPage from "./routes/ResetPage";
 import SettingsPage from "./routes/SettingsPage";
 import DocPage from "./routes/DocPage";
+import AllDocsPage from "./routes/AllDocsPage";
 import NotFound from "./routes/NotFound";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
@@ -27,7 +28,7 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route path="/" element={<Placeholder title="Workspace" />} />
+          <Route path="/" element={<AllDocsPage />} />
           <Route path="/doc/:docId" element={<DocPage />} />
           <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />
           <Route path="/trash" element={<Placeholder title="Trash" />} />

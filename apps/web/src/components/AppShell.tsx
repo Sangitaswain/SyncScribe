@@ -1,29 +1,32 @@
-import { Outlet } from "react-router";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router";
 import TopBar from "./TopBar";
 import StatusBar from "./StatusBar";
 import Toaster from "./Toaster";
 import ReauthModal from "./ReauthModal";
 import Sidebar from "./Sidebar";
-import { useUi } from "../stores/ui";
+import { isDesktop, useUi } from "../stores/ui";
 
-/** Sidebar + top bar + main area + status bar (FP-7). */
+/** Sidebar + page header + main area + status bar (FP-7). */
 export default function AppShell() {
   const sidebarOpen = useUi((s) => s.sidebarOpen);
-  const setSidebarOpen = (open: boolean) => useUi.setState({ sidebarOpen: open });
+  const close = () => useUi.setState({ sidebarOpen: false });
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (!isDesktop()) close(); // on phones, navigating hides the sidebar
+  }, [pathname]);
+
   return (
-    <div className="flex h-dvh bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div className="flex h-dvh">
+      {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/20 md:hidden" onClick={close} />}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-20 bg-black/30 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <aside className="fixed inset-y-0 left-0 z-30 w-[248px] shrink-0 border-r border-line bg-panel md:static dark:border-white/10 dark:bg-[#1c1c1c]">
+          <Sidebar />
+        </aside>
       )}
-      <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 shrink-0 border-r border-slate-200 bg-slate-50 p-3 transition-transform md:static md:translate-x-0 dark:border-slate-700 dark:bg-slate-800 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <Sidebar />
-      </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar onMenu={() => setSidebarOpen(!sidebarOpen)} />
+        <TopBar />
         <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>

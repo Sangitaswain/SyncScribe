@@ -8,9 +8,10 @@ import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type * as Y from "yjs";
 
 const theme = EditorView.theme({
-  "&": { height: "100%", fontSize: "15px" },
-  ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", lineHeight: "1.6" },
-  ".cm-content": { padding: "12px 0 24px", maxWidth: "760px", margin: "0 auto" },
+  "&": { height: "100%", fontSize: "16px" },
+  ".cm-scroller": { fontFamily: "var(--font-sans)", lineHeight: "1.75" },
+  ".cm-content": { padding: "8px 0 96px", maxWidth: "752px", margin: "0 auto" },
+  ".cm-placeholder": { color: "rgb(0 0 0 / 0.25)" },
   "&.cm-focused": { outline: "none" },
 });
 

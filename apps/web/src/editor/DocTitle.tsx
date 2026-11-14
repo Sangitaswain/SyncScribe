@@ -18,7 +18,7 @@ export default function DocTitle({ doc, readOnly = false }: { doc: Y.Doc; readOn
       aria-label="Document title"
       readOnly={readOnly}
       autoFocus={isNew}
-      className="mx-auto block w-full max-w-[760px] bg-transparent px-6 pt-8 text-3xl font-bold outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
+      className="mx-auto block w-full max-w-[800px] bg-transparent px-6 pt-14 pb-2 text-[40px] leading-tight font-bold tracking-tight outline-none placeholder:text-black/20 dark:placeholder:text-white/20"
     />
   );
 }

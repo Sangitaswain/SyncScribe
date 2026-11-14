@@ -1,36 +1,51 @@
-import { LogOut, Menu, NotebookPen } from "lucide-react";
-import { Link } from "react-router";
+import { PanelLeft } from "lucide-react";
+import { useMatch } from "react-router";
+import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
-import { clearSession } from "../services/session";
+import { useDocTitle } from "../crdt/titles";
+import { setSetting, usePrefs } from "../crdt/prefs";
+import ModeSwitch from "../editor/ModeSwitch";
 
-export default function TopBar({ onMenu }: { onMenu: () => void }) {
-  const user = useSession((s) => s.user);
+const PAGE_TITLES: Record<string, string> = { "/": "All docs", "/trash": "Trash", "/shared": "Shared with me", "/search": "Search", "/settings": "Settings" };
+
+function DocCrumb({ id }: { id: string }) {
+  return <>{useDocTitle(id) || "Untitled"}</>;
+}
+
+/** Page header: sidebar toggle, where you are, and page actions (view mode on documents). */
+export default function TopBar() {
+  const sidebarOpen = useUi((s) => s.sidebarOpen);
+  const docMatch = useMatch("/doc/:docId");
+  const page = useMatch("/:page")?.pathname ?? "/";
+  const ws = useSession((s) => s.workspaces.find((w) => w.id === s.activeWorkspaceId));
+  const { doc: prefs, settings } = usePrefs();
+  const docId = docMatch?.params.docId;
+
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-slate-200 px-3 dark:border-slate-700">
-      <button onClick={onMenu} className="rounded p-1 hover:bg-slate-100 md:hidden dark:hover:bg-slate-800" aria-label="Toggle sidebar">
-        <Menu className="size-5" />
+    <header className="flex h-12 shrink-0 items-center gap-2 px-3">
+      <button
+        onClick={() => useUi.setState({ sidebarOpen: !sidebarOpen })}
+        className={`rounded-md p-1.5 text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 ${sidebarOpen ? "md:hidden" : ""}`}
+        aria-label="Toggle sidebar"
+        title="Toggle sidebar"
+      >
+        <PanelLeft className="size-[18px]" />
       </button>
-      <Link to="/" className="flex items-center gap-2 font-semibold">
-        <NotebookPen className="size-5 text-indigo-600" /> SyncScribe
-      </Link>
-      <div className="ml-auto flex items-center gap-2">
-        {/* sync status, presence, share, notifications go here */}
-        {user && (
+      <nav className="flex min-w-0 items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+        {docId ? (
           <>
-            <Link
-              to="/settings"
-              className="flex size-7 items-center justify-center rounded-full text-xs font-semibold text-white"
-              style={{ backgroundColor: user.color }}
-              title={`${user.name} — Settings`}
-            >
-              {user.name.slice(0, 1).toUpperCase()}
-            </Link>
-            {/* Simple sign-out for now; the safe sign-out dialog comes in 13.10 */}
-            <button onClick={clearSession} className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Sign out" title="Sign out">
-              <LogOut className="size-4" />
-            </button>
+            <span className="hidden shrink-0 text-muted sm:inline">{ws?.name}</span>
+            <span className="hidden text-muted/60 sm:inline">/</span>
+            <span className="truncate font-medium">
+              <DocCrumb id={docId} />
+            </span>
           </>
+        ) : (
+          <span className="font-medium">{PAGE_TITLES[page] ?? ""}</span>
         )}
+      </nav>
+      <div className="ml-auto flex items-center gap-2">
+        {docId && <ModeSwitch value={settings.editorMode ?? "edit"} onChange={(m) => prefs && setSetting(prefs, "editorMode", m)} />}
       </div>
     </header>
   );

@@ -24,9 +24,9 @@ export default function ReauthModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-3 rounded-xl bg-white p-6 shadow-xl dark:bg-slate-800">
+      <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-3 rounded-2xl bg-white p-6 shadow-xl dark:bg-[#1c1c1c]">
         <h2 className="text-lg font-semibold">Please sign in again</h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted">
           Your session expired. Everything is still saved on this device and will sync after you sign in.
         </p>
         <input value={user.email} readOnly className={`${inputClass} opacity-70`} />
