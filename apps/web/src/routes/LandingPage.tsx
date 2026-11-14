@@ -1,388 +1,447 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Check, CloudOff, FileText, GitMerge, HardDrive, NotebookPen, RefreshCw, Users, Wifi, WifiOff } from "lucide-react";
+import { Check, ChevronRight, HardDrive, RefreshCw, WifiOff } from "lucide-react";
 import { useSession } from "../stores/session";
-import { primaryButton } from "../components/ui";
 
-// Public landing page: one long scroll (nav, hero, tech strip, features, how it works, FAQ, CTA, footer).
+// Public landing page in a clean, product-page style: big type, white space and scroll-driven motion.
 
-/** Fades a block up when it scrolls into view (skipped for reduced-motion users via CSS). */
-function Reveal({ children, className = "" }: { children: ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+const FONT: CSSProperties = {
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Variable", "Helvetica Neue", sans-serif',
+};
+const clamp = (v: number) => Math.min(1, Math.max(0, v));
+const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * 0 → 1 progress of an element through the viewport.
+ * "view": from its top entering the bottom of the screen until its top reaches `endAt` of the screen height.
+ * "sticky": across a tall section whose content is pinned (0 at its top, 1 at its bottom).
+ */
+function useScrollProgress(ref: RefObject<HTMLElement | null>, mode: "view" | "sticky" = "view", endAt = 0.35) {
+  const [p, setP] = useState(reducedMotion() ? 1 : 0);
   useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return setShown(true);
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && (setShown(true), io.disconnect()), { threshold: 0.15 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    if (reducedMotion()) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      setP(mode === "sticky" ? clamp(-r.top / Math.max(1, r.height - vh)) : clamp((vh - r.top) / (vh * (1 - endAt))));
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(update));
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [ref, mode, endAt]);
+  return p;
+}
+
+/** Fades and lifts its children in as they scroll into view. */
+function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, "view", 0.75);
+  const t = clamp(p * 1.4 - delay);
   return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ease-out motion-reduce:transition-none ${shown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"} ${className}`}
-    >
+    <div ref={ref} className={className} style={{ opacity: t, transform: `translateY(${(1 - t) * 40}px)` }}>
       {children}
     </div>
   );
 }
 
-const secondaryButton =
-  "rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium transition hover:bg-hover dark:border-white/10 dark:bg-transparent";
+const blueButton = "inline-flex items-center rounded-full bg-[#0071e3] px-6 py-3 text-[17px] font-normal text-white transition hover:bg-[#0077ed]";
+const blueLink = "inline-flex items-center text-[17px] text-[#0066cc] hover:underline";
 
-/** Window frame used for the product mock-ups. */
-function Frame({ children, className = "" }: { children: ReactNode; className?: string }) {
+/* ───────────── Product mock-ups (our own app, drawn in HTML) ───────────── */
+
+function Window({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`overflow-hidden rounded-2xl border border-line bg-white shadow-[0_20px_60px_rgb(0_0_0/0.08)] dark:border-white/10 dark:bg-[#1c1c1c] ${className}`}>
-      <div className="flex items-center gap-1.5 border-b border-line px-4 py-2.5 dark:border-white/10">
-        <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-        <span className="size-2.5 rounded-full bg-[#febc2e]" />
-        <span className="size-2.5 rounded-full bg-[#28c840]" />
+    <div className={`overflow-hidden rounded-[22px] border border-black/[0.06] bg-white shadow-[0_30px_80px_-20px_rgb(0_0_0/0.25)] ${className}`}>
+      <div className="flex items-center gap-2 border-b border-black/[0.05] bg-[#fbfbfd] px-4 py-3">
+        <span className="size-3 rounded-full bg-[#ff5f57]" />
+        <span className="size-3 rounded-full bg-[#febc2e]" />
+        <span className="size-3 rounded-full bg-[#28c840]" />
       </div>
       {children}
     </div>
   );
 }
 
-const Line = ({ w, strong = false }: { w: string; strong?: boolean }) => (
-  <div className={`h-2.5 rounded-full ${strong ? "bg-black/15 dark:bg-white/20" : "bg-black/[0.07] dark:bg-white/10"}`} style={{ width: w }} />
-);
-
-/** Two-person cursor shown in the mock editor. */
 const Cursor = ({ name, color }: { name: string; color: string }) => (
-  <span className="relative inline-block h-4 w-0.5 translate-y-0.5 align-middle" style={{ backgroundColor: color }}>
-    <span className="absolute -top-5 left-0 rounded px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-white" style={{ backgroundColor: color }}>
+  <span className="relative mx-0.5 inline-block h-[1.1em] w-[2px] translate-y-[0.15em]" style={{ backgroundColor: color }}>
+    <span className="absolute -top-6 left-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap text-white" style={{ backgroundColor: color }}>
       {name}
     </span>
   </span>
 );
 
-/** Hero mock-up: the SyncScribe app with a sidebar and two people editing. */
 function AppMock() {
   return (
-    <Frame>
-      <div className="flex h-[340px] text-left sm:h-[420px]">
-        <div className="hidden w-48 shrink-0 flex-col gap-2 border-r border-line bg-panel p-3 sm:flex dark:border-white/10 dark:bg-white/5">
-          <div className="mb-2 flex items-center gap-2 text-xs font-medium">
-            <span className="flex size-5 items-center justify-center rounded bg-brand text-[10px] text-white">G</span> Group project
-          </div>
-          {["All docs", "Recent", "Organize"].map((t) => (
-            <span key={t} className="text-[11px] text-muted">{t}</span>
+    <Window>
+      <div className="flex h-[360px] text-left sm:h-[520px]">
+        <aside className="hidden w-56 shrink-0 flex-col gap-1 border-r border-black/[0.05] bg-[#f5f5f7] p-4 text-[13px] sm:flex">
+          <p className="mb-3 font-semibold">Group project</p>
+          {["All docs", "Recent"].map((t) => (
+            <span key={t} className="rounded-md px-2 py-1 text-[#6e6e73]">{t}</span>
           ))}
+          <p className="mt-4 mb-1 px-2 text-[11px] text-[#86868b]">Organize</p>
           {["Introduction", "Research notes", "Final report"].map((t, i) => (
-            <span key={t} className={`flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs ${i === 2 ? "bg-active font-medium" : ""}`}>
-              <FileText className="size-3 text-muted" /> {t}
-            </span>
+            <span key={t} className={`rounded-md px-2 py-1 ${i === 2 ? "bg-black/[0.06] font-medium" : "text-[#1d1d1f]"}`}>{t}</span>
           ))}
-        </div>
-        <div className="flex-1 px-6 py-8 sm:px-12">
-          <div className="mb-1 flex items-center justify-between">
-            <p className="text-2xl font-bold tracking-tight sm:text-3xl">Final report</p>
-            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        </aside>
+        <div className="flex-1 px-8 py-10 sm:px-16 sm:py-14">
+          <div className="flex items-start justify-between gap-4">
+            <p className="text-[28px] font-semibold tracking-tight sm:text-[40px]">Final report</p>
+            <span className="mt-2 flex shrink-0 items-center gap-1 rounded-full bg-[#e8f8ee] px-2.5 py-1 text-[12px] font-medium text-[#1d8f4e]">
               <Check className="size-3" /> Synced
             </span>
           </div>
-          <p className="mb-6 text-xs text-muted">Edited by Priya and Ali · just now</p>
-          <p className="mb-3 text-sm font-semibold">## Introduction</p>
-          <p className="mb-5 text-sm leading-7 text-ink/80 dark:text-white/80">
-            Local-first apps keep working without the internet <Cursor name="Priya" color="#e11d48" /> and merge everyone's edits when
-            devices reconnect <Cursor name="Ali" color="#2563eb" />
+          <p className="mt-1 mb-8 text-[13px] text-[#86868b]">Edited by Priya and Ali · just now</p>
+          <p className="text-[15px] leading-8 text-[#1d1d1f] sm:text-[17px]">
+            Local-first software keeps working without the internet
+            <Cursor name="Priya" color="#ff375f" /> and quietly merges everyone's edits when devices reconnect.
+            <Cursor name="Ali" color="#0a84ff" />
           </p>
-          <div className="flex flex-col gap-2.5">
-            <Line w="92%" />
-            <Line w="78%" />
-            <Line w="85%" />
-            <Line w="40%" />
+          <div className="mt-8 flex flex-col gap-3">
+            {["94%", "86%", "90%", "52%"].map((w) => (
+              <div key={w} className="h-2.5 rounded-full bg-black/[0.06]" style={{ width: w }} />
+            ))}
           </div>
         </div>
       </div>
-    </Frame>
+    </Window>
   );
 }
 
-const TECH = ["Yjs CRDTs", "IndexedDB", "Service Workers", "React", "CodeMirror", "Hocuspocus", "SQLite", "Markdown", "PWA"];
+/* ───────────── Sections ───────────── */
 
-/** Endless strip of the technologies SyncScribe is built on. */
-function TechStrip() {
+/** Hero: headline, then the app window tilting up and settling as you scroll. */
+function Hero({ cta }: { cta: { to: string; label: string } }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, "view", 0.15);
+  const t = clamp((p - 0.45) / 0.55); // starts tilted, flattens while scrolling
   return (
-    <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_15%,black_85%,transparent)]">
-      <div className="flex w-max animate-[marquee_30s_linear_infinite] gap-3 motion-reduce:animate-none">
-        {[...TECH, ...TECH].map((t, i) => (
-          <span key={i} className="rounded-full border border-line px-4 py-1.5 text-sm whitespace-nowrap text-muted dark:border-white/10">
-            {t}
-          </span>
-        ))}
+    <section className="overflow-hidden px-6 pt-20 pb-10 text-center md:pt-28">
+      <p className="text-[21px] font-semibold text-[#1d1d1f] md:text-[24px]">SyncScribe</p>
+      <h1 className="mx-auto mt-2 max-w-[980px] text-[48px] leading-[1.05] font-semibold tracking-[-0.025em] md:text-[96px]">
+        Write anywhere.
+        <br />
+        <span className="bg-gradient-to-r from-[#0071e3] via-[#5e5ce6] to-[#bf5af2] bg-clip-text text-transparent">Sync everywhere.</span>
+      </h1>
+      <p className="mx-auto mt-6 max-w-[640px] text-[21px] leading-snug text-[#6e6e73] md:text-[28px]">
+        A markdown workspace that works offline and merges your team's edits on its own.
+      </p>
+      <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+        <Link to={cta.to} className={blueButton}>{cta.label}</Link>
+        <a href="#how" className={blueLink}>
+          See how it works <ChevronRight className="size-4" />
+        </a>
       </div>
-    </div>
-  );
-}
-
-/** Mock for "Write": markdown on the left, preview on the right. */
-function WriteMock() {
-  return (
-    <Frame>
-      <div className="grid grid-cols-2 divide-x divide-line text-left dark:divide-white/10">
-        <pre className="p-5 font-mono text-[12px] leading-6 text-muted">{`# Meeting notes\n\n- [x] Pick a topic\n- [ ] Draft outline\n\n**Due:** Friday`}</pre>
-        <div className="p-5 text-[13px] leading-6">
-          <p className="mb-2 text-lg font-bold">Meeting notes</p>
-          <p>☑ Pick a topic</p>
-          <p>☐ Draft outline</p>
-          <p className="mt-2"><b>Due:</b> Friday</p>
+      <div ref={ref} className="mx-auto mt-16 max-w-[1100px] [perspective:1600px] md:mt-24">
+        <div
+          style={{
+            transform: `rotateX(${(1 - t) * 22}deg) scale(${0.88 + t * 0.12}) translateY(${(1 - t) * 40}px)`,
+            transformOrigin: "center top",
+          }}
+        >
+          <AppMock />
         </div>
       </div>
-    </Frame>
+    </section>
   );
 }
 
-/** Mock for "Offline": status badges going offline → syncing → synced. */
-function OfflineMock() {
-  const states = [
-    { icon: WifiOff, text: "Offline — changes saved on this device", cls: "bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200" },
-    { icon: RefreshCw, text: "Back online — syncing 3 changes…", cls: "bg-sky-50 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200" },
-    { icon: Check, text: "All changes synced", cls: "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200" },
-  ];
+/** A large paragraph whose words light up one by one as you scroll. */
+function Statement() {
+  const ref = useRef<HTMLDivElement>(null);
+  const p = useScrollProgress(ref, "view", 0.2);
+  const words =
+    "Your writing lives on your device first. No spinners. No lost work. No “reconnecting…”. When the Wi-Fi comes back, everything syncs quietly — and every edit from every teammate fits together.".split(
+      " ",
+    );
   return (
-    <Frame>
-      <div className="flex flex-col gap-3 p-6 text-left">
-        {states.map(({ icon: Icon, text, cls }) => (
-          <div key={text} className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${cls}`}>
-            <Icon className="size-4" /> {text}
-          </div>
-        ))}
+    <section className="px-6 py-32 md:py-48">
+      <div ref={ref} className="mx-auto max-w-[980px]">
+        <p className="text-[32px] leading-[1.15] font-semibold tracking-[-0.02em] md:text-[56px]">
+          {words.map((w, i) => (
+            <span key={i} className="transition-colors duration-300" style={{ color: p * 1.25 > i / words.length ? "#1d1d1f" : "#d2d2d7" }}>
+              {w}{" "}
+            </span>
+          ))}
+        </p>
       </div>
-    </Frame>
-  );
-}
-
-/** Mock for "Merge": two offline versions becoming one. */
-function MergeMock() {
-  const Card = ({ who, color, text }: { who: string; color: string; text: string }) => (
-    <div className="rounded-xl border border-line p-3 text-left text-[13px] dark:border-white/10">
-      <p className="mb-1 text-[11px] font-medium" style={{ color }}>{who} · offline</p>
-      <p>{text}</p>
-    </div>
-  );
-  return (
-    <Frame>
-      <div className="flex flex-col gap-3 p-6">
-        <div className="grid grid-cols-2 gap-3">
-          <Card who="Priya" color="#e11d48" text="Rewrote the introduction" />
-          <Card who="Ali" color="#2563eb" text="Added a conclusion" />
-        </div>
-        <GitMerge className="mx-auto size-5 rotate-180 text-muted" />
-        <div className="rounded-xl bg-emerald-50 p-3 text-left text-[13px] dark:bg-emerald-500/10">
-          <p className="mb-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">Merged automatically</p>
-          <p>New introduction + new conclusion — nothing lost, no conflict dialog.</p>
-        </div>
-      </div>
-    </Frame>
-  );
-}
-
-function Feature({ label, title, accent, text, visual, flip = false }: { label: string; title: string; accent: string; text: string; visual: ReactNode; flip?: boolean }) {
-  return (
-    <Reveal className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
-      <div className={flip ? "md:order-2" : ""}>
-        <p className="mb-3 text-sm font-medium text-brand">{label}</p>
-        <h3 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-          {title} <span className="text-brand">{accent}</span>
-        </h3>
-        <p className="text-lg leading-relaxed text-muted">{text}</p>
-      </div>
-      <div className={flip ? "md:order-1" : ""}>{visual}</div>
-    </Reveal>
+    </section>
   );
 }
 
 const STEPS = [
-  { icon: NotebookPen, title: "You type", text: "Every keystroke becomes a small change in your document." },
-  { icon: HardDrive, title: "Saved on your device", text: "Changes are stored in your browser instantly — no Save button, no waiting." },
-  { icon: Users, title: "Synced & merged", text: "When online, changes flow to your team and merge automatically with theirs." },
+  { title: "Type.", text: "Every keystroke becomes a small change to your document. No Save button." },
+  { title: "Saved on your device.", text: "Changes land in your browser's storage instantly — online or not." },
+  { title: "Synced and merged.", text: "When you're online, changes flow to your team and fit together with theirs." },
 ];
+
+function StepVisual({ step }: { step: number }) {
+  const panel = (i: number, content: ReactNode) => (
+    <div className="absolute inset-0 flex items-center justify-center transition-all duration-700" style={{ opacity: step === i ? 1 : 0, transform: `scale(${step === i ? 1 : 0.94})` }}>
+      {content}
+    </div>
+  );
+  return (
+    <div className="relative aspect-square w-full max-w-[520px] rounded-[32px] bg-[#f5f5f7]">
+      {panel(
+        0,
+        <div className="w-4/5 rounded-2xl bg-white p-7 text-left shadow-sm">
+          <p className="mb-3 text-[13px] text-[#86868b]">Meeting notes</p>
+          <p className="text-[20px] leading-relaxed font-medium">
+            Ship the outline by Friday<span className="ml-0.5 inline-block h-6 w-[2px] animate-pulse bg-[#0071e3] align-middle" />
+          </p>
+        </div>,
+      )}
+      {panel(
+        1,
+        <div className="flex flex-col items-center gap-5 text-center">
+          <span className="flex size-24 items-center justify-center rounded-[28px] bg-white shadow-sm">
+            <HardDrive className="size-10 text-[#0071e3]" strokeWidth={1.5} />
+          </span>
+          <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[15px] shadow-sm">
+            <WifiOff className="size-4 text-[#ff9f0a]" /> Offline — saved on this device
+          </span>
+        </div>,
+      )}
+      {panel(
+        2,
+        <div className="flex w-4/5 flex-col gap-3">
+          {[
+            ["Priya", "#ff375f", "Rewrote the introduction"],
+            ["Ali", "#0a84ff", "Added a conclusion"],
+          ].map(([who, color, what]) => (
+            <div key={who} className="rounded-2xl bg-white px-5 py-4 text-left text-[15px] shadow-sm">
+              <span className="font-semibold" style={{ color }}>{who}</span> · {what}
+            </div>
+          ))}
+          <div className="flex items-center justify-center gap-2 rounded-2xl bg-[#e8f8ee] px-5 py-4 text-[15px] font-medium text-[#1d8f4e]">
+            <RefreshCw className="size-4" /> Merged — nothing lost
+          </div>
+        </div>,
+      )}
+    </div>
+  );
+}
+
+/** Pinned section: steps on the left change as you scroll, the picture on the right follows. */
+function HowItWorks() {
+  const ref = useRef<HTMLElement>(null);
+  const p = useScrollProgress(ref, "sticky");
+  const step = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length));
+  return (
+    <section id="how" ref={ref} className="relative h-[300vh] scroll-mt-12 bg-white">
+      <div className="sticky top-0 flex h-dvh items-center px-6">
+        <div className="mx-auto grid w-full max-w-[1100px] items-center gap-12 md:grid-cols-2">
+          <div>
+            <p className="mb-6 text-[17px] font-semibold text-[#6e6e73]">How it works</p>
+            <div className="flex flex-col gap-8">
+              {STEPS.map((s, i) => (
+                <div key={s.title} className="transition-opacity duration-500" style={{ opacity: i === step ? 1 : 0.25 }}>
+                  <h3 className="text-[32px] leading-tight font-semibold tracking-[-0.02em] md:text-[48px]">{s.title}</h3>
+                  <p className="mt-2 max-w-[440px] text-[17px] leading-relaxed text-[#6e6e73] md:text-[19px]">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hidden justify-center md:flex">
+            <StepVisual step={step} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Tile({ className = "", children, delay = 0 }: { className?: string; children: ReactNode; delay?: number }) {
+  return (
+    <Reveal delay={delay} className={`overflow-hidden rounded-[28px] bg-white p-8 md:p-10 ${className}`}>
+      {children}
+    </Reveal>
+  );
+}
+
+const TileTitle = ({ eyebrow, children }: { eyebrow: string; children: ReactNode }) => (
+  <>
+    <p className="text-[15px] font-semibold text-[#6e6e73]">{eyebrow}</p>
+    <h3 className="mt-2 text-[28px] leading-tight font-semibold tracking-[-0.02em] md:text-[40px]">{children}</h3>
+  </>
+);
+
+/** Bento grid of features on a light grey background. */
+function Features() {
+  return (
+    <section id="features" className="scroll-mt-12 bg-[#f5f5f7] px-6 py-28 md:py-36">
+      <div className="mx-auto max-w-[1100px]">
+        <Reveal>
+          <h2 className="mb-14 text-center text-[40px] leading-tight font-semibold tracking-[-0.025em] md:text-[64px]">Everything you need.<br />Nothing you don't.</h2>
+        </Reveal>
+        <div className="grid gap-5 md:grid-cols-3">
+          <Tile className="md:col-span-2">
+            <TileTitle eyebrow="Offline">Works with no signal.<br />At all.</TileTitle>
+            <div className="mt-10 flex flex-wrap gap-3">
+              {[
+                ["Offline — saved on this device", "bg-[#fff4e5] text-[#a35a00]"],
+                ["Syncing 3 changes…", "bg-[#e8f2ff] text-[#0058b0]"],
+                ["All changes synced", "bg-[#e8f8ee] text-[#1d8f4e]"],
+              ].map(([t, c]) => (
+                <span key={t} className={`rounded-full px-4 py-2 text-[15px] font-medium ${c}`}>{t}</span>
+              ))}
+            </div>
+          </Tile>
+          <Tile delay={0.1} className="flex flex-col justify-between">
+            <TileTitle eyebrow="Price">Free.</TileTitle>
+            <p className="mt-10 text-[88px] leading-none font-semibold tracking-tight text-[#1d1d1f]">$0</p>
+          </Tile>
+          <Tile>
+            <TileTitle eyebrow="Together">Live cursors.</TileTitle>
+            <p className="mt-8 text-[19px] leading-9">
+              See who's<Cursor name="Ali" color="#0a84ff" /> writing where<Cursor name="Priya" color="#ff375f" />
+            </p>
+          </Tile>
+          <Tile delay={0.1}>
+            <TileTitle eyebrow="Markdown">Write fast.<br />Read beautifully.</TileTitle>
+            <pre className="mt-8 font-mono text-[14px] leading-7 text-[#6e6e73]">{"# Notes\n- [x] Outline\n**Due:** Friday"}</pre>
+          </Tile>
+          <Tile delay={0.2}>
+            <TileTitle eyebrow="History">Every version, kept.</TileTitle>
+            <div className="mt-8 flex flex-col gap-2 text-[15px] text-[#6e6e73]">
+              {["Today, 10:42 — Priya", "Today, 09:15 — Ali", "Yesterday — Submitted draft"].map((v) => (
+                <span key={v} className="border-b border-black/[0.06] pb-2">{v}</span>
+              ))}
+            </div>
+          </Tile>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Dark band with a large gradient statement. */
+function ZeroConflicts() {
+  return (
+    <section className="bg-black px-6 py-36 text-center md:py-52">
+      <Reveal>
+        <p className="text-[21px] font-semibold text-[#86868b]">Powered by CRDTs</p>
+        <h2 className="mt-4 bg-gradient-to-b from-white to-[#6e6e73] bg-clip-text text-[64px] leading-none font-semibold tracking-[-0.03em] text-transparent md:text-[140px]">
+          Zero conflicts.
+        </h2>
+        <p className="mx-auto mt-8 max-w-[620px] text-[19px] leading-relaxed text-[#a1a1a6] md:text-[24px]">
+          Two people edit the same paragraph on a plane. They land, reconnect, and both see the same document. Nobody is asked to choose.
+        </p>
+      </Reveal>
+    </section>
+  );
+}
 
 const FAQ = [
-  { q: "Does it really work without internet?", a: "Yes. After your first visit the whole app is stored on your device. You can create, edit, organise and search documents with no connection at all." },
-  { q: "What happens if two people edit the same paragraph offline?", a: "Both sets of changes are kept. SyncScribe uses CRDTs, so every device ends up with exactly the same document — without asking anyone to pick a version." },
-  { q: "Where is my data stored?", a: "First on your own device (IndexedDB). A copy is kept on the sync server so your teammates and your other devices can receive your changes." },
-  { q: "How much does it cost?", a: "Nothing. SyncScribe is a university project built entirely with free and open-source tools." },
+  ["Does it really work without internet?", "Yes. After your first visit the whole app is stored on your device. You can create, edit, organise and search with no connection."],
+  ["What if two people edit the same paragraph offline?", "Both changes are kept. Every device ends up with exactly the same document, without a conflict dialog."],
+  ["Where is my data stored?", "On your device first. A copy is kept on the sync server so your teammates and other devices receive your changes."],
+  ["How much does it cost?", "Nothing. SyncScribe is a university project built with free and open-source tools."],
 ];
 
-const CHIPS = ["Lecture notes", "Group reports", "Meeting notes", "Team wiki", "Research logs", "To-do lists"];
+function Faq() {
+  return (
+    <section id="faq" className="scroll-mt-12 px-6 py-28 md:py-36">
+      <div className="mx-auto max-w-[760px]">
+        <Reveal>
+          <h2 className="mb-12 text-center text-[40px] font-semibold tracking-[-0.025em] md:text-[56px]">Questions? Answers.</h2>
+        </Reveal>
+        <div className="border-t border-[#d2d2d7]">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group border-b border-[#d2d2d7] py-6">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-[19px] font-semibold md:text-[21px]">
+                {q}
+                <span className="ml-6 text-[28px] leading-none font-light text-[#86868b] transition-transform duration-300 group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 pr-10 text-[17px] leading-relaxed text-[#6e6e73]">{a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage() {
   const signedIn = useSession((s) => s.status === "signedIn");
-  const cta = signedIn ? { to: "/", label: "Open SyncScribe" } : { to: "/signup", label: "Get started — it's free" };
+  const cta = signedIn ? { to: "/", label: "Open SyncScribe" } : { to: "/signup", label: "Get started" };
 
   return (
-    <div className="min-h-dvh bg-white text-ink dark:bg-[#141414] dark:text-[#e8e8e8]">
-      <style>{`@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
-
+    <div style={FONT} className="min-h-dvh bg-white text-[#1d1d1f] antialiased">
       {/* Navigation */}
-      <header className="sticky top-0 z-40 border-b border-transparent bg-white/80 backdrop-blur-md dark:bg-[#141414]/80">
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-8 px-6">
-          <Link to="/welcome" className="flex items-center gap-2 font-semibold">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-brand text-white">
-              <NotebookPen className="size-4" />
-            </span>
-            SyncScribe
-          </Link>
-          <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
-            <a href="#features" className="hover:text-ink dark:hover:text-white">Features</a>
-            <a href="#how" className="hover:text-ink dark:hover:text-white">How it works</a>
-            <a href="#faq" className="hover:text-ink dark:hover:text-white">FAQ</a>
+      <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-white/70 backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-6 text-[13px]">
+          <Link to="/welcome" className="font-semibold tracking-tight">SyncScribe</Link>
+          <nav className="hidden items-center gap-8 text-[#1d1d1f]/80 md:flex">
+            <a href="#features" className="hover:text-[#1d1d1f]">Features</a>
+            <a href="#how" className="hover:text-[#1d1d1f]">How it works</a>
+            <a href="#faq" className="hover:text-[#1d1d1f]">FAQ</a>
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            {!signedIn && (
-              <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-hover dark:hover:bg-white/5">
-                Sign in
-              </Link>
-            )}
-            <Link to={cta.to} className={primaryButton}>
-              {signedIn ? "Open app" : "Get started"}
+          <div className="flex items-center gap-4">
+            {!signedIn && <Link to="/login" className="text-[#1d1d1f]/80 hover:text-[#1d1d1f]">Sign in</Link>}
+            <Link to={cta.to} className="rounded-full bg-[#0071e3] px-3.5 py-1 text-white hover:bg-[#0077ed]">
+              {signedIn ? "Open" : "Get started"}
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-20 text-center md:pt-24">
+      <Hero cta={cta} />
+      <Statement />
+      <HowItWorks />
+      <Features />
+      <ZeroConflicts />
+      <Faq />
+
+      {/* Closing call to action */}
+      <section className="px-6 pb-32 text-center">
         <Reveal>
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line px-3 py-1 text-[13px] text-muted dark:border-white/10">
-            <CloudOff className="size-3.5 text-brand" /> Local-first · Works offline
-          </span>
-          <h1 className="mx-auto max-w-[820px] text-[44px] leading-[1.05] font-bold tracking-tight md:text-[72px]">
-            Write together, <span className="text-brand">even offline.</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-[620px] text-lg leading-relaxed text-muted md:text-xl">
-            SyncScribe is a markdown workspace that saves everything on your device first and merges your team's edits
-            automatically when you reconnect.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to={cta.to} className={`${primaryButton} flex items-center gap-1.5 px-5 py-2.5`}>
-              {cta.label} <ArrowRight className="size-4" />
-            </Link>
-            <a href="#how" className={`${secondaryButton} px-5 py-2.5`}>See how it works</a>
+          <h2 className="text-[40px] leading-tight font-semibold tracking-[-0.025em] md:text-[72px]">Start writing today.</h2>
+          <p className="mx-auto mt-4 max-w-[520px] text-[21px] text-[#6e6e73]">Free account. Ready in seconds. Connection optional.</p>
+          <div className="mt-8">
+            <Link to={cta.to} className={blueButton}>{cta.label}</Link>
           </div>
-        </Reveal>
-        <Reveal className="mx-auto mt-16 max-w-[1000px]">
-          <AppMock />
-        </Reveal>
-      </section>
-
-      {/* Built-on strip */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-24">
-        <p className="mb-6 text-center text-sm text-muted">Built on proven, open-source local-first technology</p>
-        <TechStrip />
-      </section>
-
-      {/* One workspace */}
-      <section className="bg-panel py-24 dark:bg-white/[0.03]">
-        <Reveal className="mx-auto max-w-[900px] px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">One calm place for everything you write</h2>
-          <p className="mx-auto mt-5 max-w-[600px] text-lg text-muted">Folders, search, version history and sharing — all working with or without a connection.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-2">
-            {CHIPS.map((c) => (
-              <span key={c} className="rounded-full bg-white px-4 py-2 text-sm shadow-sm dark:bg-white/10">{c}</span>
-            ))}
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="mx-auto flex max-w-[1200px] scroll-mt-20 flex-col gap-28 px-6 py-28">
-        <Feature label="Write" title="Markdown that" accent="stays out of your way." text="A focused editor with live preview, side-by-side view, tables, task lists and code blocks. Your words autosave on every keystroke." visual={<WriteMock />} />
-        <Feature flip label="Offline" title="No signal?" accent="Keep going." text="Trains, flights, lecture halls with bad Wi-Fi — SyncScribe keeps working. A clear status badge always tells you what's saved and what's synced." visual={<OfflineMock />} />
-        <Feature label="Collaborate" title="Edit at the same time," accent="never overwrite." text="See teammates' cursors live. Edit the same document offline. When you reconnect, every change is merged — no conflict dialogs, no lost paragraphs." visual={<MergeMock />} />
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="scroll-mt-20 bg-panel py-28 dark:bg-white/[0.03]">
-        <div className="mx-auto max-w-[1200px] px-6">
-          <Reveal className="mb-14 text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">How it works</h2>
-            <p className="mx-auto mt-4 max-w-[560px] text-lg text-muted">Your device is the source of truth. The network is a bonus.</p>
-          </Reveal>
-          <div className="grid gap-5 md:grid-cols-3">
-            {STEPS.map(({ icon: Icon, title, text }, i) => (
-              <Reveal key={title}>
-                <div className="h-full rounded-2xl bg-white p-7 shadow-sm dark:bg-white/5">
-                  <div className="mb-5 flex items-center justify-between">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                      <Icon className="size-5" />
-                    </span>
-                    <span className="text-sm font-medium text-muted">0{i + 1}</span>
-                  </div>
-                  <h3 className="mb-2 text-xl font-semibold">{title}</h3>
-                  <p className="leading-relaxed text-muted">{text}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-[800px] scroll-mt-20 px-6 py-28">
-        <Reveal>
-          <h2 className="mb-10 text-center text-3xl font-bold tracking-tight md:text-5xl">Questions</h2>
-          <div className="divide-y divide-line border-y border-line dark:divide-white/10 dark:border-white/10">
-            {FAQ.map(({ q, a }) => (
-              <details key={q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-medium">
-                  {q}
-                  <span className="ml-4 text-2xl leading-none text-muted transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 leading-relaxed text-muted">{a}</p>
-              </details>
-            ))}
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Closing CTA */}
-      <section className="px-6 pb-24">
-        <Reveal className="mx-auto max-w-[1200px] rounded-3xl bg-ink px-6 py-20 text-center text-white dark:bg-white/[0.06]">
-          <Wifi className="mx-auto mb-6 size-8 text-brand" />
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Start writing. Connection optional.</h2>
-          <p className="mx-auto mt-4 max-w-[520px] text-lg text-white/60">Create a free account and your workspace is ready in seconds.</p>
-          <Link to={cta.to} className={`${primaryButton} mt-8 inline-flex items-center gap-1.5 px-6 py-3`}>
-            {cta.label} <ArrowRight className="size-4" />
-          </Link>
         </Reveal>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-line dark:border-white/10">
-        <div className="mx-auto grid max-w-[1200px] gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-4">
-          <div>
-            <p className="mb-3 flex items-center gap-2 font-semibold">
-              <span className="flex size-6 items-center justify-center rounded-md bg-brand text-white">
-                <NotebookPen className="size-3.5" />
-              </span>
-              SyncScribe
-            </p>
-            <p className="text-sm text-muted">Local-first collaborative markdown workspace.</p>
+      <footer className="bg-[#f5f5f7] px-6 py-10 text-[12px] text-[#6e6e73]">
+        <div className="mx-auto max-w-[1024px]">
+          <p className="border-b border-[#d2d2d7] pb-4">
+            SyncScribe is a local-first collaborative markdown workspace, built as a university project with free and open-source tools.
+          </p>
+          <div className="grid grid-cols-2 gap-8 py-6 md:grid-cols-4">
+            {[
+              ["Explore", [["Features", "#features"], ["How it works", "#how"], ["FAQ", "#faq"]]],
+              ["Account", [["Sign in", "/login"], ["Create account", "/signup"]]],
+              ["Built with", [["Yjs CRDTs", "#how"], ["IndexedDB", "#how"], ["Service Workers", "#how"]]],
+              ["Project", [["University project", "#"]]],
+            ].map(([title, links]) => (
+              <div key={title as string}>
+                <p className="mb-2 font-semibold text-[#1d1d1f]">{title as string}</p>
+                <ul className="flex flex-col gap-1.5">
+                  {(links as string[][]).map(([label, href]) => (
+                    <li key={label}>
+                      {href.startsWith("/") ? <Link to={href} className="hover:underline">{label}</Link> : <a href={href} className="hover:underline">{label}</a>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          {[
-            { title: "Product", links: [["Features", "#features"], ["How it works", "#how"], ["FAQ", "#faq"]] },
-            { title: "Account", links: [["Sign in", "/login"], ["Create account", "/signup"]] },
-            { title: "Project", links: [["University project", "#"], ["Free & open-source tools", "#how"]] },
-          ].map((col) => (
-            <div key={col.title}>
-              <p className="mb-3 text-sm font-semibold">{col.title}</p>
-              <ul className="flex flex-col gap-2 text-sm text-muted">
-                {col.links.map(([label, href]) => (
-                  <li key={label}>
-                    {href.startsWith("/") ? <Link to={href} className="hover:text-ink dark:hover:text-white">{label}</Link> : <a href={href} className="hover:text-ink dark:hover:text-white">{label}</a>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <p className="border-t border-[#d2d2d7] pt-4">Copyright © {new Date().getFullYear()} SyncScribe. University project.</p>
         </div>
-        <p className="border-t border-line py-6 text-center text-[13px] text-muted dark:border-white/10">
-          © {new Date().getFullYear()} SyncScribe · Built for a university project
-        </p>
       </footer>
     </div>
   );
