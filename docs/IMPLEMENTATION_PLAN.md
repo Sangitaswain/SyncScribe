@@ -94,7 +94,7 @@
 - [x] **4.1** Add `password.ts` (bcryptjs) and `jwt.ts` (jose HS256, 7-day expiry) plus `requireAuth` middleware.
   - Done when: unit test signs and verifies a token; expired token is rejected.
   - Commit: `feat(server): add password hashing and JWT auth`
-- [ ] **4.2** Add `seed.ts`: build a personal `ws:` Y.Doc with a "Welcome to SyncScribe" item and its `doc:` Y.Doc (offline tips, sync status, data-clearing warning); store both in `ydoc_state`.
+- [x] **4.2** Add `seed.ts`: build a personal `ws:` Y.Doc with a "Welcome to SyncScribe" item and its `doc:` Y.Doc (offline tips, sync status, data-clearing warning); store both in `ydoc_state`.
   - Done when: a test seeds and decodes both docs correctly.
   - Commit: `feat(server): seed personal workspace and welcome document`
 - [ ] **4.3** Add `POST /api/auth/signup` (create user, colour, personal workspace, member row, seed) and `POST /api/auth/login`; rate-limit both.
