@@ -4,6 +4,7 @@ import AuthPage from "./routes/AuthPage";
 import NotFound from "./routes/NotFound";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
+import RequireAuth from "./components/RequireAuth";
 
 // Screens from FRONTEND_PLAN.md FP-6
 export default function App() {
@@ -15,7 +16,13 @@ export default function App() {
         <Route path="/forgot" element={<Placeholder title="Forgot password" />} />
         <Route path="/reset/:token" element={<Placeholder title="Reset password" />} />
         <Route path="/s/:token" element={<Placeholder title="Accept share link" />} />
-        <Route element={<AppShell />}>
+        <Route
+          element={
+            <RequireAuth>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
           <Route path="/" element={<Placeholder title="Workspace" />} />
           <Route path="/doc/:docId" element={<Placeholder title="Document" />} />
           <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />

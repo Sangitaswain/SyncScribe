@@ -137,7 +137,7 @@
 - [x] **6.2** Build Sign up and Sign in screens with Zod validation; on success save `session` to idb-keyval and the store (A1, A2).
   - Done when: a new user can sign up and lands on `/`.
   - Commit: `feat(web): add sign up and sign in screens`
-- [ ] **6.3** Implement offline boot: read cached `session` on start and render the app without network; route guard per FP-6 (A3).
+- [x] **6.3** Implement offline boot: read cached `session` on start and render the app without network; route guard per FP-6 (A3).
   - Done when: signed-in user reloads offline and stays in the app.
   - Commit: `feat(web): keep users signed in offline`
 - [ ] **6.4** Add token refresh on reconnect and `ReauthModal` for expired sessions that keeps local data (EC19).
