@@ -155,7 +155,7 @@
 - [x] **7.2** Add React hooks to subscribe to Y.Map / Y.Text / Y.Array changes (`useYMap`, `useYText`).
   - Done when: a demo component re-renders on Yjs changes.
   - Commit: `feat(web): add React hooks for Yjs data`
-- [ ] **7.3** Implement workspace tree operations in `crdt/tree.ts`: createDoc, createFolder, rename, move, setTags, duplicate (FP-8.2), each in one transaction.
+- [x] **7.3** Implement workspace tree operations in `crdt/tree.ts`: createDoc, createFolder, rename, move, setTags, duplicate (FP-8.2), each in one transaction.
   - Done when: unit tests for each operation pass.
   - Commit: `feat(web): add workspace tree operations`
 - [ ] **7.4** Implement `resolveTree` with orphan-to-root, deterministic cycle breaking and sorting (FP-4.6, EC12, B6).
