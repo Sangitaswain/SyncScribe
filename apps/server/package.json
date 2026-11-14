@@ -1,0 +1,8 @@
+{
+  "name": "@syncscribe/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node -e \"console.log('server placeholder running'); setInterval(() => {}, 1e9)\""
+  }
+}

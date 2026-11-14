@@ -9,7 +9,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently -n web,server -c cyan,magenta \"npm run dev -w apps/web\" \"npm run dev -w apps/server\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "e2e": "npm run e2e --workspaces --if-present",
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.7",
     "eslint": "^10.15.0",
     "globals": "^17.14.0",
     "prettier": "^3.10.1",

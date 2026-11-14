@@ -21,7 +21,7 @@
 
 | # | Step | Day | Status |
 | --- | --- | --- | --- |
-| 1 | Repository and tooling setup | 1 | [ ] |
+| 1 | Repository and tooling setup | 1 | [x] |
 | 2 | Shared package | 1 | [ ] |
 | 3 | Backend foundation: server, database, health | 1 | [ ] |
 | 4 | Backend authentication and seeding | 1 | [ ] |
@@ -55,7 +55,7 @@
 - [x] **1.3** Add shared TypeScript config (`tsconfig.base.json`, strict mode), ESLint and Prettier configs at the root.
   - Done when: `npm run lint` runs without config errors.
   - Commit: `chore: add TypeScript, ESLint and Prettier configuration`
-- [ ] **1.4** Add `concurrently` and wire the root `dev` script to run web and server together (placeholders for now).
+- [x] **1.4** Add `concurrently` and wire the root `dev` script to run web and server together (placeholders for now).
   - Done when: `npm run dev` starts both placeholder processes.
   - Commit: `chore: add combined dev script for web and server`
 
