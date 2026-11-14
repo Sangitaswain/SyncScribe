@@ -10,7 +10,7 @@ import type * as Y from "yjs";
 const theme = EditorView.theme({
   "&": { height: "100%", fontSize: "15px" },
   ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", lineHeight: "1.6" },
-  ".cm-content": { padding: "24px 0", maxWidth: "760px", margin: "0 auto" },
+  ".cm-content": { padding: "12px 0 24px", maxWidth: "760px", margin: "0 auto" },
   "&.cm-focused": { outline: "none" },
 });
 
