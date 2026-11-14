@@ -1,12 +1,13 @@
-import { useState } from "react";
 import { Outlet } from "react-router";
 import TopBar from "./TopBar";
 import StatusBar from "./StatusBar";
 import Toaster from "./Toaster";
+import { useUi } from "../stores/ui";
 
 /** Sidebar + top bar + main area + status bar (FP-7). */
 export default function AppShell() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarOpen = useUi((s) => s.sidebarOpen);
+  const setSidebarOpen = (open: boolean) => useUi.setState({ sidebarOpen: open });
   return (
     <div className="flex h-dvh bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       {sidebarOpen && (
@@ -20,7 +21,7 @@ export default function AppShell() {
         <p className="text-sm text-slate-500">Documents</p>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar onMenu={() => setSidebarOpen((o) => !o)} />
+        <TopBar onMenu={() => setSidebarOpen(!sidebarOpen)} />
         <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>

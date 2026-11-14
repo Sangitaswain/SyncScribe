@@ -118,7 +118,7 @@
 - [x] **5.3** Build `AppShell` layout: sidebar slot, `TopBar`, main area, `StatusBar`, `Toaster`.
   - Done when: layout renders on desktop and narrow widths.
   - Commit: `feat(web): add app shell layout`
-- [ ] **5.4** Add Zustand stores from FP-5 (session, network, docStatus, ui, notification, presence) with initial state.
+- [x] **5.4** Add Zustand stores from FP-5 (session, network, docStatus, ui, notification, presence) with initial state.
   - Done when: stores are importable and typed.
   - Commit: `feat(web): add client state stores`
 - [ ] **5.5** Configure `vite-plugin-pwa`: precache app shell, manifest + icons, `registerType: "prompt"`, network-only for `/api/*`; add `UpdateAvailableToast` (D2, D5, EC30).
