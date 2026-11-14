@@ -39,3 +39,15 @@ it("keeps different users' data apart", async () => {
   expect((await getDoc("doc:c")).getText("content").toString()).toBe("");
   closeAll();
 });
+
+it("records when a document was last edited, at most once a minute", async () => {
+  const doc = await getDoc("doc:edited");
+  doc.getText("content").insert(0, "a");
+  await new Promise((r) => setTimeout(r, 10));
+  const first = doc.getMap("meta").get("editedAt") as number;
+  expect(first).toBeGreaterThan(Date.now() - 5000);
+  doc.getText("content").insert(0, "b");
+  await new Promise((r) => setTimeout(r, 10));
+  expect(doc.getMap("meta").get("editedAt")).toBe(first); // throttled
+  closeAll();
+});

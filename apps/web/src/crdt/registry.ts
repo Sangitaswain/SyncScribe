@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
+import { DOC } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { markPending } from "../services/pending";
 import { remoteOrigins } from "../sync/origins";
@@ -14,6 +15,7 @@ interface Entry {
 }
 
 const entries = new Map<string, Entry>();
+const EDITED_EVERY = 60_000;
 
 /** Workspace and user docs stay open for the whole session. */
 const keepOpen = (name: string) => name.startsWith("ws:") || name.startsWith("user:");
@@ -28,8 +30,15 @@ export function getDoc(name: string): Promise<Y.Doc> {
     const doc = new Y.Doc();
     const persistence = new IndexeddbPersistence(dbName(name), doc);
     // Local edits only: not state loaded from disk, not changes received from the server
+    let editedWritten = 0;
     doc.on("update", (_u: Uint8Array, origin: unknown) => {
-      if (origin !== persistence && !(origin && typeof origin === "object" && remoteOrigins.has(origin))) markPending(name);
+      if (origin === persistence || (origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
+      markPending(name);
+      // Record "last edited" for sorting (B6), at most once a minute so it doesn't flood sync
+      if (name.startsWith("doc:") && Date.now() - editedWritten > EDITED_EVERY) {
+        editedWritten = Date.now();
+        setTimeout(() => doc.getMap(DOC.meta).set("editedAt", editedWritten));
+      }
     });
     entry = { doc, persistence, ready: persistence.whenSynced.then(() => doc), refs: 0 };
     entries.set(name, entry);
