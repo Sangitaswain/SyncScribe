@@ -115,7 +115,7 @@
 - [x] **5.2** Add React Router with all FP-6 routes as placeholder screens and a Not Found page.
   - Done when: every route renders its placeholder.
   - Commit: `feat(web): add routes for all screens`
-- [ ] **5.3** Build `AppShell` layout: sidebar slot, `TopBar`, main area, `StatusBar`, `Toaster`.
+- [x] **5.3** Build `AppShell` layout: sidebar slot, `TopBar`, main area, `StatusBar`, `Toaster`.
   - Done when: layout renders on desktop and narrow widths.
   - Commit: `feat(web): add app shell layout`
 - [ ] **5.4** Add Zustand stores from FP-5 (session, network, docStatus, ui, notification, presence) with initial state.
