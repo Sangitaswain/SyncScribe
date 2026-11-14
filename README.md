@@ -145,6 +145,7 @@ SyncScribe/
 | [Frontend Plan](docs/FRONTEND_PLAN.md)                 | Client architecture and the Yjs data model            |
 | [Backend Plan](docs/BACKEND_PLAN.md)                   | Database schema, API, sync hooks, permissions         |
 | [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)     | Every step and substep, with progress                 |
+| [Contributing](CONTRIBUTING.md)                        | How teammates set up, take turns and commit           |
 
 ---
 

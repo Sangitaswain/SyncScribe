@@ -80,19 +80,19 @@ Then, after each substep:
 
 ## 7. If something goes wrong
 
-| Problem | Fix |
-| --- | --- |
-| `git push` is rejected | Someone pushed first. Run `git pull`, then push again. |
-| Merge conflict in `IMPLEMENTATION_PLAN.md` | Keep both sets of ticked boxes, save, `git add` the file, `git commit`. |
-| Sign-up says "Can't reach SyncScribe" | The server isn't running. Use `npm run dev`, not only the web app. |
-| Tests fail before you changed anything | Run `git pull` and `npm install`, then try again. Still failing? Tell the team. |
-| GitHub asks for a password | Use a Personal Access Token (GitHub → Settings → Developer settings → Tokens). |
+| Problem                                    | Fix                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `git push` is rejected                     | Someone pushed first. Run `git pull`, then push again.                          |
+| Merge conflict in `IMPLEMENTATION_PLAN.md` | Keep both sets of ticked boxes, save, `git add` the file, `git commit`.         |
+| Sign-up says "Can't reach SyncScribe"      | The server isn't running. Use `npm run dev`, not only the web app.              |
+| Tests fail before you changed anything     | Run `git pull` and `npm install`, then try again. Still failing? Tell the team. |
+| GitHub asks for a password                 | Use a Personal Access Token (GitHub → Settings → Developer settings → Tokens).  |
 
 ## Useful docs
 
-| Document | What it's for |
-| --- | --- |
-| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | The task list: read first, every time |
-| [`docs/SyncScribe-PRD.md`](docs/SyncScribe-PRD.md) | What the app should do |
+| Document                                                                                          | What it's for                                                         |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)                                      | The task list: read first, every time                                 |
+| [`docs/SyncScribe-PRD.md`](docs/SyncScribe-PRD.md)                                                | What the app should do                                                |
 | [`docs/FRONTEND_PLAN.md`](docs/FRONTEND_PLAN.md) / [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) | How the app is built; substeps reference their sections (FP-x / BP-x) |
-| [`CLAUDE.md`](CLAUDE.md) | Rules Claude Code follows in this repo |
+| [`CLAUDE.md`](CLAUDE.md)                                                                          | Rules Claude Code follows in this repo                                |
