@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import { nanoid } from "nanoid";
 import { DOC, WS, docDoc, wsDoc } from "@syncscribe/shared";
 import { db } from "../db/db";
+import { indexTitle, indexWorkspace } from "./treeIndex";
 
 const WELCOME = `# Welcome to SyncScribe
 
@@ -33,6 +34,7 @@ export const seedWorkspace = (opts: {
   kind: "personal" | "team";
 }) => {
   const now = Date.now();
+  let welcome: { docId: string; doc: Y.Doc } | undefined;
   const ws = new Y.Doc();
   ws.getMap(WS.info).set("name", opts.name);
   ws.getMap(WS.info).set("kind", opts.kind);
@@ -55,6 +57,9 @@ export const seedWorkspace = (opts: {
     meta.set("createdBy", opts.userId);
     meta.set("workspaceId", opts.workspaceId);
     saveDoc(docDoc(docId), doc);
+    welcome = { docId, doc };
   }
   saveDoc(wsDoc(opts.workspaceId), ws);
+  indexWorkspace(opts.workspaceId, ws);
+  if (welcome) indexTitle(welcome.docId, welcome.doc);
 };

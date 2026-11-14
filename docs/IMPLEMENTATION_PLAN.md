@@ -212,7 +212,7 @@
 - [x] **10.2** Implement `onAuthenticate`: verify JWT, reject `token-expired`/`invalid-token`, resolve role (owner/workspace member only for now), set read-only per BP-6.2.
   - Done when: tests show an invalid token is refused and a member connects.
   - Commit: `feat(server): authenticate sync connections`
-- [ ] **10.3** Implement the tree index: `ws:` changes upsert the `documents` table; `doc:` stores update cached titles; `unknown-doc` reason when not found (BP-6.4).
+- [x] **10.3** Implement the tree index: `ws:` changes upsert the `documents` table; `doc:` stores update cached titles; `unknown-doc` reason when not found (BP-6.4).
   - Done when: creating a doc in a `ws:` doc via a test provider creates a `documents` row.
   - Commit: `feat(server): index workspace trees into documents table`
 - [ ] **10.4** Add `GET /api/sync/changed?since=` and `GET /api/sync/all` filtered by access (BP-5.7).
