@@ -3,6 +3,7 @@ import { Hocuspocus } from "@hocuspocus/server";
 import { Database } from "@hocuspocus/extension-database";
 import { WebSocketServer } from "ws";
 import { fetchState, storeState } from "./persistence";
+import { onAuthenticate } from "./auth";
 
 // Real-time Yjs sync server (BP-6). Shares the HTTP server/port with Express, at /collab.
 
@@ -10,6 +11,7 @@ export const hocuspocus = new Hocuspocus({
   quiet: true,
   debounce: 2000, // store at most every 2 s while people type…
   maxDebounce: 10000, // …and at least every 10 s
+  onAuthenticate,
   extensions: [
     new Database({
       fetch: async ({ documentName }) => fetchState(documentName),
