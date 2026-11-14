@@ -59,3 +59,33 @@ test("edits sync both ways between the Provider Manager and another device", asy
   other.provider.destroy();
   stop();
 });
+
+test("on reconnect, closed docs edited offline upload and docs changed elsewhere download", async () => {
+  const { providerFor, isAttached } = await import("./providers");
+  const { syncClosedDocs } = await import("./background");
+  const { getDoc, releaseDoc } = await import("../crdt/registry");
+  const { pendingNames } = await import("../services/pending");
+  const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
+  const docId = [...(tree.document.getMap(WS.items).keys() as Iterable<string>)][0];
+  const name = docDoc(docId);
+  expect(isAttached(name)).toBe(false); // closed
+
+  // Edited "offline" while closed: saved locally and marked pending, no provider attached
+  const local = await getDoc(name);
+  local.getText(DOC.content).insert(0, "closed edit ");
+  releaseDoc(name);
+  expect(pendingNames()).toContain(name);
+
+  // Meanwhile another device changes it on the server
+  const other = await helpers.connect(server.port, name, auth.token);
+  other.doc.getText(DOC.content).insert(0, "remote edit ");
+
+  await syncClosedDocs();
+  await helpers.until(() => other.doc.getText(DOC.content).toString().includes("closed edit "));
+  expect(pendingNames()).not.toContain(name);
+  expect(isAttached(name)).toBe(false); // disconnected again afterwards
+  const reopened = await getDoc(name); // the download was saved on the device
+  expect(reopened.getText(DOC.content).toString()).toContain("remote edit ");
+  releaseDoc(name);
+  other.provider.destroy();
+});

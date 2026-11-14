@@ -13,6 +13,10 @@ const COLLAB_URL = import.meta.env.VITE_COLLAB_URL ?? `${API_URL.replace(/^http/
 
 let socket: HocuspocusProviderWebsocket | null = null;
 const providers = new Map<string, Promise<HocuspocusProvider>>();
+const connectListeners = new Set<() => void>();
+
+/** Runs `fn` every time the shared socket (re)connects. */
+export const onConnect = (fn: () => void) => connectListeners.add(fn);
 
 /** Resolves once the provider has finished its first sync with the server. */
 export const whenSynced = (p: HocuspocusProvider) =>
@@ -26,7 +30,10 @@ export const whenSynced = (p: HocuspocusProvider) =>
 export function attach(name: string): Promise<HocuspocusProvider> {
   const existing = providers.get(name);
   if (existing) return existing;
-  socket ??= new HocuspocusProviderWebsocket({ url: COLLAB_URL });
+  if (!socket) {
+    socket = new HocuspocusProviderWebsocket({ url: COLLAB_URL });
+    socket.on("connect", () => connectListeners.forEach((fn) => fn()));
+  }
   const ws = socket;
   const ready = getDoc(name).then((document) => {
     const provider = new HocuspocusProvider({
@@ -57,7 +64,7 @@ export async function detach(name: string) {
 }
 
 /** Workspace trees must reach the server first, so it knows which workspace a new doc belongs to (E2). */
-const workspacesSynced = async () => {
+export const workspacesSynced = async () => {
   const { workspaces } = useSession.getState();
   await Promise.all(workspaces.map(async (w) => whenSynced(await attach(wsDoc(w.id)))));
 };
@@ -98,3 +105,5 @@ export async function stopSync() {
 }
 
 export const providerFor = (name: string) => providers.get(name);
+export const isAttached = (name: string) => providers.has(name);
+export const isOpen = (name: string) => !!openCount.get(name);

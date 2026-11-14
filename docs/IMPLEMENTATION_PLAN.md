@@ -229,7 +229,7 @@
 - [x] **11.2** Clear pending flags on `synced` with zero unsynced changes; show `PendingDot` per doc and "All changes synced" toast (D4, E6, 4.4).
   - Done when: offline edits show dots; reconnecting clears them automatically.
   - Commit: `feat(web): show pending markers and sync completion`
-- [ ] **11.3** On reconnect, sync non-open docs: pending docs plus `/api/sync/changed` results, concurrency 4, with "Syncing X of Y" progress (E2, EC5).
+- [x] **11.3** On reconnect, sync non-open docs: pending docs plus `/api/sync/changed` results, concurrency 4, with "Syncing X of Y" progress (E2, EC5).
   - Done when: a doc edited offline but closed still uploads after reconnect.
   - Commit: `feat(web): sync closed documents on reconnect`
 - [ ] **11.4** Implement the Network Monitor: browser events, socket status, `/api/health` ping, 3 s debounce, unreachable-server detection (E1, EC2, EC3, EC6).
