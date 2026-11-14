@@ -27,7 +27,7 @@
 | 4 | Backend authentication and seeding | 1 | [x] |
 | 5 | Frontend shell, routing, PWA | 1 | [x] |
 | 6 | Frontend auth and offline session | 1 | [x] |
-| 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [ ] |
+| 7 | Local-first data layer (Yjs + IndexedDB) | 1 | [x] |
 | 8 | Sidebar, tree and document organization | 1 | [ ] |
 | 9 | Markdown editor and preview | 1 | [ ] |
 | 10 | Sync server (Hocuspocus) | 1–2 | [ ] |
@@ -164,7 +164,7 @@
 - [x] **7.5** Track local changes as pending in `{uid}:pending` on every non-provider update (D4).
   - Done when: editing a doc offline creates a pending entry that persists across reload.
   - Commit: `feat(web): track pending local changes`
-- [ ] **7.6** Add the `user:{uid}` prefs doc helpers: pins, recents (max 20), settings (FP-4.5).
+- [x] **7.6** Add the `user:{uid}` prefs doc helpers: pins, recents (max 20), settings (FP-4.5).
   - Done when: opening docs updates recents; settings persist.
   - Commit: `feat(web): add per-user preferences document`
 
