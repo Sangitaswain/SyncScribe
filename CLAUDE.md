@@ -5,7 +5,7 @@
 1. **Read `docs/IMPLEMENTATION_PLAN.md` before doing any work.** It is the primary working document.
 2. Find the first unchecked substep (`- [ ]`). That is the current task. Work strictly top to bottom.
 3. Read the FP / BP sections that substep references before writing code.
-4. Check `git log --oneline -5` and `git status` to confirm where the last session stopped.
+4. Check `git log --oneline -5` and `git status` to confirm where the last session stopped. Several people take turns on this repo: run `git pull` first, and follow `CONTRIBUTING.md` for the team workflow.
 
 ## Project
 
@@ -25,6 +25,7 @@ Stack: TypeScript monorepo (npm workspaces). `apps/web`: React + Vite + CodeMirr
 | Security doc | `docs/SECURITY.md` | *Not created yet.* Until it exists, follow FP-17 and BP-8 |
 | Testing doc | `docs/TESTING.md` | *Not created yet.* Until it exists, follow FP-18 and BP-12 |
 | Phase strategy | `docs/PHASE_STRATEGY.md` | *Not created yet.* Until it exists, follow the Day 1 / Day 2 schedule in the Implementation Plan |
+| Team guide | `CONTRIBUTING.md` | Setup, git workflow (take turns, `git pull` first), commit rules for teammates |
 | Test notes | `docs/TEST_NOTES.md` | Created in substep 12.3; manual verification results |
 
 When a "not created yet" document is added, update this table.
