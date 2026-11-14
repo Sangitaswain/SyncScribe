@@ -49,7 +49,7 @@
 - [x] **1.1** Initialise git in the project root, add `.gitignore` (node_modules, dist, .env, `apps/server/data/`, .DS_Store), and commit the existing `docs/`.
   - Done when: `git log` shows the first commit with all docs.
   - Commit: `chore: initialise repository with project documents`
-- [ ] **1.2** Create root `package.json` with npm workspaces (`apps/*`, `packages/*`), Node 20 engine, and scripts `dev`, `build`, `test`, `e2e`, `lint`.
+- [x] **1.2** Create root `package.json` with npm workspaces (`apps/*`, `packages/*`), Node 20 engine, and scripts `dev`, `build`, `test`, `e2e`, `lint`.
   - Done when: `npm install` succeeds at the root.
   - Commit: `chore: set up npm workspaces monorepo`
 - [ ] **1.3** Add shared TypeScript config (`tsconfig.base.json`, strict mode), ESLint and Prettier configs at the root.
