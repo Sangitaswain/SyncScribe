@@ -82,7 +82,7 @@
 - [x] **3.2** Add `db.ts` (better-sqlite3, WAL, foreign keys) and `schema.sql` with all BP-3 tables; apply schema on boot.
   - Done when: the server creates `data/syncscribe.db` containing all tables.
   - Commit: `feat(server): add SQLite database and schema`
-- [ ] **3.3** Add Helmet, CORS restricted to `APP_URL`, JSON body limit, a central error handler that returns `{ error: { code, message } }`.
+- [x] **3.3** Add Helmet, CORS restricted to `APP_URL`, JSON body limit, a central error handler that returns `{ error: { code, message } }`.
   - Done when: an unknown route returns a JSON 404 error.
   - Commit: `feat(server): add security middleware and error handling`
 - [ ] **3.4** Add `GET /api/health` (BP-5.8).
