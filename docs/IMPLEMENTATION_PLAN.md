@@ -274,7 +274,7 @@
 - [x] **13.3** Add shares endpoints (list, invite, change role, remove) with the editor-up-to-editor rule, pending email invites attached at sign-up, and socket closing on change (G1, G2, G4, EC16, EC17, EC22).
   - Done when: supertest and a provider test cover invite, downgrade and removal.
   - Commit: `feat(server): add document and folder sharing`
-- [ ] **13.4** Add share-link endpoints: create, revoke, accept; revoked → 410 "This link is no longer active" (G3, EC23).
+- [x] **13.4** Add share-link endpoints: create, revoke, accept; revoked → 410 "This link is no longer active" (G3, EC23).
   - Done when: tests cover a valid and a revoked link.
   - Commit: `feat(server): add share links`
 - [ ] **13.5** Add workspaces and members endpoints (B2) and `GET /api/shared-with-me`.

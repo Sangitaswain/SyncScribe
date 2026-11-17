@@ -1,6 +1,17 @@
+import { createHash, randomBytes } from "node:crypto";
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { can, docDoc, roleUpdateSchema, shareCreateSchema, type Capability, type Share } from "@syncscribe/shared";
+import {
+  can,
+  docDoc,
+  rank,
+  roleUpdateSchema,
+  shareCreateSchema,
+  shareLinkCreateSchema,
+  type Capability,
+  type Share,
+  type ShareRole,
+} from "@syncscribe/shared";
 import { db } from "../db/db";
 import { config } from "../config";
 import { HttpError } from "../errors";
@@ -85,4 +96,53 @@ sharesRouter.delete("/:id", (req, res) => {
   db.prepare("DELETE FROM shares WHERE id = ?").run(share.id);
   if (share.userId) closeConnectionsFor(share.userId);
   res.status(204).end();
+});
+
+// Share links (G3, EC23): anyone signed in who opens the link gets its role; only a hash of the token is stored
+
+export const shareLinksRouter = Router();
+shareLinksRouter.use(requireAuth);
+
+const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
+
+shareLinksRouter.post("/", (req, res) => {
+  const { resourceId, role } = shareLinkCreateSchema.parse(req.body);
+  const me = currentUser(res);
+  requireRole(me.id, resourceId, "manageAccess");
+  const id = nanoid();
+  const token = randomBytes(24).toString("base64url");
+  db.prepare(
+    "INSERT INTO share_links (id, token_hash, resource_id, role, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(id, sha256(token), resourceId, role, me.id, Date.now());
+  res.status(201).json({ id, resourceId, role, url: `${config.APP_URL}/s/${token}`, revoked: false });
+});
+
+shareLinksRouter.delete("/:id", (req, res) => {
+  const link = db.prepare("SELECT resource_id FROM share_links WHERE id = ?").get(req.params.id) as
+    | { resource_id: string }
+    | undefined;
+  if (!link) throw new HttpError(404, "not_found", "Link not found");
+  requireRole(currentUser(res).id, link.resource_id, "manageAccess");
+  db.prepare("UPDATE share_links SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").run(Date.now(), req.params.id);
+  res.status(204).end();
+});
+
+shareLinksRouter.post("/:token/accept", (req, res) => {
+  const link = db
+    .prepare("SELECT resource_id, role, created_by FROM share_links WHERE token_hash = ? AND revoked_at IS NULL")
+    .get(sha256(req.params.token)) as { resource_id: string; role: ShareRole; created_by: string } | undefined;
+  if (!link) throw new HttpError(410, "link_inactive", "This link is no longer active");
+  const me = currentUser(res);
+  // Never lowers access the person already has through another share
+  const existing = db.prepare("SELECT role FROM shares WHERE resource_id = ? AND user_id = ?").get(link.resource_id, me.id) as
+    | { role: ShareRole }
+    | undefined;
+  if (!existing || rank(existing.role) < rank(link.role)) {
+    db.prepare(
+      `INSERT INTO shares (id, resource_id, user_id, role, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT DO UPDATE SET role = excluded.role`,
+    ).run(nanoid(), link.resource_id, me.id, link.role, link.created_by, Date.now());
+    closeConnectionsFor(me.id);
+  }
+  res.json({ resourceId: link.resource_id, role: roleFor(me.id, docDoc(link.resource_id)) });
 });

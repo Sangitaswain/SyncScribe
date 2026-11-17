@@ -78,3 +78,23 @@ it("a downgrade makes the open doc read-only, a removal refuses it (EC16, EC17)"
   await expect(connect(srv.port, `doc:${docId}`, ed.token)).rejects.toThrow("forbidden");
   for (const c of [owner, again]) c.provider.destroy();
 });
+
+it("share links give their role until revoked, then say the link is no longer active (G3, EC23)", async () => {
+  const link = (role: string, by = ana) => request(app).post("/api/share-links").set(as(by)).send({ resourceId: docId, role });
+  await link("viewer", vi).expect(404); // Vi has no access
+  const created = (await link("commenter").expect(201)).body;
+  expect(created.url).toMatch(/\/s\/[\w-]{20,}$/);
+  const token = created.url.split("/s/")[1];
+
+  const visitor = await signup("Visitor");
+  const accepted = (await request(app).post(`/api/share-links/${token}/accept`).set(as(visitor)).expect(200)).body;
+  expect(accepted).toEqual({ resourceId: docId, role: "commenter" });
+  await request(app).post(`/api/share-links/${token}/accept`).expect(401); // must be signed in
+
+  await request(app).delete(`/api/share-links/${created.id}`).set(as(visitor)).expect(403); // only the owner revokes
+  await request(app).delete(`/api/share-links/${created.id}`).set(as(ana)).expect(204);
+  const late = await signup("Late");
+  const gone = await request(app).post(`/api/share-links/${token}/accept`).set(as(late)).expect(410);
+  expect(gone.body.error).toEqual({ code: "link_inactive", message: "This link is no longer active" });
+  await request(app).post("/api/share-links/made-up-token/accept").set(as(late)).expect(410);
+});
