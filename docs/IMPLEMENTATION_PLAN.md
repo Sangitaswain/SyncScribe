@@ -328,7 +328,7 @@
 - [x] **16.1** Add the snapshot policy in `onStoreDocument` (10-minute interval, authors set, retention) (H1).
   - Done when: editing over time creates versions with authors.
   - Commit: `feat(server): add automatic version snapshots`
-- [ ] **16.2** Add versions endpoints: list, get state, create named, rename (H1, H4).
+- [x] **16.2** Add versions endpoints: list, get state, create named, rename (H1, H4).
   - Done when: supertest covers all four.
   - Commit: `feat(server): add version history endpoints`
 - [ ] **16.3** Build the history panel: list, read-only preview, restore as a new change, name a version (H1, H3, H4, DF12).

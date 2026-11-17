@@ -33,3 +33,40 @@ it("only the owner deletes permanently, and everything stored for the doc goes (
   storeState("doc:d1", new Uint8Array([0, 0])); // a late save from a client that still had it open
   expect(count("ydoc_state WHERE name = 'doc:d1'")).toBe(0);
 });
+
+it("lists, names, renames and returns versions; viewers read, editors write (H1, H4)", async () => {
+  const Y = await import("yjs");
+  const [own, vi, nobody] = [await signup("Vown"), await signup("Vview"), await signup("Vno")];
+  const as = (a: { token: string }) => ({ Authorization: `Bearer ${a.token}` });
+  const { names } = (await request(app).get("/api/sync/all").set(as(own))).body;
+  const docId = names.find((n: string) => n.startsWith("doc:")).slice(4);
+  await request(app).post("/api/shares").set(as(own)).send({ resourceId: docId, email: "vview@example.com", role: "viewer" }).expect(201);
+
+  const v = (await request(app).post(`/api/docs/${docId}/versions`).set(as(own)).send({ name: "Before review" }).expect(201)).body;
+  expect(v).toMatchObject({ docId, name: "Before review", authors: ["Vown"] });
+  await request(app).post(`/api/docs/${docId}/versions`).set(as(vi)).send({ name: "Mine" }).expect(403);
+  await request(app).post(`/api/docs/${docId}/versions`).set(as(own)).send({ name: " " }).expect(400);
+
+  const list = (await request(app).get(`/api/docs/${docId}/versions`).set(as(vi)).expect(200)).body.versions;
+  expect(list.map((x: { id: string }) => x.id)).toContain(v.id);
+  await request(app).get(`/api/docs/${docId}/versions`).set(as(nobody)).expect(404);
+
+  // The stored state decodes into the document as it was
+  const { body } = await request(app)
+    .get(`/api/versions/${v.id}`)
+    .set(as(vi))
+    .buffer(true)
+    .parse((res, cb) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => cb(null, Buffer.concat(chunks)));
+    })
+    .expect(200);
+  const doc = new Y.Doc();
+  Y.applyUpdate(doc, new Uint8Array(body));
+  expect(doc.getMap("meta").get("title")).toBe("Welcome to SyncScribe");
+
+  await request(app).patch(`/api/versions/${v.id}`).set(as(vi)).send({ name: "x" }).expect(403);
+  expect((await request(app).patch(`/api/versions/${v.id}`).set(as(own)).send({ name: "Final draft" }).expect(200)).body.name).toBe("Final draft");
+  await request(app).get("/api/versions/nope").set(as(own)).expect(404);
+});
