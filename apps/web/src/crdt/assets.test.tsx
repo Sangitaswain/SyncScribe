@@ -60,7 +60,7 @@ it("pasting an image stores it in the doc and inserts its markdown", async () =>
   cleanup();
   const doc = new Y.Doc();
   render(<MarkdownEditor ytext={doc.getText(DOC.content)} />);
-  const paste = Object.assign(new Event("paste", { bubbles: true, cancelable: true }), { clipboardData: { files: [png("photo.png")] } });
+  const paste = Object.assign(new Event("paste", { bubbles: true, cancelable: true }), { clipboardData: { files: [png("photo.png")], getData: () => "" } });
   document.querySelector(".cm-content")!.dispatchEvent(paste);
   await waitFor(() => expect(doc.getText(DOC.content).toString()).toMatch(/^!\[photo\]\(asset:[\w-]+\)\n$/));
   expect(doc.getMap(DOC.assets).size).toBe(1);

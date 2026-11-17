@@ -73,3 +73,17 @@ it("the editor selects the match it was opened at", async () => {
     expect(view.state.sliceDoc(from, to)).toBe("rivers");
   });
 });
+
+it("Cmd+Shift+F also opens search; Cmd+K inside the editor is left to the editor (C5)", async () => {
+  const { useUi } = await import("../stores/ui");
+  cleanup();
+  useUi.setState({ modal: null });
+  app();
+  const editor = Object.assign(document.createElement("div"), { className: "cm-editor" });
+  document.body.append(editor);
+  fireEvent.keyDown(editor, { key: "k", metaKey: true });
+  expect(useUi.getState().modal).toBeNull();
+  fireEvent.keyDown(window, { key: "F", code: "KeyF", metaKey: true, shiftKey: true });
+  expect(useUi.getState().modal).toBe("search");
+  editor.remove();
+});

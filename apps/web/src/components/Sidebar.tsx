@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { Files, FolderPlus, LogOut, PanelLeftClose, Plus, Search, Settings, Trash2, Users } from "lucide-react";
 import { wsDoc } from "@syncscribe/shared";
@@ -34,6 +34,17 @@ export default function Sidebar() {
   const [renaming, setRenaming] = useState<string | null>(null);
   const { doc: prefs, recents, settings } = usePrefs();
   const navigate = useNavigate();
+  // Cmd/Ctrl+Alt+N makes a new document (C5)
+  useEffect(() => {
+    const onKey = async (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.altKey || e.code !== "KeyN" || !activeWorkspaceId) return;
+      e.preventDefault();
+      navigate(`/doc/${await newDocument(activeWorkspaceId, null)}`);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeWorkspaceId, navigate]);
+
   if (!activeWorkspaceId || !user) return null;
 
   const newDoc = async () => navigate(`/doc/${await newDocument(activeWorkspaceId, null)}`);

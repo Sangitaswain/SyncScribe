@@ -76,15 +76,17 @@ export function SearchPanel({ titlesOnly = false }: { titlesOnly?: boolean }) {
   );
 }
 
-/** Cmd/Ctrl+K opens search, Cmd/Ctrl+P quick open; Escape closes. */
+/** Cmd/Ctrl+K or Cmd/Ctrl+Shift+F opens search, Cmd/Ctrl+P quick open; Escape closes (C5). */
 export default function SearchOverlay() {
   const modal = useUi((s) => s.modal);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
-      if (mod && (e.key === "k" || e.key === "p")) {
+      const inEditor = (e.target as Element | null)?.closest?.(".cm-editor"); // there Cmd+K makes a link
+      const search = mod && ((e.key === "k" && !inEditor) || (e.shiftKey && e.code === "KeyF"));
+      if (search || (mod && e.key === "p")) {
         e.preventDefault(); // Cmd+P would print
-        useUi.setState({ modal: e.key === "k" ? "search" : "quickopen" });
+        useUi.setState({ modal: search ? "search" : "quickopen" });
       } else if (e.key === "Escape" && (useUi.getState().modal === "search" || useUi.getState().modal === "quickopen"))
         useUi.setState({ modal: null });
     };

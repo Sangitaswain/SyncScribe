@@ -33,3 +33,21 @@ it("lists recent docs (not trashed ones) and saves the sort choice", async () =>
   fireEvent.change(screen.getByLabelText("Sort documents"), { target: { value: "name" } });
   expect(prefs.getMap(USER.settings).get("sort")).toBe("name");
 });
+
+it("Cmd/Ctrl+Alt+N creates a new document and opens it (C5)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  const { Route, Routes } = await import("react-router");
+  cleanup();
+  render(
+    <MemoryRouter>
+      <Sidebar />
+      <Routes>
+        <Route path="/" element={null} />
+        <Route path="/doc/:docId" element={<p>New doc opened</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  await screen.findByText("Recent");
+  fireEvent.keyDown(window, { key: "n", code: "KeyN", ctrlKey: true, altKey: true });
+  await screen.findByText("New doc opened");
+});

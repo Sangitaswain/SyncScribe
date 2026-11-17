@@ -117,3 +117,24 @@ it("shows who deleted the open doc and restores it (EC9)", async () => {
   await waitFor(() => expect(screen.queryByText(/This document was deleted/)).toBeNull(), slow);
   expect(readItem(ws, id)!.deletedAt).toBeNull();
 });
+
+it("Cmd/Ctrl+Shift+P switches between editing and preview (C5)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  cleanup();
+  const id = await newDocument("w1", null, "# Shortcut", "Keys");
+  render(
+    <MemoryRouter initialEntries={[`/doc/${id}`]}>
+      <Routes>
+        <Route path="/doc/:docId" element={<DocPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  const prefs = await getDoc(userDoc("u1"));
+  const mode = () => prefs.getMap(USER.settings).get("editorMode");
+  await screen.findByLabelText("Document title", {}, { timeout: 5000 });
+  const before = mode();
+  fireEvent.keyDown(window, { key: "P", code: "KeyP", ctrlKey: true, shiftKey: true });
+  await waitFor(() => expect(mode()).toBe(before === "preview" ? "edit" : "preview"));
+  fireEvent.keyDown(window, { key: "P", code: "KeyP", ctrlKey: true, shiftKey: true });
+  await waitFor(() => expect(mode()).toBe(before === "preview" ? "preview" : "edit"));
+});

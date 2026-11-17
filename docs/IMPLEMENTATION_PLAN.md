@@ -37,7 +37,7 @@
 | 14 | Trash and structural edge cases | 2 | [x] |
 | 15 | Search | 2 | [x] |
 | 16 | Version history | 2 | [x] |
-| 17 | Import, export, notifications, storage safety | 2 | [ ] |
+| 17 | Import, export, notifications, storage safety | 2 | [x] |
 | 18 | Testing | 2 | [ ] |
 | 19 | Polish, docs and demo | 2 | [ ] |
 | 20 | Could features: comments, mentions, tags, pins, TOC, templates, focus mode, attribution, tab-hide flush | 2 | [ ] |
@@ -355,7 +355,7 @@
 - [x] **17.6** Add images: paste/drop/upload to the doc `assets` map with type/size checks, rendered in preview (C10, EC34).
   - Done when: an image added offline appears for a collaborator after sync.
   - Commit: `feat(web): add offline image support`
-- [ ] **17.7** Add the formatting toolbar and keyboard shortcuts, find & replace, large-paste limit (C4, C5, C11, EC32).
+- [x] **17.7** Add the formatting toolbar and keyboard shortcuts, find & replace, large-paste limit (C4, C5, C11, EC32).
   - Done when: every toolbar button and shortcut in FP-9.2 works.
   - Commit: `feat(web): add formatting toolbar, shortcuts and find and replace`
 

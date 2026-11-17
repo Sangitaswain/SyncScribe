@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { DOC, docDoc, rank } from "@syncscribe/shared";
-import { addRecent, usePrefs } from "../crdt/prefs";
+import { addRecent, setSetting, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
 import { awarenessOf } from "../crdt/registry";
 import { useEditorStats } from "../stores/editorStats";
@@ -22,6 +22,17 @@ export default function DocPage() {
   const { doc: prefs, settings } = usePrefs(); // view mode is switched in the page header
   const doc = useDoc(docId ? docDoc(docId) : undefined);
   const mode = settings.editorMode ?? "edit";
+
+  // Cmd/Ctrl+Shift+P switches between editing and the preview (C5)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.code !== "KeyP" || !prefs) return;
+      e.preventDefault();
+      setSetting(prefs, "editorMode", mode === "preview" ? "edit" : "preview");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prefs, mode]);
 
   useEffect(() => {
     if (prefs && docId) addRecent(prefs, docId);

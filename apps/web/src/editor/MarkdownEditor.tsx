@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
@@ -7,8 +7,9 @@ import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type * as Y from "yjs";
 import type { Awareness } from "y-protocols/awareness";
-import { addImage, imageProblem } from "../crdt/assets";
-import { toast } from "../stores/ui";
+import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
+import { formattingKeymap, insertImages, pasteTooLarge, rememberDoc } from "./commands";
+import EditorToolbar from "./EditorToolbar";
 
 const theme = EditorView.theme({
   "&": { height: "100%", fontSize: "16px" },
@@ -18,32 +19,6 @@ const theme = EditorView.theme({
   "&.cm-focused": { outline: "none" },
 });
 
-/**
- * Adds image files to the doc and inserts their markdown at `pos` (default: the cursor). Returns false if
- * there were no images, so the editor handles the paste or drop as usual (C10, EC34).
- */
-export function insertImages(view: EditorView, files: File[], pos?: number) {
-  const images = files.filter((f) => f.type.startsWith("image/"));
-  const doc = images.length ? docOf(view) : undefined;
-  if (!doc) return false;
-  (async () => {
-    let at = pos ?? view.state.selection.main.head;
-    for (const file of images) {
-      const problem = imageProblem(file);
-      if (problem) {
-        toast(problem, "error");
-        continue;
-      }
-      const md = `${await addImage(doc, file)}\n`;
-      view.dispatch({ changes: { from: at, insert: md }, selection: { anchor: at + md.length } });
-      at += md.length;
-    }
-  })();
-  return true;
-}
-
-const docs = new WeakMap<EditorView, Y.Doc>();
-const docOf = (view: EditorView) => docs.get(view);
 
 /**
  * CodeMirror bound to the document's Y.Text: every keystroke is a CRDT change saved on the device (C2, C6).
@@ -63,6 +38,7 @@ export default function MarkdownEditor({
 }) {
   const host = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView>(null);
+  const [view, setView] = useState<EditorView | null>(null);
 
   useEffect(() => {
     const view = new EditorView({
@@ -76,11 +52,15 @@ export default function MarkdownEditor({
           drawSelection(),
           placeholder("Start writing in markdown…"),
           // Undo/redo only this user's edits, never a collaborator's (C7, EC14)
+          // Formatting shortcuts (C5) and find & replace in the doc (C11)
+          keymap.of([...formattingKeymap, { key: "Mod-Alt-f", run: openSearchPanel }, ...searchKeymap]),
           keymap.of([...yUndoManagerKeymap, ...defaultKeymap, indentWithTab]),
+          search({ top: true }),
           yCollab(ytext, awareness ?? null),
           EditorState.readOnly.of(readOnly), // viewers and commenters (G5)
           EditorView.domEventHandlers({
-            paste: (e, view) => !readOnly && insertImages(view, [...(e.clipboardData?.files ?? [])]),
+            paste: (e, view) =>
+              !readOnly && (pasteTooLarge(e.clipboardData?.getData("text/plain") ?? "") || insertImages(view, [...(e.clipboardData?.files ?? [])])),
             drop: (e, view) =>
               !readOnly && insertImages(view, [...(e.dataTransfer?.files ?? [])], view.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined),
           }),
@@ -90,7 +70,8 @@ export default function MarkdownEditor({
       }),
     });
     viewRef.current = view;
-    if (ytext.doc) docs.set(view, ytext.doc);
+    setView(view);
+    if (ytext.doc) rememberDoc(view, ytext.doc);
     return () => view.destroy();
   }, [ytext, awareness, readOnly]);
 
@@ -104,5 +85,14 @@ export default function MarkdownEditor({
     view.focus();
   }, [find, ytext]);
 
-  return <div ref={host} className="h-full px-6 dark:[&_.cm-content]:caret-white" />;
+  return (
+    <div className="flex h-full flex-col">
+      {!readOnly && (
+        <div className="px-6">
+          <EditorToolbar view={view} />
+        </div>
+      )}
+      <div ref={host} className="min-h-0 flex-1 px-6 dark:[&_.cm-content]:caret-white" />
+    </div>
+  );
 }
