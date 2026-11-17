@@ -280,7 +280,7 @@
 - [x] **13.5** Add workspaces and members endpoints (B2) and `GET /api/shared-with-me`.
   - Done when: a team workspace can be created and a member invited.
   - Commit: `feat(server): add team workspaces and shared-with-me listing`
-- [ ] **13.6** Add the client outbox (enqueue, persist, ordered flush with retry, 4xx drop with toast) (FP-13).
+- [x] **13.6** Add the client outbox (enqueue, persist, ordered flush with retry, 4xx drop with toast) (FP-13).
   - Done when: an invite made offline is sent automatically after reconnecting.
   - Commit: `feat(web): add offline outbox for server actions`
 - [ ] **13.7** Build `ShareDialog`: invite with role, link create/copy/revoke, manage access list; controls hidden by capability (G1–G4).

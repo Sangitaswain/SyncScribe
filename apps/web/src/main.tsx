@@ -6,6 +6,7 @@ import App from "./App";
 import { loadSession, refreshIfNeeded } from "./services/session";
 import { loadPending } from "./services/pending";
 import { loadOfflineSet } from "./services/offlineSet";
+import { loadOutbox } from "./services/outbox";
 import { useSession } from "./stores/session";
 import { reconnect, startSync, stopSync } from "./sync/providers";
 import "./sync/background";
@@ -22,6 +23,7 @@ useSession.subscribe((s, prev) => {
 loadSession().then(async () => {
   loadPending();
   loadOfflineSet();
+  loadOutbox();
   await refreshIfNeeded();
 });
 window.addEventListener("online", refreshIfNeeded);
