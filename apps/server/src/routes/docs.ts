@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { can, cmDoc, docDoc } from "@syncscribe/shared";
+import { can, docDoc } from "@syncscribe/shared";
 import { db } from "../db/db";
 import { HttpError } from "../errors";
 import { currentUser, requireAuth } from "../auth/middleware";
 import { roleFor } from "../permissions/resolve";
-import { hocuspocus } from "../collab/hocuspocus";
+import { deleteDocs } from "../purge";
 
 // Permanent delete (BP-5.4, B10). Moving to Trash and restoring are CRDT changes in the ws: tree.
 
@@ -21,16 +21,6 @@ docsRouter.delete("/:id", (req, res) => {
   if (role === null || role === "none") throw new HttpError(404, "not_found", "Document not found");
   if (!can(role, "purge")) throw new HttpError(403, "forbidden", "Only the owner can delete this permanently");
 
-  const ids = (subtree.all(req.params.id) as { id: string }[]).map((r) => r.id);
-  for (const id of ids) for (const name of [docDoc(id), cmDoc(id)]) hocuspocus.closeConnections(name);
-  db.transaction(() => {
-    for (const id of ids) {
-      db.prepare("DELETE FROM ydoc_state WHERE name IN (?, ?)").run(docDoc(id), cmDoc(id));
-      db.prepare("DELETE FROM versions WHERE doc_id = ?").run(id);
-      db.prepare("DELETE FROM shares WHERE resource_id = ?").run(id);
-      db.prepare("DELETE FROM share_links WHERE resource_id = ?").run(id);
-      db.prepare("DELETE FROM documents WHERE id = ?").run(id);
-    }
-  })();
+  deleteDocs((subtree.all(req.params.id) as { id: string }[]).map((r) => r.id));
   res.status(204).end();
 });
