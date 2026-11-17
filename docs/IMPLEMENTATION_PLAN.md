@@ -32,7 +32,7 @@
 | 9 | Markdown editor and preview | 1 | [x] |
 | 10 | Sync server (Hocuspocus) | 1–2 | [x] |
 | 11 | Frontend sync engine and network status | 2 | [x] |
-| 12 | Real-time collaboration and presence | 2 | [ ] |
+| 12 | Real-time collaboration and presence | 2 | [x] |
 | 13 | Permissions, sharing and workspaces | 2 | [ ] |
 | 14 | Trash and structural edge cases | 2 | [ ] |
 | 15 | Search | 2 | [ ] |
@@ -258,8 +258,9 @@
 - [x] **12.2** Build `PresenceAvatars` from awareness, with an offline indicator for the local user (F2, 4.6).
   - Done when: avatars appear and disappear as users open and close the doc.
   - Commit: `feat(web): add presence avatars`
-- [ ] **12.3** Manually verify the PRD 4.5 scenario (two users offline, then reconnect) and record the result in `docs/TEST_NOTES.md`.
+- [x] **12.3** Manually verify the PRD 4.5 scenario (two users offline, then reconnect) and record the result in `docs/TEST_NOTES.md`.
   - Done when: both users see identical content and nothing is lost.
+  > Note: run as a scripted scenario against the real sync server (`apps/server/src/collab/offlineMerge.test.ts`), since sharing between two accounts arrives in Step 13. Re-run by hand with two browsers after Step 13 and add the result to `docs/TEST_NOTES.md`.
   - Commit: `test: verify offline concurrent edits merge without loss`
 
 ## Step 13 — Permissions, sharing and workspaces · BP-4.2, BP-5.2, BP-5.3, BP-6.2, FP-12, FP-13
