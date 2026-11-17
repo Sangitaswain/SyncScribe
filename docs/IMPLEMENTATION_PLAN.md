@@ -382,7 +382,7 @@
 - [x] **19.1** Add the onboarding tour (3 steps) shown on first sign-in (J4).
   - Done when: it shows once per user.
   - Commit: `feat(web): add first-run onboarding tour`
-- [ ] **19.2** Accessibility and responsive pass: focus states, labels, keyboard navigation of the tree, narrow-screen layout.
+- [x] **19.2** Accessibility and responsive pass: focus states, labels, keyboard navigation of the tree, narrow-screen layout.
   - Done when: all main flows work with keyboard only.
   - Commit: `fix(web): improve accessibility and responsive layout`
 - [ ] **19.3** Write `README.md`: what it is, features, architecture diagram, setup, scripts, how to demo offline sync.

@@ -49,7 +49,11 @@ export default function TopBar() {
         )}
       </nav>
       <div className="ml-auto flex items-center gap-2">
-        {docId && <PresenceAvatars />}
+        {docId && (
+          <div className="hidden sm:block">
+            <PresenceAvatars />
+          </div>
+        )}
         <SyncStatusBadge />
         <NotificationBell />
         {docId && (

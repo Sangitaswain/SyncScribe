@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CloudCheck, UserPlus, WifiOff } from "lucide-react";
 import { setSetting, usePrefs } from "../crdt/prefs";
 import { primaryButton } from "./ui";
+import { useSession } from "../stores/session";
 
 const STEPS = [
   {
@@ -24,14 +25,22 @@ const STEPS = [
 /** A three-step first-run guide, shown once per user on any device (J4, EC26). */
 export default function WelcomeTour() {
   const { doc: prefs, settings } = usePrefs();
+  const uid = useSession((s) => s.user?.id);
   const [step, setStep] = useState(0);
-  if (!prefs || settings.tourDone) return null;
+  const [done, setDone] = useState(() => !!localStorage.getItem(`${uid}:tourDone`));
+  if (!prefs || settings.tourDone || done) return null;
 
-  const finish = () => setSetting(prefs, "tourDone", true);
+  // Saved in the synced preferences (other devices) and, synchronously, on this device: a reload right
+  // after finishing can drop the IndexedDB write
+  const finish = () => {
+    setSetting(prefs, "tourDone", true);
+    localStorage.setItem(`${uid}:tourDone`, "1");
+    setDone(true);
+  };
   const { Icon, title, text } = STEPS[step];
   const last = step === STEPS.length - 1;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onKeyDown={(e) => e.key === "Escape" && finish()}>
       <div role="dialog" aria-label="Welcome to SyncScribe" className="flex w-full max-w-sm flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl dark:bg-[#1c1c1c]">
         <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
           <Icon className="size-5" />
@@ -52,7 +61,12 @@ export default function WelcomeTour() {
               Back
             </button>
           )}
-          <button onClick={last ? finish : () => setStep(step + 1)} className={`${primaryButton} ${step > 0 ? "" : "ml-auto"}`}>
+          <button
+            key={step}
+            autoFocus // Enter goes forward, Escape skips
+            onClick={last ? finish : () => setStep(step + 1)}
+            className={`${primaryButton} ${step > 0 ? "" : "ml-auto"}`}
+          >
             {last ? "Start writing" : "Next"}
           </button>
         </div>

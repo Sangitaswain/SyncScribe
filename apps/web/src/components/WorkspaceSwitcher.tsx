@@ -38,7 +38,7 @@ export default function WorkspaceSwitcher() {
   }
 
   return (
-    <div className="relative min-w-0 flex-1" onMouseLeave={() => setOpen(false)}>
+    <div className="relative min-w-0 flex-1" onMouseLeave={() => setOpen(false)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
       <button onClick={() => setOpen(!open)} className={`${rowClass()} h-10 w-full`} title="Workspace" aria-expanded={open}>
         <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-brand text-xs font-semibold text-white">
           {(ws?.name ?? "W").slice(0, 1).toUpperCase()}

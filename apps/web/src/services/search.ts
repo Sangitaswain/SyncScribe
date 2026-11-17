@@ -63,20 +63,25 @@ export async function buildIndex() {
   }
 }
 
-const timers = new Map<string, ReturnType<typeof setTimeout>>();
+const waiting = new Map<string, { timer: ReturnType<typeof setTimeout>; doc: Y.Doc }>();
 
 // Re-index a document 500 ms after it stops changing (local edits, other tabs or the server)
 onDocChange((name, doc) => {
   if (!name.startsWith("doc:")) return;
-  clearTimeout(timers.get(name));
-  timers.set(
-    name,
-    setTimeout(() => {
-      timers.delete(name);
-      indexDoc(name.slice(4), doc);
-    }, 500),
-  );
+  clearTimeout(waiting.get(name)?.timer);
+  waiting.set(name, { doc, timer: setTimeout(() => indexWaiting(name), 500) });
 });
+
+function indexWaiting(name: string) {
+  const entry = waiting.get(name);
+  if (!entry) return;
+  clearTimeout(entry.timer);
+  waiting.delete(name);
+  indexDoc(name.slice(4), entry.doc);
+}
+
+/** Searching right after typing still finds the newest text. */
+const catchUp = () => [...waiting.keys()].forEach(indexWaiting);
 
 function snippetOf(content: string, terms: string[]): SearchResult["snippet"] {
   const lower = content.toLowerCase();
@@ -95,7 +100,7 @@ function snippetOf(content: string, terms: string[]): SearchResult["snippet"] {
 
 /** Quick open (I2): fuzzy match on titles only. */
 export const quickOpen = (query: string, keep: (id: string) => boolean = () => true): SearchResult[] =>
-  query.trim()
+  query.trim() && (catchUp(), true)
     ? index
         .search(query, { fields: ["title"], prefix: true, fuzzy: 0.3 })
         .filter((r) => keep(r.id))
@@ -106,6 +111,7 @@ export const quickOpen = (query: string, keep: (id: string) => boolean = () => t
 /** Best matches first; `keep` filters out documents that shouldn't show (e.g. in Trash). */
 export function search(query: string, keep: (id: string) => boolean = () => true): SearchResult[] {
   if (!query.trim()) return [];
+  catchUp();
   return index
     .search(query)
     .filter((r) => keep(r.id))

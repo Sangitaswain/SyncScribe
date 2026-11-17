@@ -21,7 +21,7 @@ export default function ExportMenu({ docId }: { docId: string }) {
     releaseDoc(docDoc(docId));
   };
   return (
-    <div className="relative" onMouseLeave={() => setOpen(false)}>
+    <div className="relative" onMouseLeave={() => setOpen(false)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
       <button
         onClick={() => setOpen(!open)}
         aria-label="Export"

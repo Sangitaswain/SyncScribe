@@ -133,6 +133,7 @@ function Row({ item, depth, children, after }: { item: TreeItem; depth: number; 
         setMenu(true);
       }}
       onMouseLeave={() => setMenu(false)}
+      onKeyDown={(e) => e.key === "Escape" && setMenu(false)}
     >
       {children}
       {renaming === item.id ? (
@@ -175,7 +176,18 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
     );
   return (
     <div ref={drop.setNodeRef} className={drop.isOver ? "rounded-md bg-brand/10 ring-2 ring-brand/50" : ""}>
-      <div className={rowClass()} onClick={() => setOpen(!open)} aria-expanded={open} {...dragProps} role="button">
+      <div
+        className={rowClass()}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+          e.preventDefault();
+          setOpen(!open); // keyboard users open and close folders too
+        }}
+        aria-expanded={open}
+        {...dragProps}
+        role="button"
+      >
         <Row item={item} depth={depth}>
           <ChevronRight className={`size-3.5 shrink-0 text-muted transition-transform ${open ? "rotate-90" : ""}`} />
           {open ? <FolderOpen className="size-4 shrink-0 text-muted" /> : <Folder className="size-4 shrink-0 text-muted" />}

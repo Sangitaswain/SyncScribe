@@ -24,7 +24,12 @@ export default function SyncStatusBadge() {
       <span role="status" title={reason ?? label} className={`flex items-center gap-1.5 px-1 ${color}`}>
         <Icon className={`size-4 ${state === "syncing" ? "animate-spin" : ""}`} />
         <span className={error ? "" : "hidden sm:inline"}>{label}</span>
-        {pending > 0 && <span className="text-muted">· {pending} unsynced</span>}
+        {pending > 0 && (
+          <span className="text-muted">
+            · {pending}
+            <span className="hidden sm:inline"> unsynced</span>
+          </span>
+        )}
       </span>
       <button
         onClick={syncNow}

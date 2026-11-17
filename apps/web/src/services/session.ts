@@ -41,6 +41,7 @@ export async function clearDevice() {
   const dbs = await indexedDB.databases();
   await Promise.all(dbs.filter((d) => mine(d.name)).map((d) => deleteDatabase(d.name!)));
   await delMany((await keys()).filter(mine));
+  Object.keys(localStorage).filter(mine).forEach((k) => localStorage.removeItem(k));
   await clearSession();
 }
 

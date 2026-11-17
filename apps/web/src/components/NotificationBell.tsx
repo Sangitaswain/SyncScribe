@@ -31,7 +31,7 @@ export default function NotificationBell() {
   const unread = unreadCount(items);
 
   return (
-    <div className="relative" onMouseLeave={() => setOpen(false)}>
+    <div className="relative" onMouseLeave={() => setOpen(false)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
       <button
         onClick={() => setOpen(!open)}
         aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
