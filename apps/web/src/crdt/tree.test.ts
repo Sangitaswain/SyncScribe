@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
+import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, purge, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -104,4 +104,13 @@ it("restores to the top level when the original folder is gone (4.10 step 3)", (
   trash(ws, other, "u1");
   restore(ws, other);
   expect(readItem(ws, other)!.parentId).toBe(keep); // its folder still exists
+});
+
+it("purge removes an item and everything inside it from the tree", () => {
+  const ws = new Y.Doc();
+  const folder = createFolder(ws, null, "Gone", "u1");
+  const doc = createDocItem(ws, folder, "u1");
+  const keep = createDocItem(ws, null, "u1");
+  expect(purge(ws, folder).sort()).toEqual([folder, doc].sort());
+  expect([...itemsOf(ws).keys()]).toEqual([keep]);
 });

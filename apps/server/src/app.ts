@@ -9,6 +9,7 @@ import { meRouter } from "./routes/me";
 import { syncRouter } from "./routes/sync";
 import { shareLinksRouter, sharedWithMe, sharesRouter } from "./routes/shares";
 import { workspacesRouter } from "./routes/workspaces";
+import { docsRouter } from "./routes/docs";
 import { requireAuth } from "./auth/middleware";
 
 export const app = express();
@@ -30,6 +31,7 @@ app.use("/api/shares", sharesRouter);
 app.use("/api/share-links", shareLinksRouter);
 app.get("/api/shared-with-me", requireAuth, sharedWithMe);
 app.use("/api/workspaces", workspacesRouter);
+app.use("/api/docs", docsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

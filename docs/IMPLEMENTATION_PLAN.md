@@ -301,7 +301,7 @@
 - [x] **14.1** Implement trash/restore in `tree.ts` (descendants together, restore to original or root) and the `/trash` screen (B10, 4.10).
   - Done when: deleting and restoring a folder with children works offline.
   - Commit: `feat(web): add trash and restore`
-- [ ] **14.2** Add permanent delete (owner only, confirm, outbox if offline) and `DELETE /api/docs/:id` on the server.
+- [x] **14.2** Add permanent delete (owner only, confirm, outbox if offline) and `DELETE /api/docs/:id` on the server.
   - Done when: a permanently deleted doc's data is removed from the database.
   - Commit: `feat: add permanent delete for owners`
 - [ ] **14.3** Add the daily Trash purge job (30 days) and automatic version pruning (BP-9).

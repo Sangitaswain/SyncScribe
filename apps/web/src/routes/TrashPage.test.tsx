@@ -27,3 +27,31 @@ it("lists deleted items and restores a folder with its contents, all on the devi
   await screen.findByText("Trash is empty.");
   await waitFor(() => expect(readItem(ws, doc)!.deletedAt).toBeNull());
 });
+
+it("deletes permanently after confirming; offline, the server request waits in the outbox (B10, FP-13)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  const { useNetwork } = await import("../stores/network");
+  const { outboxItems } = await import("../services/outbox");
+  cleanup();
+  useNetwork.setState({ serverReachable: false });
+  useSession.setState({ workspaces: [{ id: "w1", name: "Mine", kind: "personal", role: "owner" }] });
+  const ws = await getDoc(wsDoc("w1"));
+  const doc = createDocItem(ws, null, "u1");
+  const local = await getDoc(`doc:${doc}`);
+  local.getText("content").insert(0, "bye");
+  trash(ws, doc, "u1");
+
+  render(
+    <MemoryRouter>
+      <TrashPage />
+    </MemoryRouter>,
+  );
+  fireEvent.click(await screen.findByText("Delete permanently"));
+  await screen.findByText("Delete forever? This can't be undone.");
+  fireEvent.click(screen.getByText("Delete"));
+  // Deleting the local copy goes through IndexedDB, which can be slow when the whole suite runs
+  await screen.findByText("Trash is empty.", {}, { timeout: 5000 });
+  expect(readItem(ws, doc)).toBeUndefined();
+  await waitFor(() => expect(outboxItems().map((i) => `${i.method} ${i.path}`)).toEqual([`DELETE /docs/${doc}`]), { timeout: 5000 });
+  expect((await indexedDB.databases()).map((d) => d.name)).not.toContain(`u1:doc:${doc}`);
+});

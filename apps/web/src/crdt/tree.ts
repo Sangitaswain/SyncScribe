@@ -106,15 +106,15 @@ export const readItem = (ws: Y.Doc, id: string) => {
   return item ? ({ id, ...item.toJSON() } as TreeItem) : undefined;
 };
 
-/** Live (not trashed) items below `id`, at any depth. */
-function descendants(ws: Y.Doc, id: string, deletedAt: number | null = null) {
-  const found: Y.Map<unknown>[] = [];
+/** Items below `id` at any depth with the given `deletedAt` (null = live; undefined = all). */
+function descendants(ws: Y.Doc, id: string, deletedAt: number | null | undefined = null) {
+  const found: [string, Y.Map<unknown>][] = [];
   const seen = new Set([id]);
   for (let i = 0, parents = [id]; i < parents.length; i++)
     for (const [childId, child] of itemsOf(ws))
-      if (child.get("parentId") === parents[i] && child.get("deletedAt") === deletedAt && !seen.has(childId)) {
+      if (child.get("parentId") === parents[i] && (deletedAt === undefined || child.get("deletedAt") === deletedAt) && !seen.has(childId)) {
         seen.add(childId);
-        found.push(child);
+        found.push([childId, child]);
         parents.push(childId);
       }
   return found;
@@ -130,7 +130,7 @@ export function trash(ws: Y.Doc, id: string, userId: string) {
   const deletedAt = Date.now();
   ws.transact(() => {
     item.set("trashParentId", item.get("parentId"));
-    for (const it of [item, ...descendants(ws, id)]) {
+    for (const it of [item, ...descendants(ws, id).map(([, d]) => d)]) {
       it.set("deletedAt", deletedAt);
       it.set("deletedBy", userId);
     }
@@ -147,11 +147,18 @@ export function restore(ws: Y.Doc, id: string) {
   ws.transact(() => {
     item.set("parentId", parent && !parent.get("deletedAt") ? oldParent : null);
     item.set("trashParentId", null);
-    for (const it of [item, ...descendants(ws, id, deletedAt)]) {
+    for (const it of [item, ...descendants(ws, id, deletedAt).map(([, d]) => d)]) {
       it.set("deletedAt", null);
       it.set("deletedBy", null);
     }
   });
+}
+
+/** Removes an item and everything inside it from the tree for good; returns the removed ids (B10, owner only). */
+export function purge(ws: Y.Doc, id: string) {
+  const ids = [id, ...descendants(ws, id, undefined).map(([childId]) => childId)];
+  ws.transact(() => ids.forEach((i) => itemsOf(ws).delete(i)));
+  return ids;
 }
 
 /** Items the user put in Trash themselves (not the contents of a trashed folder), newest first. */
