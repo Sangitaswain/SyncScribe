@@ -7,6 +7,7 @@ import { errorHandler, notFound } from "./errors";
 import { authRouter } from "./routes/auth";
 import { meRouter } from "./routes/me";
 import { syncRouter } from "./routes/sync";
+import { sharesRouter } from "./routes/shares";
 
 export const app = express();
 app.use(helmet());
@@ -23,6 +24,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/me", meRouter);
 app.use("/api/sync", syncRouter);
+app.use("/api/shares", sharesRouter);
 
 app.use(notFound);
 app.use(errorHandler);

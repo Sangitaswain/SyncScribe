@@ -271,7 +271,7 @@
 - [x] **13.2** Enforce read-only connections for viewers/commenters on `doc:`, viewers on `cm:` (G5, EC18).
   - Done when: a test viewer's update is discarded by the server.
   - Commit: `feat(server): enforce read-only sync for viewers and commenters`
-- [ ] **13.3** Add shares endpoints (list, invite, change role, remove) with the editor-up-to-editor rule, pending email invites attached at sign-up, and socket closing on change (G1, G2, G4, EC16, EC17, EC22).
+- [x] **13.3** Add shares endpoints (list, invite, change role, remove) with the editor-up-to-editor rule, pending email invites attached at sign-up, and socket closing on change (G1, G2, G4, EC16, EC17, EC22).
   - Done when: supertest and a provider test cover invite, downgrade and removal.
   - Commit: `feat(server): add document and folder sharing`
 - [ ] **13.4** Add share-link endpoints: create, revoke, accept; revoked → 410 "This link is no longer active" (G3, EC23).

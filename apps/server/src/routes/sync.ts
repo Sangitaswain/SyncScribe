@@ -6,9 +6,13 @@ import { HttpError } from "../errors";
 export const syncRouter = Router();
 syncRouter.use(requireAuth);
 
-// Stored docs the user can access: own prefs, member workspaces, and the docs/comments inside them (BP-5.7).
-// Shared documents are added in Step 13.
+// Stored docs the user can access (BP-5.7): own prefs, member workspaces, the docs/comments inside them,
+// and docs shared with the user directly or through a shared folder (UNION stops at folder loops)
 const accessible = db.prepare(`
+  WITH RECURSIVE shared(id) AS (
+    SELECT resource_id FROM shares WHERE user_id = @uid
+    UNION SELECT d.id FROM documents d JOIN shared ON d.parent_id = shared.id
+  )
   SELECT s.name FROM ydoc_state s
   WHERE s.updated_at > @since AND (
     s.name = 'user:' || @uid
@@ -17,6 +21,7 @@ const accessible = db.prepare(`
                   JOIN workspace_members m ON m.workspace_id = d.workspace_id AND m.user_id = @uid
                   JOIN (SELECT 'doc:' AS prefix UNION ALL SELECT 'cm:') p
                   WHERE d.type = 'doc')
+    OR s.name IN (SELECT p.prefix || id FROM shared, (SELECT 'doc:' AS prefix UNION ALL SELECT 'cm:') p)
   )
   ORDER BY s.name`);
 

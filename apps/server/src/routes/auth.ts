@@ -35,6 +35,8 @@ authRouter.post("/signup", limiter, async (req, res) => {
     );
     db.prepare("INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, 'owner')").run(workspaceId, userId);
     seedWorkspace({ workspaceId, userId, name: wsName, kind: "personal" });
+    // Documents shared with this email before the account existed (EC22)
+    db.prepare("UPDATE shares SET user_id = ?, invited_email = NULL WHERE invited_email = ?").run(userId, email);
   })();
 
   res.status(201).json(await authResponse(userById(userId)!));
