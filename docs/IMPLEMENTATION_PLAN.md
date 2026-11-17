@@ -38,7 +38,7 @@
 | 15 | Search | 2 | [x] |
 | 16 | Version history | 2 | [x] |
 | 17 | Import, export, notifications, storage safety | 2 | [x] |
-| 18 | Testing | 2 | [ ] |
+| 18 | Testing | 2 | [x] |
 | 19 | Polish, docs and demo | 2 | [ ] |
 | 20 | Could features: comments, mentions, tags, pins, TOC, templates, focus mode, attribution, tab-hide flush | 2 | [ ] |
 
