@@ -34,7 +34,7 @@
 | 11 | Frontend sync engine and network status | 2 | [x] |
 | 12 | Real-time collaboration and presence | 2 | [x] |
 | 13 | Permissions, sharing and workspaces | 2 | [x] |
-| 14 | Trash and structural edge cases | 2 | [ ] |
+| 14 | Trash and structural edge cases | 2 | [x] |
 | 15 | Search | 2 | [ ] |
 | 16 | Version history | 2 | [ ] |
 | 17 | Import, export, notifications, storage safety | 2 | [ ] |
@@ -310,7 +310,7 @@
 - [x] **14.4** Add `DocDeletedBanner` for docs deleted remotely while open (EC9) and auto-move to root when editing inside a deleted folder (EC13).
   - Done when: both scenarios behave as specified with two users.
   - Commit: `feat(web): handle edits to deleted documents and folders`
-- [ ] **14.5** Add the cycle-fix writer and notice for conflicting folder moves (EC12).
+- [x] **14.5** Add the cycle-fix writer and notice for conflicting folder moves (EC12).
   - Done when: two users creating a cycle offline end with the same tree and see a notice.
   - Commit: `feat(web): resolve conflicting folder moves`
 

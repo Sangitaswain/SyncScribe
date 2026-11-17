@@ -5,7 +5,7 @@ import { DOC, docDoc } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { markPending, pendingNames } from "../services/pending";
 import { toast } from "../stores/ui";
-import { rescueEditedDocs } from "./tree";
+import { fixCycles, rescueEditedDocs } from "./tree";
 import { remoteOrigins } from "../sync/origins";
 
 // The only place Y.Docs are created (FP-8.1). Every doc is persisted to IndexedDB so it opens offline.
@@ -53,11 +53,14 @@ export function getDoc(name: string): Promise<Y.Doc> {
         setTimeout(() => doc.getMap(DOC.meta).set("editedAt", editedWritten));
       }
     });
-    // EC13: a folder deleted elsewhere doesn't take my unsynced edits with it (FP-8.3)
+    // Tree conflicts that only appear when changes from others arrive (FP-8.3)
     if (name.startsWith("ws:"))
       doc.on("update", (_u: Uint8Array, origin: unknown) => {
         if (!(origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
         setTimeout(() => {
+          // EC12: folders moved into each other offline
+          for (const folder of fixCycles(doc)) toast(`Folder moves conflicted; "${folder}" was moved to the top level`);
+          // EC13: a folder deleted elsewhere doesn't take my unsynced edits with it
           const me = useSession.getState().user?.id;
           if (me && rescueEditedDocs(doc, (id) => pendingNames().includes(docDoc(id)), me))
             toast("Moved to top level because its folder was deleted");

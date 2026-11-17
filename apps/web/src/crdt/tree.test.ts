@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
+import { copyDoc, createDocItem, createFolder, fixCycles, initDoc, itemsOf, move, readItem, renameFolder, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -135,4 +135,27 @@ it("keeps docs I edited when someone else trashes their folder (EC13)", () => {
   trash(ws, own, "me");
   expect(rescueEditedDocs(ws, (id) => id === doc, "me")).toBe(0); // I deleted it myself
   expect(readItem(ws, doc)!.deletedAt).not.toBeNull();
+});
+
+it("two devices moving folders into each other offline end with the same tree and no loop (EC12)", () => {
+  const a = new Y.Doc();
+  const x = createFolder(a, null, "X", "u1");
+  const y = createFolder(a, null, "Y", "u1");
+  const b = new Y.Doc();
+  Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+  move(a, x, y); // offline on device A
+  move(b, y, x); // offline on device B
+  Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+  Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+
+  const victim = [x, y].sort()[0];
+  const name = victim === x ? "X" : "Y";
+  expect(fixCycles(a)).toEqual([name]); // both devices fix it the same way…
+  expect(fixCycles(b)).toEqual([name]);
+  Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+  Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+  expect(itemsOf(a).toJSON()).toEqual(itemsOf(b).toJSON()); // …and end identical
+  expect(readItem(a, victim)!.parentId).toBeNull();
+  expect(readItem(a, victim === x ? y : x)!.parentId).toBe(victim);
+  expect(fixCycles(a)).toEqual([]);
 });

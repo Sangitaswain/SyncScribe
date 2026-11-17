@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import { nanoid } from "nanoid";
 import { generateKeyBetween } from "fractional-indexing";
 import { DOC, WS } from "@syncscribe/shared";
+import { resolveTree } from "./resolveTree";
 
 // Workspace tree operations (FP-4.2, FP-8.2). Each change is one Yjs transaction, so it is atomic and works offline.
 
@@ -175,6 +176,20 @@ export function rescueEditedDocs(ws: Y.Doc, hasLocalEdits: (docId: string) => bo
           item.set(k, v);
     });
   return rescued.length;
+}
+
+/**
+ * EC12: two offline moves put folders inside each other. Writes the loop break that every device
+ * already computes (the folder with the smallest id goes to the top), so all trees match. Returns their names.
+ */
+export function fixCycles(ws: Y.Doc) {
+  const all = [...itemsOf(ws).keys()].map((id) => readItem(ws, id)!);
+  const { broken } = resolveTree(all);
+  if (broken.length)
+    ws.transact(() => {
+      for (const id of broken) move(ws, id, null);
+    });
+  return broken.map((id) => all.find((i) => i.id === id)?.name || "Untitled folder");
 }
 
 /** Removes an item and everything inside it from the tree for good; returns the removed ids (B10, owner only). */

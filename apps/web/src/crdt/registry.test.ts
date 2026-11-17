@@ -51,3 +51,28 @@ it("records when a document was last edited, at most once a minute", async () =>
   expect(doc.getMap("meta").get("editedAt")).toBe(first); // throttled
   closeAll();
 });
+
+it("fixes a folder loop that arrives from the server and says so (EC12)", async () => {
+  const Y = await import("yjs");
+  const { createFolder, move, readItem } = await import("./tree");
+  const { remoteOrigins } = await import("../sync/origins");
+  const { useUi } = await import("../stores/ui");
+  const local = await getDoc("ws:loop");
+  const x = createFolder(local, null, "Notes", "u1");
+  const y = createFolder(local, null, "Drafts", "u1");
+  const remote = new Y.Doc();
+  Y.applyUpdate(remote, Y.encodeStateAsUpdate(local));
+  move(local, x, y);
+  move(remote, y, x); // someone else, at the same time
+
+  const server = {};
+  remoteOrigins.add(server);
+  Y.applyUpdate(local, Y.encodeStateAsUpdate(remote), server);
+  await new Promise((r) => setTimeout(r, 10));
+  const victim = [x, y].sort()[0];
+  expect(readItem(local, victim)!.parentId).toBeNull();
+  expect(useUi.getState().toasts.map((t) => t.message)).toContain(
+    `Folder moves conflicted; "${victim === x ? "Notes" : "Drafts"}" was moved to the top level`,
+  );
+  closeAll();
+});
