@@ -361,7 +361,7 @@
 
 ## Step 18 — Testing · FP-18, BP-12
 
-- [ ] **18.1** Unit tests for merge scenarios with two in-memory Y.Docs: EC7, EC8, EC10, EC11, H3 restore.
+- [x] **18.1** Unit tests for merge scenarios with two in-memory Y.Docs: EC7, EC8, EC10, EC11, H3 restore.
   - Done when: `npm test` passes.
   - Commit: `test(web): add CRDT merge scenario tests`
 - [ ] **18.2** Backend sync tests: two-provider merge, viewer update discarded, revoke closes connection, snapshot created.
