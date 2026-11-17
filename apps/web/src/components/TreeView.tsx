@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ChevronRight, FileText, Folder, FolderOpen, MoreHorizontal } from "lucide-react";
+import { ChevronRight, CloudCheck, FileText, Folder, FolderOpen, MoreHorizontal } from "lucide-react";
 import type * as Y from "yjs";
 import { DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { WS, docDoc, wsDoc } from "@syncscribe/shared";
@@ -107,7 +107,7 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
   );
 }
 
-function Row({ item, depth, children }: { item: TreeItem; depth: number; children: React.ReactNode }) {
+function Row({ item, depth, children, after }: { item: TreeItem; depth: number; children: React.ReactNode; after?: React.ReactNode }) {
   const { ws, renaming, setRenaming } = useContext(TreeCtx);
   const [menu, setMenu] = useState(false);
   const docTitle = useDocTitle(item.type === "doc" ? item.id : undefined);
@@ -138,6 +138,7 @@ function Row({ item, depth, children }: { item: TreeItem; depth: number; childre
       ) : (
         <span className="truncate">{title}</span>
       )}
+      {after}
       <RowMenu item={item} title={title} open={menu} setOpen={setMenu} />
     </div>
   );
@@ -152,6 +153,7 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
   const [open, setOpen] = useState(true);
   const { item, children } = node;
   const pending = useDocStatus((s) => s[`doc:${item.id}`]?.pending);
+  const offline = useDocStatus((s) => s[`doc:${item.id}`]?.offlineAvailable);
   const drag = useDraggable({ id: item.id });
   const drop = useDroppable({ id: item.id, disabled: item.type !== "folder" });
   const dragProps = { ref: drag.setNodeRef, ...drag.listeners, ...drag.attributes, style: { opacity: drag.isDragging ? 0.4 : 1 } };
@@ -159,7 +161,11 @@ function Node({ node, depth, activeId }: { node: TreeNode; depth: number; active
   if (item.type === "doc")
     return (
       <Link to={`/doc/${item.id}`} className={rowClass(item.id === activeId)} {...dragProps}>
-        <Row item={item} depth={depth}>
+        <Row
+          item={item}
+          depth={depth}
+          after={offline && <CloudCheck className="size-3.5 shrink-0 text-muted/60" aria-label="Available offline" />}
+        >
           <FileText className="ml-[18px] size-4 shrink-0 text-muted" />
           {pending && <span className="absolute top-1/2 left-1 size-1.5 -translate-y-1/2 rounded-full bg-amber-500" title="Not synced yet" />}
         </Row>

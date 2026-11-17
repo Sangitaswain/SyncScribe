@@ -4,7 +4,6 @@ import { NotebookPen } from "lucide-react";
 import { loginSchema, signupSchema, type AuthResponse } from "@syncscribe/shared";
 import { api } from "../services/api";
 import { saveSession } from "../services/session";
-import { bootstrap } from "../services/bootstrap";
 
 import { inputClass, primaryButton } from "../components/ui";
 
@@ -47,7 +46,6 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
     setError("");
     try {
       await saveSession(await api<AuthResponse>(`/auth/${mode}`, { body: parsed.data }));
-      await bootstrap(); // download the Welcome doc / existing documents to this device
       navigate("/");
     } catch (err) {
       setError((err as Error).message);

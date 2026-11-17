@@ -50,8 +50,11 @@ export async function syncClosedDocs() {
   try {
     // Workspace trees first, so the server knows about docs created offline
     await Promise.race([workspacesSynced().then(() => true), timeout(TIMEOUT)]);
-    const since = (await get<number>(key())) ?? 0;
-    const changed = await api<{ names: string[]; now: number }>(`/sync/changed?since=${since}`).catch(() => null);
+    // A device that never synced downloads everything it can access (A6, DF13)
+    const since = await get<number>(key());
+    const changed = await api<{ names: string[]; now: number }>(since ? `/sync/changed?since=${since}` : "/sync/all").catch(
+      () => null,
+    );
     const queue = [...new Set([...pendingNames(), ...(changed?.names ?? [])])].filter(
       (n) => (n.startsWith("doc:") || n.startsWith("cm:")) && !isAttached(n),
     );

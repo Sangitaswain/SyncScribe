@@ -5,7 +5,7 @@ import "./index.css";
 import App from "./App";
 import { loadSession, refreshIfNeeded } from "./services/session";
 import { loadPending } from "./services/pending";
-import { bootstrap } from "./services/bootstrap";
+import { loadOfflineSet } from "./services/offlineSet";
 import { useSession } from "./stores/session";
 import { reconnect, startSync, stopSync } from "./sync/providers";
 import "./sync/background";
@@ -21,8 +21,8 @@ useSession.subscribe((s, prev) => {
 // Restore the cached session before anything touches the network (A3), then refresh the token if needed
 loadSession().then(async () => {
   loadPending();
+  loadOfflineSet();
   await refreshIfNeeded();
-  bootstrap();
 });
 window.addEventListener("online", refreshIfNeeded);
 

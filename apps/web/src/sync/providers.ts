@@ -5,6 +5,7 @@ import { useSession } from "../stores/session";
 import { useNetwork } from "../stores/network";
 import { API_URL } from "../services/api";
 import { clearPending } from "../services/pending";
+import { markOffline } from "../services/offlineSet";
 import { remoteOrigins } from "./origins";
 
 // Provider Manager (FP-10.1): the only place network providers are attached to Y.Docs.
@@ -93,6 +94,7 @@ export function attach(name: string): Promise<HocuspocusProvider> {
     provider.on("authenticationFailed", ({ reason }: { reason: string }) => onRefused(name, provider, reason, attempt++));
     provider.on("authenticated", () => (attempt = 0));
     provider.on("synced", confirm);
+    if (name.startsWith("doc:")) provider.on("synced", ({ state }: { state: boolean }) => state && markOffline(name));
     provider.on("unsyncedChanges", confirm);
     provider.attach();
     return provider;

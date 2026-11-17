@@ -31,7 +31,7 @@
 | 8 | Sidebar, tree and document organization | 1 | [x] |
 | 9 | Markdown editor and preview | 1 | [x] |
 | 10 | Sync server (Hocuspocus) | 1–2 | [x] |
-| 11 | Frontend sync engine and network status | 2 | [ ] |
+| 11 | Frontend sync engine and network status | 2 | [x] |
 | 12 | Real-time collaboration and presence | 2 | [ ] |
 | 13 | Permissions, sharing and workspaces | 2 | [ ] |
 | 14 | Trash and structural edge cases | 2 | [ ] |
@@ -245,8 +245,9 @@
   - Done when: two tabs offline mirror each other's typing.
   > Note: Hocuspocus provider v4 no longer has the `broadcast` option, so cross-tab sync is done in the Doc Registry with the browser's `BroadcastChannel` (one channel per `${userId}:${docName}`; a tab opening a doc asks the others for anything it is missing).
   - Commit: `test(web): verify cross-tab sync works offline`
-- [ ] **11.8** New-device bootstrap: on sign-in, fetch `/api/sync/all`, download all docs, record `{uid}:offlineSet` and show the offline-available icon (A6, D6, DF13).
+- [x] **11.8** New-device bootstrap: on sign-in, fetch `/api/sync/all`, download all docs, record `{uid}:offlineSet` and show the offline-available icon (A6, D6, DF13).
   - Done when: signing in on a second browser shows all docs, and they open offline.
+  > Note: replaces the 8.1 `GET /api/sync/bootstrap` download (removed). A device with no `lastSyncedAt` asks `/api/sync/all` and downloads every doc through the background sync; docs whose provider reports `synced` are added to `{uid}:offlineSet`.
   - Commit: `feat(web): download all documents on a new device`
 
 ## Step 12 — Real-time collaboration and presence · FP-10.4, BP-6.6

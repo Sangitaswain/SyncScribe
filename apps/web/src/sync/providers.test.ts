@@ -140,3 +140,38 @@ test("a doc refused as unknown is retried once its workspace tree reaches the se
   await helpers.until(() => doc.isAuthenticated, 5000);
   await detach(docDoc(id));
 });
+
+test("a device that never synced downloads every document and marks it available offline (A6, D6, DF13)", async () => {
+  const { syncClosedDocs } = await import("./background");
+  const { createDocItem } = await import("../crdt/tree");
+  const { getDoc, releaseDoc } = await import("../crdt/registry");
+  const { useDocStatus } = await import("../stores/docStatus");
+  const { del, get } = await import("idb-keyval");
+
+  // Another device adds a document with text
+  const ws = wsDoc(auth.user.personalWorkspaceId);
+  const otherTree = await helpers.connect(server.port, ws, auth.token);
+  await helpers.until(() => otherTree.provider.isSynced);
+  const id = createDocItem(otherTree.doc, null, auth.user.id);
+  const otherDoc = await helpers.connect(server.port, docDoc(id), auth.token);
+  otherDoc.doc.getText(DOC.content).insert(0, "written elsewhere");
+  await helpers.until(() => otherDoc.provider.isSynced && otherDoc.provider.unsyncedChanges === 0);
+
+  // The server lists a doc once it has stored it (debounced up to 10 s)
+  const { api } = await import("../services/api");
+  for (let i = 0; i < 60; i++) {
+    if ((await api<{ names: string[] }>("/sync/all")).names.includes(docDoc(id))) break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  // This device has never synced: everything it can access is downloaded
+  await del(`${auth.user.id}:lastSyncedAt`);
+  await syncClosedDocs();
+  expect(useDocStatus.getState()[docDoc(id)]?.offlineAvailable).toBe(true);
+  expect(await get(`${auth.user.id}:offlineSet`)).toContain(docDoc(id));
+  const local = await getDoc(docDoc(id)); // opens from the device, no network needed
+  expect(local.getText(DOC.content).toString()).toBe("written elsewhere");
+  releaseDoc(docDoc(id));
+  otherTree.provider.destroy();
+  otherDoc.provider.destroy();
+}, 20_000);
