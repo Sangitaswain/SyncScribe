@@ -4,15 +4,20 @@ import { useDocStatus } from "../stores/docStatus";
 import { useNetwork } from "../stores/network";
 import { readingMinutes } from "../lib/text";
 
-/** Save/sync state of the open doc, word count and reading time (C6, C12, E6). */
+/** Save/sync state of the open doc, connection, word count and reading time (C6, C12, E1, E6, EC3). */
 export default function StatusBar() {
   const words = useEditorStats((s) => s.words);
   const docId = useMatch("/doc/:docId")?.params.docId;
   const progress = useNetwork((s) => s.progress);
+  const offline = useNetwork((s) => s.syncState === "offline");
+  const browserOnline = useNetwork((s) => s.browserOnline);
   const pending = useDocStatus((s) => !!docId && s[`doc:${docId}`]?.pending);
   return (
     <footer className="flex h-7 shrink-0 items-center gap-4 px-4 text-[11px] text-muted">
       <span>{pending ? "Saved on this device · waiting to sync" : "Saved on this device"}</span>
+      {offline && (
+        <span>{browserOnline ? "Can't reach SyncScribe — working offline" : "Offline — changes saved on this device"}</span>
+      )}
       {progress && progress.total > 1 && (
         <span>
           Syncing {progress.done} of {progress.total}…

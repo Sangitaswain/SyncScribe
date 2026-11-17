@@ -232,7 +232,7 @@
 - [x] **11.3** On reconnect, sync non-open docs: pending docs plus `/api/sync/changed` results, concurrency 4, with "Syncing X of Y" progress (E2, EC5).
   - Done when: a doc edited offline but closed still uploads after reconnect.
   - Commit: `feat(web): sync closed documents on reconnect`
-- [ ] **11.4** Implement the Network Monitor: browser events, socket status, `/api/health` ping, 3 s debounce, unreachable-server detection (E1, EC2, EC3, EC6).
+- [x] **11.4** Implement the Network Monitor: browser events, socket status, `/api/health` ping, 3 s debounce, unreachable-server detection (E1, EC2, EC3, EC6).
   - Done when: stopping the server shows "Can't reach SyncScribe — working offline"; flaky toggling does not flicker.
   - Commit: `feat(web): add network monitor with debounced status`
 - [ ] **11.5** Build `SyncStatusBadge` (Online/Offline/Syncing/Synced/Sync error + pending count), `OfflineBanner`, and **Sync now** button (E5, E6, E7, EC39).

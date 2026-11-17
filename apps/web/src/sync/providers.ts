@@ -1,4 +1,4 @@
-import { HocuspocusProvider, HocuspocusProviderWebsocket } from "@hocuspocus/provider";
+import { HocuspocusProvider, HocuspocusProviderWebsocket, WebSocketStatus } from "@hocuspocus/provider";
 import { userDoc, wsDoc } from "@syncscribe/shared";
 import { closeAll, getDoc, releaseDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
@@ -14,9 +14,15 @@ const COLLAB_URL = import.meta.env.VITE_COLLAB_URL ?? `${API_URL.replace(/^http/
 let socket: HocuspocusProviderWebsocket | null = null;
 const providers = new Map<string, Promise<HocuspocusProvider>>();
 const connectListeners = new Set<() => void>();
+const disconnectListeners = new Set<() => void>();
 
 /** Runs `fn` every time the shared socket (re)connects. */
 export const onConnect = (fn: () => void) => connectListeners.add(fn);
+/** Runs `fn` every time the shared socket loses its connection. */
+export const onDisconnect = (fn: () => void) => disconnectListeners.add(fn);
+
+/** Retries a dropped socket now instead of waiting out its backoff (EC3, E7). */
+export const reconnect = () => socket?.status === WebSocketStatus.Disconnected && socket.connect();
 
 /** Resolves once the provider has finished its first sync with the server. */
 export const whenSynced = (p: HocuspocusProvider) =>
@@ -33,6 +39,7 @@ export function attach(name: string): Promise<HocuspocusProvider> {
   if (!socket) {
     socket = new HocuspocusProviderWebsocket({ url: COLLAB_URL });
     socket.on("connect", () => connectListeners.forEach((fn) => fn()));
+    socket.on("disconnect", () => disconnectListeners.forEach((fn) => fn()));
   }
   const ws = socket;
   const ready = getDoc(name).then((document) => {

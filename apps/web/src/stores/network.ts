@@ -14,8 +14,9 @@ interface NetworkState {
 
 export const useNetwork = create<NetworkState>(() => ({
   browserOnline: navigator.onLine,
-  serverReachable: false,
-  syncState: "offline",
+  // Assume reachable while the browser is online; the Network Monitor confirms within 3 s (EC2)
+  serverReachable: navigator.onLine,
+  syncState: navigator.onLine ? "online" : "offline",
   pendingCount: 0,
   lastSyncedAt: null,
   errorReason: null,

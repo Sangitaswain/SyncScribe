@@ -9,6 +9,7 @@ import { bootstrap } from "./services/bootstrap";
 import { useSession } from "./stores/session";
 import { startSync, stopSync } from "./sync/providers";
 import "./sync/background";
+import "./sync/network";
 
 // Background sync runs while signed in (FP-10.1); signing out disconnects and closes local docs
 useSession.subscribe((s, prev) => {
