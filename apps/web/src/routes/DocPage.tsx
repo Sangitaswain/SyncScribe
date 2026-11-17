@@ -5,6 +5,7 @@ import { addRecent, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
 import { awarenessOf } from "../crdt/registry";
 import { useEditorStats } from "../stores/editorStats";
+import { usePresence, type PresenceUser } from "../stores/presence";
 import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import MarkdownPreview from "../editor/MarkdownPreview";
@@ -26,6 +27,23 @@ export default function DocPage() {
   useEffect(() => {
     if (docId) return syncWhileOpen(docDoc(docId));
   }, [docId]);
+
+  // Who has this doc open, one avatar per person even with several tabs (F2)
+  useEffect(() => {
+    const awareness = doc && docId ? awarenessOf(docDoc(docId)) : undefined;
+    if (!awareness) return;
+    const publish = () => {
+      const users = new Map<string, PresenceUser>();
+      for (const s of awareness.getStates().values()) if (s.user) users.set(s.user.id, s.user);
+      usePresence.setState({ users: [...users.values()] });
+    };
+    publish();
+    awareness.on("change", publish);
+    return () => {
+      awareness.off("change", publish);
+      usePresence.setState({ users: [] });
+    };
+  }, [doc, docId]);
 
   // Word count for the status bar, updated while typing (C12)
   const text = useY<string>(doc?.getText(DOC.content));

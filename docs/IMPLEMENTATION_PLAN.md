@@ -255,7 +255,7 @@
 - [x] **12.1** Pass awareness to `yCollab` so remote cursors and selections show with name and colour (F1, F3).
   - Done when: two users see each other's cursor and typing within about a second.
   - Commit: `feat(web): show live cursors and selections`
-- [ ] **12.2** Build `PresenceAvatars` from awareness, with an offline indicator for the local user (F2, 4.6).
+- [x] **12.2** Build `PresenceAvatars` from awareness, with an offline indicator for the local user (F2, 4.6).
   - Done when: avatars appear and disappear as users open and close the doc.
   - Commit: `feat(web): add presence avatars`
 - [ ] **12.3** Manually verify the PRD 4.5 scenario (two users offline, then reconnect) and record the result in `docs/TEST_NOTES.md`.

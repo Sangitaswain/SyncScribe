@@ -6,6 +6,7 @@ import { useDocTitle } from "../crdt/titles";
 import { setSetting, usePrefs } from "../crdt/prefs";
 import ModeSwitch from "../editor/ModeSwitch";
 import SyncStatusBadge from "./SyncStatusBadge";
+import PresenceAvatars from "./PresenceAvatars";
 
 const PAGE_TITLES: Record<string, string> = { "/": "All docs", "/trash": "Trash", "/shared": "Shared with me", "/search": "Search", "/settings": "Settings" };
 
@@ -46,6 +47,7 @@ export default function TopBar() {
         )}
       </nav>
       <div className="ml-auto flex items-center gap-2">
+        {docId && <PresenceAvatars />}
         <SyncStatusBadge />
         {docId && <ModeSwitch value={settings.editorMode ?? "edit"} onChange={(m) => prefs && setSetting(prefs, "editorMode", m)} />}
       </div>

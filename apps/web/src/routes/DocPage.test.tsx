@@ -3,7 +3,8 @@ import "fake-indexeddb/auto";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { expect, it, vi } from "vitest";
-import { USER, userDoc } from "@syncscribe/shared";
+import * as Y from "yjs";
+import { USER, docDoc, userDoc } from "@syncscribe/shared";
 import DocPage from "./DocPage";
 import StatusBar from "../components/StatusBar";
 import TopBar from "../components/TopBar";
@@ -37,4 +38,35 @@ it("opens a document with title, editor, preview modes and word count", async ()
   await waitFor(() => expect(document.querySelector(".prose h1")?.textContent).toBe("Plan"));
   expect(document.querySelector(".cm-editor")).toBeTruthy();
   expect((await getDoc(userDoc("u1"))).getMap(USER.settings).get("editorMode")).toBe("split");
+});
+
+it("shows who is in the document, and my avatar as offline when I am (F2, 4.6)", async () => {
+  const { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate, removeAwarenessStates } = await import("y-protocols/awareness");
+  const { awarenessOf } = await import("../crdt/registry");
+  const { useNetwork } = await import("../stores/network");
+  const { act, cleanup } = await import("@testing-library/react");
+  cleanup(); // unmount the previous test's page
+  useSession.setState({ user: { id: "u1", email: "", name: "Ada", color: "#16a34a", personalWorkspaceId: "w1" } });
+  const id = await newDocument("w1", null, "", "Shared");
+  render(
+    <MemoryRouter initialEntries={[`/doc/${id}`]}>
+      <TopBar />
+      <Routes>
+        <Route path="/doc/:docId" element={<DocPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  await screen.findByTitle("Ada");
+
+  // A collaborator opens the doc, then closes it
+  const bo = new Awareness(new Y.Doc());
+  bo.setLocalStateField("user", { id: "u2", name: "Bo", color: "#2563eb" });
+  const mine = awarenessOf(docDoc(id))!;
+  act(() => applyAwarenessUpdate(mine, encodeAwarenessUpdate(bo, [bo.clientID]), "remote"));
+  await screen.findByTitle("Bo");
+  act(() => removeAwarenessStates(mine, [bo.clientID], "remote"));
+  await waitFor(() => expect(screen.queryByTitle("Bo")).toBeNull());
+
+  act(() => useNetwork.setState({ syncState: "offline" }));
+  await screen.findByTitle("Ada (offline)");
 });
