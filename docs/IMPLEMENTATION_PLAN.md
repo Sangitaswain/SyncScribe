@@ -373,7 +373,7 @@
 - [x] **18.4** Write E2E 5–8 (viewer read-only, revoked while offline, two tabs offline, offline search).
   - Done when: all E2E tests pass.
   - Commit: `test(e2e): add permission, multi-tab and search tests`
-- [ ] **18.5** Add a GitHub Actions workflow running lint, unit and E2E tests.
+- [x] **18.5** Add a GitHub Actions workflow running lint, unit and E2E tests.
   - Done when: the workflow passes on push.
   - Commit: `ci: run lint and tests on push`
 
