@@ -238,7 +238,7 @@
 - [x] **11.5** Build `SyncStatusBadge` (Online/Offline/Syncing/Synced/Sync error + pending count), `OfflineBanner`, and **Sync now** button (E5, E6, E7, EC39).
   - Done when: all five states can be produced and look correct.
   - Commit: `feat(web): add sync status badge and offline banner`
-- [ ] **11.6** Handle provider auth failures: `token-expired` → re-auth modal; `unknown-doc` → retry after `ws:` sync (FP-10.2).
+- [x] **11.6** Handle provider auth failures: `token-expired` → re-auth modal; `unknown-doc` → retry after `ws:` sync (FP-10.2).
   - Done when: both cases behave as specified.
   - Commit: `feat(web): handle sync authentication failures`
 - [ ] **11.7** Verify cross-tab sync via provider broadcast, including offline (EC28, DF16).

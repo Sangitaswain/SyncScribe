@@ -22,34 +22,52 @@ export const onConnect = (fn: () => void) => connectListeners.add(fn);
 /** Runs `fn` every time the shared socket loses its connection. */
 export const onDisconnect = (fn: () => void) => disconnectListeners.add(fn);
 
-// Sync error (EC39): the server refused this device's docs three times in a row
-let refusals = 0;
-const refused = () =>
-  ++refusals >= 3 && useNetwork.setState({ errorReason: "The server refused to sync. Your changes are safe on this device." });
-const accepted = () => {
-  refusals = 0;
-  if (useNetwork.getState().errorReason) useNetwork.setState({ errorReason: null });
-};
-
 /**
  * Retries a dropped socket now instead of waiting out its backoff (EC3). With `force` ("Sync now", E7)
  * it also drops a live connection, so every doc signs in and syncs again.
  */
 export function reconnect(force = false) {
   if (!socket) return;
-  if (force) refusals = 0;
   // Closing the live socket makes it reopen by itself (disconnect() + connect() would leave it closed)
   if (force && socket.status === WebSocketStatus.Connected) socket.webSocket?.close();
   else if (force || socket.status === WebSocketStatus.Disconnected) socket.connect();
 }
 
-/** Resolves once the provider has finished its first sync with the server. */
+/** Resolves once the server has everything this provider holds (synced, nothing unconfirmed). */
 export const whenSynced = (p: HocuspocusProvider) =>
   new Promise<void>((resolve) => {
-    if (p.isSynced) return resolve();
-    const done = ({ state }: { state: boolean }) => state && (p.off("synced", done), resolve());
-    p.on("synced", done);
+    const check = () => {
+      if (!p.isSynced || p.unsyncedChanges > 0) return;
+      p.off("synced", check);
+      p.off("unsyncedChanges", check);
+      resolve();
+    };
+    p.on("synced", check);
+    p.on("unsyncedChanges", check);
+    check();
   });
+
+// Refused sync connections (FP-10.2): a doc is retried after the workspace trees reach the server
+// (the server doesn't know a doc until the tree listing it arrives); refused 3 times → Sync error (EC39)
+const SESSION_REASONS = ["token-expired", "invalid-token"];
+const RETRIES = 3;
+
+function onRefused(name: string, provider: HocuspocusProvider, reason: string, attempt: number) {
+  if (SESSION_REASONS.includes(reason)) {
+    // Keep working on this device; sign in again, then everything reconnects (EC19)
+    if (useSession.getState().status === "signedIn") useSession.setState({ status: "needsReauth" });
+    return;
+  }
+  if (attempt + 1 >= RETRIES)
+    return useNetwork.setState({ errorReason: "The server refused to sync. Your changes are safe on this device." });
+  workspacesSynced()
+    .then(() => new Promise((r) => setTimeout(r, 1000 * (attempt + 1))))
+    .then(async () => {
+      if ((await providers.get(name)) !== provider) return; // detached meanwhile
+      await provider.sendToken(); // sign this doc in again on the same socket
+      provider.startSync();
+    });
+}
 
 /** Starts syncing a doc (no-op if it is already attached). */
 export function attach(name: string): Promise<HocuspocusProvider> {
@@ -71,8 +89,9 @@ export function attach(name: string): Promise<HocuspocusProvider> {
     remoteOrigins.add(provider); // changes from the server are not local edits
     // The server has everything once the doc is synced with no unconfirmed changes (D4, E6)
     const confirm = () => provider.isSynced && provider.unsyncedChanges === 0 && clearPending(name);
-    provider.on("authenticationFailed", refused);
-    provider.on("authenticated", accepted);
+    let attempt = 0;
+    provider.on("authenticationFailed", ({ reason }: { reason: string }) => onRefused(name, provider, reason, attempt++));
+    provider.on("authenticated", () => (attempt = 0));
     provider.on("synced", confirm);
     provider.on("unsyncedChanges", confirm);
     provider.attach();

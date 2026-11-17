@@ -91,33 +91,52 @@ test("on reconnect, closed docs edited offline upload and docs changed elsewhere
 });
 
 test("Sync now reconnects; repeated refusals show a sync error that Retry clears (E7, EC39)", async () => {
-  const { providerFor, reconnect, syncWhileOpen, whenSynced } = await import("./providers");
+  const { attach, detach, providerFor, reconnect, whenSynced } = await import("./providers");
   const { useNetwork } = await import("../stores/network");
-  const { useSession } = await import("../stores/session");
   const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
   const socket = tree.configuration.websocketProvider;
   const reconnected = () => new Promise<void>((resolve) => socket.on("connect", resolve));
 
   // A forced reconnect of a live socket must come back up
-  let back = reconnected();
+  const back = reconnected();
   reconnect(true);
   await back;
   await whenSynced(tree);
 
-  // With a doc open, the server refuses all three (user, workspace, doc) → Sync error
-  const docId = [...(tree.document.getMap(WS.items).keys() as Iterable<string>)][0];
-  const stop = syncWhileOpen(docDoc(docId));
-  await helpers.until(() => !!providerFor(docDoc(docId)));
-  await whenSynced(await providerFor(docDoc(docId))!);
-  useSession.setState({ token: "not-a-valid-token" });
-  reconnect(true);
-  await helpers.until(() => !!useNetwork.getState().errorReason);
+  // A doc the server has never heard of is retried, then refused a third time → Sync error
+  await attach("doc:nope");
+  await helpers.until(() => !!useNetwork.getState().errorReason, 8000);
+  await detach("doc:nope");
+}, 15_000);
 
-  // Retry with a working session clears it
-  useSession.setState({ token: auth.token });
-  back = reconnected();
+test("an expired session asks to sign in again, then sync resumes (FP-10.2, EC19)", async () => {
+  const { providerFor, reconnect } = await import("./providers");
+  const { useSession } = await import("../stores/session");
+  const { signToken } = await import("../../../server/src/auth/jwt");
+  const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
+
+  useSession.setState({ token: await signToken(auth.user, "1s") });
+  await new Promise((r) => setTimeout(r, 1100));
   reconnect(true);
-  await back;
-  await helpers.until(() => tree.isAuthenticated && useNetwork.getState().errorReason === null);
-  stop();
+  await helpers.until(() => useSession.getState().status === "needsReauth");
+
+  useSession.setState({ token: auth.token, status: "signedIn" }); // signed in again (main.tsx then reconnects)
+  reconnect(true);
+  await helpers.until(() => tree.isAuthenticated);
+});
+
+test("a doc refused as unknown is retried once its workspace tree reaches the server (FP-10.2)", async () => {
+  const { attach, detach, providerFor } = await import("./providers");
+  const { createDocItem } = await import("../crdt/tree");
+  const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
+
+  // The doc is listed in a tree change the server has not received yet
+  const scratch = new Y.Doc();
+  const id = createDocItem(scratch, null, auth.user.id);
+  const doc = await attach(docDoc(id));
+  await new Promise((r) => doc.on("authenticationFailed", r));
+
+  Y.applyUpdate(tree.document, Y.encodeStateAsUpdate(scratch));
+  await helpers.until(() => doc.isAuthenticated, 5000);
+  await detach(docDoc(id));
 });
