@@ -325,7 +325,7 @@
 
 ## Step 16 — Version history · BP-5.5, BP-6.3, FP-15.3
 
-- [ ] **16.1** Add the snapshot policy in `onStoreDocument` (10-minute interval, authors set, retention) (H1).
+- [x] **16.1** Add the snapshot policy in `onStoreDocument` (10-minute interval, authors set, retention) (H1).
   - Done when: editing over time creates versions with authors.
   - Commit: `feat(server): add automatic version snapshots`
 - [ ] **16.2** Add versions endpoints: list, get state, create named, rename (H1, H4).

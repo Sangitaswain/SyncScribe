@@ -3,7 +3,8 @@ import { Hocuspocus } from "@hocuspocus/server";
 import { Database } from "@hocuspocus/extension-database";
 import { WebSocketServer } from "ws";
 import { fetchState, storeState } from "./persistence";
-import { onAuthenticate } from "./auth";
+import { onAuthenticate, type CollabContext } from "./auth";
+import { maybeSnapshot, noteAuthor } from "./versions";
 import { indexDocument, indexTitle } from "./treeIndex";
 import { parseDocName } from "@syncscribe/shared";
 
@@ -16,10 +17,21 @@ export const hocuspocus = new Hocuspocus({
   onAuthenticate,
   // Workspace trees are indexed as soon as they load or change; doc titles when stored
   afterLoadDocument: async ({ documentName, document }) => indexDocument(documentName, document),
-  onChange: async ({ documentName, document }) => indexDocument(documentName, document),
+  onChange: async ({ documentName, document, context }) => {
+    indexDocument(documentName, document);
+    const parsed = parseDocName(documentName);
+    if (parsed?.kind === "doc") noteAuthor(parsed.id, (context as CollabContext | undefined)?.user?.id);
+  },
   onStoreDocument: async ({ documentName, document }) => {
     const parsed = parseDocName(documentName);
-    if (parsed?.kind === "doc") indexTitle(parsed.id, document);
+    if (parsed?.kind !== "doc") return;
+    indexTitle(parsed.id, document);
+    maybeSnapshot(parsed.id, document, document.getConnectionsCount() === 0); // H1, BP-6.3
+  },
+  // The last person left: their session's changes become a version (it may have been stored already)
+  onDisconnect: async ({ documentName, document }) => {
+    const parsed = parseDocName(documentName);
+    if (parsed?.kind === "doc" && document.getConnectionsCount() === 0) maybeSnapshot(parsed.id, document, true);
   },
   extensions: [
     new Database({
