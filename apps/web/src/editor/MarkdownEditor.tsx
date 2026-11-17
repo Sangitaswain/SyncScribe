@@ -7,6 +7,8 @@ import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type * as Y from "yjs";
 import type { Awareness } from "y-protocols/awareness";
+import { addImage, imageProblem } from "../crdt/assets";
+import { toast } from "../stores/ui";
 
 const theme = EditorView.theme({
   "&": { height: "100%", fontSize: "16px" },
@@ -15,6 +17,33 @@ const theme = EditorView.theme({
   ".cm-placeholder": { color: "rgb(0 0 0 / 0.25)" },
   "&.cm-focused": { outline: "none" },
 });
+
+/**
+ * Adds image files to the doc and inserts their markdown at `pos` (default: the cursor). Returns false if
+ * there were no images, so the editor handles the paste or drop as usual (C10, EC34).
+ */
+export function insertImages(view: EditorView, files: File[], pos?: number) {
+  const images = files.filter((f) => f.type.startsWith("image/"));
+  const doc = images.length ? docOf(view) : undefined;
+  if (!doc) return false;
+  (async () => {
+    let at = pos ?? view.state.selection.main.head;
+    for (const file of images) {
+      const problem = imageProblem(file);
+      if (problem) {
+        toast(problem, "error");
+        continue;
+      }
+      const md = `${await addImage(doc, file)}\n`;
+      view.dispatch({ changes: { from: at, insert: md }, selection: { anchor: at + md.length } });
+      at += md.length;
+    }
+  })();
+  return true;
+}
+
+const docs = new WeakMap<EditorView, Y.Doc>();
+const docOf = (view: EditorView) => docs.get(view);
 
 /**
  * CodeMirror bound to the document's Y.Text: every keystroke is a CRDT change saved on the device (C2, C6).
@@ -50,12 +79,18 @@ export default function MarkdownEditor({
           keymap.of([...yUndoManagerKeymap, ...defaultKeymap, indentWithTab]),
           yCollab(ytext, awareness ?? null),
           EditorState.readOnly.of(readOnly), // viewers and commenters (G5)
+          EditorView.domEventHandlers({
+            paste: (e, view) => !readOnly && insertImages(view, [...(e.clipboardData?.files ?? [])]),
+            drop: (e, view) =>
+              !readOnly && insertImages(view, [...(e.dataTransfer?.files ?? [])], view.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined),
+          }),
           EditorView.editable.of(!readOnly),
           theme,
         ],
       }),
     });
     viewRef.current = view;
+    if (ytext.doc) docs.set(view, ytext.doc);
     return () => view.destroy();
   }, [ytext, awareness, readOnly]);
 

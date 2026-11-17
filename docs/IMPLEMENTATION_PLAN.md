@@ -352,7 +352,7 @@
 - [x] **17.5** Add storage safety: `persist()`, usage in Settings, 80 % warning, quota-exceeded handling, private-mode warning, IndexedDB-unavailable fallback (D7, EC24–EC27, EC40).
   - Done when: each warning can be triggered (simulated) and shows the right message.
   - Commit: `feat(web): add storage usage and safety warnings`
-- [ ] **17.6** Add images: paste/drop/upload to the doc `assets` map with type/size checks, rendered in preview (C10, EC34).
+- [x] **17.6** Add images: paste/drop/upload to the doc `assets` map with type/size checks, rendered in preview (C10, EC34).
   - Done when: an image added offline appears for a collaborator after sync.
   - Commit: `feat(web): add offline image support`
 - [ ] **17.7** Add the formatting toolbar and keyboard shortcuts, find & replace, large-paste limit (C4, C5, C11, EC32).
