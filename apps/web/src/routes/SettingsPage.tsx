@@ -1,10 +1,28 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { COLORS, type AuthResponse } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { api } from "../services/api";
 import { saveSession } from "../services/session";
 import { toast } from "../stores/ui";
 import { inputClass, primaryButton } from "../components/ui";
+import { formatSize, refreshUsage, useStorage } from "../services/storage";
+
+/** Device storage used by SyncScribe (D7) and what clearing browser data means (EC26). */
+function StorageSection() {
+  const { usage, quota } = useStorage();
+  useEffect(() => {
+    refreshUsage();
+  }, []);
+  return (
+    <section className="mt-6 flex flex-col gap-2 rounded-2xl border border-line p-6 text-sm dark:border-white/10">
+      <h2 className="font-semibold">Storage on this device</h2>
+      <p>{usage !== null && quota !== null ? `SyncScribe uses ${formatSize(usage)} of ${formatSize(quota)} available.` : "Storage use isn't available in this browser."}</p>
+      <p className="text-muted">
+        Clearing your browser data deletes changes that haven't synced yet. Documents that have synced come back when you sign in again.
+      </p>
+    </section>
+  );
+}
 
 /** Profile: display name and cursor colour shown to collaborators (A4). */
 export default function SettingsPage() {
@@ -51,6 +69,7 @@ export default function SettingsPage() {
           Save
         </button>
       </form>
+      <StorageSection />
     </div>
   );
 }

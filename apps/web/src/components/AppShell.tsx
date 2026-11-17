@@ -6,6 +6,7 @@ import Toaster from "./Toaster";
 import ReauthModal from "./ReauthModal";
 import Sidebar from "./Sidebar";
 import OfflineBanner from "./OfflineBanner";
+import StorageBanner from "./StorageBanner";
 import ShareDialog from "./ShareDialog";
 import SignOutDialog from "./SignOutDialog";
 import SearchOverlay from "./SearchPanel";
@@ -32,6 +33,7 @@ export default function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <OfflineBanner />
+        <StorageBanner />
         <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>

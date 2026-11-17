@@ -9,7 +9,7 @@ const KEY = "session";
 
 export async function saveSession(auth: AuthResponse) {
   const { user, token, workspaces } = auth;
-  await set(KEY, auth);
+  await set(KEY, auth).catch(() => {}); // storage blocked (EC40): stay signed in for this visit only
   useSession.setState((s) => ({
     user,
     token,
@@ -20,7 +20,7 @@ export async function saveSession(auth: AuthResponse) {
 }
 
 export async function loadSession() {
-  const auth = await get<AuthResponse>(KEY);
+  const auth = await get<AuthResponse>(KEY).catch(() => undefined);
   if (auth) await saveSession(auth);
   else useSession.setState({ status: "signedOut" });
 }

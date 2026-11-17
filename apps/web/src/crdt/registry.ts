@@ -12,7 +12,7 @@ import { remoteOrigins } from "../sync/origins";
 
 interface Entry {
   doc: Y.Doc;
-  persistence: IndexeddbPersistence;
+  persistence: IndexeddbPersistence | null;
   channel: BroadcastChannel;
   awareness?: Awareness;
   ready: Promise<Y.Doc>;
@@ -26,6 +26,10 @@ const changeListeners = new Set<(name: string, doc: Y.Doc) => void>();
 /** Runs `fn` after any change to an open document, local or remote (used by search, FP-14). */
 export const onDocChange = (fn: (name: string, doc: Y.Doc) => void) => changeListeners.add(fn);
 
+// EC40: when the browser blocks IndexedDB, docs live in memory only and sync online
+let saveOnDevice = true;
+export const setSaveOnDevice = (ok: boolean) => (saveOnDevice = ok);
+
 /** Workspace and user docs stay open for the whole session. */
 const keepOpen = (name: string) => name.startsWith("ws:") || name.startsWith("user:");
 
@@ -37,7 +41,8 @@ export function getDoc(name: string): Promise<Y.Doc> {
   let entry = entries.get(name);
   if (!entry) {
     const doc = new Y.Doc();
-    const persistence = new IndexeddbPersistence(dbName(name), doc);
+    const persistence = saveOnDevice ? new IndexeddbPersistence(dbName(name), doc) : null;
+    const fromDisk = (origin: unknown) => !!persistence && origin === persistence;
     // Other tabs on this device get local edits directly, even offline (EC28, DF16). A tab that opens
     // the doc sends what it has; the others answer with anything it is missing.
     const channel = new BroadcastChannel(dbName(name));
@@ -48,7 +53,7 @@ export function getDoc(name: string): Promise<Y.Doc> {
     // Local edits only: not state loaded from disk, not changes received from the server
     let editedWritten = 0;
     doc.on("update", (update: Uint8Array, origin: unknown) => {
-      if (origin === persistence || (origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
+      if (fromDisk(origin) || (origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
       if (origin !== channel) channel.postMessage({ update });
       markPending(name);
       // Record "last edited" for sorting (B6), at most once a minute so it doesn't flood sync
@@ -58,7 +63,7 @@ export function getDoc(name: string): Promise<Y.Doc> {
       }
     });
     doc.on("update", (_u: Uint8Array, origin: unknown) => {
-      if (origin !== persistence) changeListeners.forEach((fn) => fn(name, doc));
+      if (!fromDisk(origin)) changeListeners.forEach((fn) => fn(name, doc));
     });
     // Tree conflicts that only appear when changes from others arrive (FP-8.3)
     if (name.startsWith("ws:"))
@@ -73,7 +78,7 @@ export function getDoc(name: string): Promise<Y.Doc> {
             toast("Moved to top level because its folder was deleted");
         });
       });
-    const ready = persistence.whenSynced.then(() => {
+    const ready = (persistence ? persistence.whenSynced : Promise.resolve()).then(() => {
       channel.postMessage({ sv: Y.encodeStateVector(doc) });
       return doc;
     });
@@ -98,7 +103,7 @@ export function releaseDoc(name: string) {
   entries.delete(name);
   entry.awareness?.destroy();
   entry.channel.close();
-  entry.persistence.destroy();
+  entry.persistence?.destroy();
   entry.doc.destroy();
 }
 
@@ -116,10 +121,10 @@ export async function deleteLocal(name: string) {
     entries.delete(name);
     entry.awareness?.destroy();
     entry.channel.close();
-    await entry.persistence.destroy(); // closes the database (y-indexeddb's clearData doesn't wait for the delete)
+    await entry.persistence?.destroy(); // closes the database (y-indexeddb's clearData doesn't wait for the delete)
     entry.doc.destroy();
   }
-  await deleteDatabase(dbName(name));
+  if (saveOnDevice) await deleteDatabase(dbName(name));
 }
 
 /** Presence of an open document (null for workspace and user docs). */
@@ -133,7 +138,7 @@ export function closeAll() {
   for (const [name, e] of entries) {
     e.awareness?.destroy();
     e.channel.close();
-    e.persistence.destroy();
+    e.persistence?.destroy();
     e.doc.destroy();
     entries.delete(name);
   }

@@ -349,7 +349,7 @@
 - [x] **17.4** Build `NotificationBell` and the list; local toasts for sync finished/failed (J3).
   - Done when: unread count and mark-as-read work.
   - Commit: `feat(web): add notification bell`
-- [ ] **17.5** Add storage safety: `persist()`, usage in Settings, 80 % warning, quota-exceeded handling, private-mode warning, IndexedDB-unavailable fallback (D7, EC24–EC27, EC40).
+- [x] **17.5** Add storage safety: `persist()`, usage in Settings, 80 % warning, quota-exceeded handling, private-mode warning, IndexedDB-unavailable fallback (D7, EC24–EC27, EC40).
   - Done when: each warning can be triggered (simulated) and shows the right message.
   - Commit: `feat(web): add storage usage and safety warnings`
 - [ ] **17.6** Add images: paste/drop/upload to the doc `assets` map with type/size checks, rendered in preview (C10, EC34).
