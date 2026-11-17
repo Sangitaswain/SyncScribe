@@ -106,16 +106,61 @@ export const readItem = (ws: Y.Doc, id: string) => {
   return item ? ({ id, ...item.toJSON() } as TreeItem) : undefined;
 };
 
-/** Moves an item to Trash; nothing is erased (B10). Full trash/restore arrives in Step 14. */
+/** Live (not trashed) items below `id`, at any depth. */
+function descendants(ws: Y.Doc, id: string, deletedAt: number | null = null) {
+  const found: Y.Map<unknown>[] = [];
+  const seen = new Set([id]);
+  for (let i = 0, parents = [id]; i < parents.length; i++)
+    for (const [childId, child] of itemsOf(ws))
+      if (child.get("parentId") === parents[i] && child.get("deletedAt") === deletedAt && !seen.has(childId)) {
+        seen.add(childId);
+        found.push(child);
+        parents.push(childId);
+      }
+  return found;
+}
+
+/**
+ * Moves an item to Trash; nothing is erased (B10). A folder's contents get the same `deletedAt`,
+ * so they come back together on restore.
+ */
 export function trash(ws: Y.Doc, id: string, userId: string) {
   const item = itemsOf(ws).get(id);
-  if (!item) return;
+  if (!item || item.get("deletedAt")) return;
+  const deletedAt = Date.now();
   ws.transact(() => {
     item.set("trashParentId", item.get("parentId"));
-    item.set("deletedAt", Date.now());
-    item.set("deletedBy", userId);
+    for (const it of [item, ...descendants(ws, id)]) {
+      it.set("deletedAt", deletedAt);
+      it.set("deletedBy", userId);
+    }
   });
 }
+
+/** Brings an item (and what was trashed with it) back: to its old folder if that still exists, else to the top (4.10). */
+export function restore(ws: Y.Doc, id: string) {
+  const item = itemsOf(ws).get(id);
+  const deletedAt = item?.get("deletedAt") as number | null | undefined;
+  if (!item || !deletedAt) return;
+  const oldParent = item.get("trashParentId") as string | null;
+  const parent = oldParent ? itemsOf(ws).get(oldParent) : undefined;
+  ws.transact(() => {
+    item.set("parentId", parent && !parent.get("deletedAt") ? oldParent : null);
+    item.set("trashParentId", null);
+    for (const it of [item, ...descendants(ws, id, deletedAt)]) {
+      it.set("deletedAt", null);
+      it.set("deletedBy", null);
+    }
+  });
+}
+
+/** Items the user put in Trash themselves (not the contents of a trashed folder), newest first. */
+export const trashedItems = (items: TreeItem[]) => {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  return items
+    .filter((i) => i.deletedAt && byId.get(i.parentId ?? "")?.deletedAt !== i.deletedAt)
+    .sort((a, b) => b.deletedAt! - a.deletedAt!);
+};
 
 /** True if `targetId` is `itemId` itself or somewhere inside it (a folder can't move into its own subtree). */
 export function isInside(items: TreeItem[], targetId: string, itemId: string) {

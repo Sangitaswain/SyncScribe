@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, setTags, setTitle } from "./tree";
+import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -66,4 +66,42 @@ it("decides drag-and-drop targets", async () => {
   expect(dropParent(items, outer, inner)).toBeUndefined(); // not into its own subfolder
   expect(dropParent(items, doc, doc)).toBeUndefined(); // onto a doc: no move
   expect(dropParent(items, doc, null)).toBeUndefined(); // dropped outside
+});
+
+it("trashes a folder with everything in it and restores it together (B10, 4.10)", async () => {
+  const ws = new Y.Doc();
+  const top = createFolder(ws, null, "Course", "u1");
+  const sub = createFolder(ws, top, "Week 1", "u1");
+  const doc = createDocItem(ws, sub, "u1");
+  const loose = createDocItem(ws, top, "u1");
+  trash(ws, loose, "u1"); // trashed on its own first
+  await new Promise((r) => setTimeout(r, 2));
+  trash(ws, top, "u2");
+
+  const all = () => [...itemsOf(ws).keys()].map((id) => readItem(ws, id)!) as TreeItem[];
+  expect(readItem(ws, doc)!.deletedAt).toBe(readItem(ws, top)!.deletedAt);
+  expect(readItem(ws, sub)).toMatchObject({ deletedBy: "u2", parentId: top });
+  expect(trashedItems(all()).map((i) => i.id)).toEqual([top, loose]); // what the user deleted, newest first
+
+  restore(ws, top);
+  for (const id of [top, sub, doc]) expect(readItem(ws, id)!.deletedAt).toBeNull();
+  expect(readItem(ws, doc)!.parentId).toBe(sub);
+  expect(readItem(ws, loose)!.deletedAt).not.toBeNull(); // trashed separately, stays in Trash
+});
+
+it("restores to the top level when the original folder is gone (4.10 step 3)", () => {
+  const ws = new Y.Doc();
+  const folder = createFolder(ws, null, "Drafts", "u1");
+  const doc = createDocItem(ws, folder, "u1");
+  trash(ws, doc, "u1");
+  trash(ws, folder, "u1");
+  restore(ws, doc);
+  expect(readItem(ws, doc)).toMatchObject({ parentId: null, deletedAt: null, trashParentId: null });
+
+  const other = createDocItem(ws, null, "u1");
+  const keep = createFolder(ws, null, "Kept", "u1");
+  move(ws, other, keep);
+  trash(ws, other, "u1");
+  restore(ws, other);
+  expect(readItem(ws, other)!.parentId).toBe(keep); // its folder still exists
 });

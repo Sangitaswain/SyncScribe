@@ -298,7 +298,7 @@
 
 ## Step 14 — Trash and structural edge cases · FP-8.2, FP-8.3, BP-5.4, BP-9
 
-- [ ] **14.1** Implement trash/restore in `tree.ts` (descendants together, restore to original or root) and the `/trash` screen (B10, 4.10).
+- [x] **14.1** Implement trash/restore in `tree.ts` (descendants together, restore to original or root) and the `/trash` screen (B10, 4.10).
   - Done when: deleting and restoring a folder with children works offline.
   - Commit: `feat(web): add trash and restore`
 - [ ] **14.2** Add permanent delete (owner only, confirm, outbox if offline) and `DELETE /api/docs/:id` on the server.

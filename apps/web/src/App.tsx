@@ -11,6 +11,7 @@ import NotFound from "./routes/NotFound";
 import SharedPage from "./routes/SharedPage";
 import AcceptLinkPage from "./routes/AcceptLinkPage";
 import MembersPage from "./routes/MembersPage";
+import TrashPage from "./routes/TrashPage";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
 import RequireAuth from "./components/RequireAuth";
@@ -36,7 +37,7 @@ export default function App() {
           <Route path="/" element={<AllDocsPage />} />
           <Route path="/doc/:docId" element={<DocPage />} />
           <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />
-          <Route path="/trash" element={<Placeholder title="Trash" />} />
+          <Route path="/trash" element={<TrashPage />} />
           <Route path="/shared" element={<SharedPage />} />
           <Route path="/search" element={<Placeholder title="Search" />} />
           <Route path="/settings" element={<SettingsPage />} />
