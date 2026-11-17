@@ -1,12 +1,14 @@
 import type { AppNotification } from "@syncscribe/shared";
 import { useNotifications } from "../stores/notifications";
 import { useNetwork } from "../stores/network";
+import { useSession } from "../stores/session";
 import { api } from "./api";
 import { sendOrQueue } from "./outbox";
 
 // Notifications from the server (J3): loaded when online, live ones arrive through the sync connection
 
 export async function loadNotifications() {
+  if (useSession.getState().status !== "signedIn") return;
   try {
     useNotifications.setState({ items: (await api<{ notifications: AppNotification[] }>("/notifications")).notifications });
   } catch {

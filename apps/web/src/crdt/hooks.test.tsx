@@ -26,3 +26,26 @@ it("opens and releases a doc with the component", async () => {
   unmount();
   expect(peekDoc("doc:hook")).toBeUndefined();
 });
+
+it("shows a change that lands before the hook has subscribed (e.g. the server's copy arriving)", async () => {
+  const { useLayoutEffect } = await import("react");
+  const { render: draw, screen: view } = await import("@testing-library/react");
+  const Yjs = await import("yjs");
+  const map = new Yjs.Doc().getMap<string>("items");
+  function Reader() {
+    return <p>{JSON.stringify(useY(map))}</p>;
+  }
+  function Writer() {
+    useLayoutEffect(() => {
+      map.set("welcome", "doc"); // runs before Reader's subscription
+    }, []);
+    return null;
+  }
+  draw(
+    <>
+      <Reader />
+      <Writer />
+    </>,
+  );
+  expect(view.getByText('{"welcome":"doc"}')).toBeTruthy();
+});
