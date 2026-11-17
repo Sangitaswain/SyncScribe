@@ -8,6 +8,7 @@ import { loadPending } from "./services/pending";
 import { offlineSet, revokedSet } from "./services/docSets";
 import { loadOutbox } from "./services/outbox";
 import { buildIndex } from "./services/search";
+import { loadNotifications } from "./services/notifications";
 import { useSession } from "./stores/session";
 import { reconnect, startSync, stopSync } from "./sync/providers";
 import "./sync/background";
@@ -28,6 +29,7 @@ loadSession().then(async () => {
   buildIndex(); // offline search over everything on the device (FP-14)
   loadOutbox();
   await refreshIfNeeded();
+  loadNotifications();
 });
 window.addEventListener("online", refreshIfNeeded);
 

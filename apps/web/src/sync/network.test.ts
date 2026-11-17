@@ -70,6 +70,8 @@ it("shows syncing while docs are pending or downloading, then synced, and a sync
   expect(state()).toBe("synced");
   useNetwork.setState({ errorReason: "The server refused to sync." });
   expect(state()).toBe("error");
+  const { useUi } = await import("../stores/ui");
+  expect(useUi.getState().toasts.map((t) => t.message)).toContain("Sync failed: The server refused to sync.");
 });
 
 it("Sync now clears the error and forces a reconnect (E7)", async () => {

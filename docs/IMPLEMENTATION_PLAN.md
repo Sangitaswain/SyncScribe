@@ -346,7 +346,7 @@
 - [x] **17.3** Add notifications on the server (create, list, mark read, live stateless delivery) and `POST /api/mentions` (J3, F5).
   - Done when: sharing a doc creates a live notification for the invitee.
   - Commit: `feat(server): add notifications and live delivery`
-- [ ] **17.4** Build `NotificationBell` and the list; local toasts for sync finished/failed (J3).
+- [x] **17.4** Build `NotificationBell` and the list; local toasts for sync finished/failed (J3).
   - Done when: unread count and mark-as-read work.
   - Commit: `feat(web): add notification bell`
 - [ ] **17.5** Add storage safety: `persist()`, usage in Settings, 80 % warning, quota-exceeded handling, private-mode warning, IndexedDB-unavailable fallback (D7, EC24–EC27, EC40).

@@ -7,6 +7,7 @@ import { API_URL } from "../services/api";
 import { clearPending, pendingNames } from "../services/pending";
 import { offlineSet, revokedSet } from "../services/docSets";
 import { setDocStatus } from "../stores/docStatus";
+import { receive } from "../services/notifications";
 import { remoteOrigins } from "./origins";
 
 // Provider Manager (FP-10.1): the only place network providers are attached to Y.Docs.
@@ -122,7 +123,9 @@ export function attach(name: string): Promise<HocuspocusProvider> {
     });
     // Role changed on the server: it closes this doc, then we sign in again with the new role (EC17)
     provider.on("stateless", ({ payload }: { payload: string }) => {
-      if (JSON.parse(payload).type !== "role-changed") return;
+      const message = JSON.parse(payload);
+      if (message.type === "notification") return receive(message.notification); // J3, live
+      if (message.type !== "role-changed") return;
       const again = () => {
         provider.off("close", again);
         setTimeout(() => signInAgain(name, provider));

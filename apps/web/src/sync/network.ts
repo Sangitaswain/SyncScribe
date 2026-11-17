@@ -1,5 +1,6 @@
 import { API_URL } from "../services/api";
 import { useNetwork, type SyncState } from "../stores/network";
+import { toast } from "../stores/ui";
 import { onConnect, onDisconnect, reconnect } from "./providers";
 
 // Network Monitor (FP-10.3): SyncScribe counts as reachable only when the browser is online, the sync
@@ -56,7 +57,9 @@ const stateOf = (s: ReturnType<typeof useNetwork.getState>): SyncState =>
   : "online";
 useNetwork.subscribe((s) => {
   const syncState = stateOf(s);
-  if (syncState !== s.syncState) useNetwork.setState({ syncState });
+  if (syncState === s.syncState) return;
+  useNetwork.setState({ syncState });
+  if (syncState === "error") toast(`Sync failed: ${s.errorReason}`, "error"); // J3 local notice
 });
 
 window.addEventListener("online", () => {

@@ -8,6 +8,7 @@ import ModeSwitch from "../editor/ModeSwitch";
 import SyncStatusBadge from "./SyncStatusBadge";
 import PresenceAvatars from "./PresenceAvatars";
 import ExportMenu from "./ExportMenu";
+import NotificationBell from "./NotificationBell";
 
 const PAGE_TITLES: Record<string, string> = { "/": "All docs", "/trash": "Trash", "/shared": "Shared with me", "/search": "Search", "/settings": "Settings" };
 
@@ -50,6 +51,7 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-2">
         {docId && <PresenceAvatars />}
         <SyncStatusBadge />
+        <NotificationBell />
         {docId && (
           <button
             onClick={() => useUi.setState({ modal: `share:${docId}` })}
