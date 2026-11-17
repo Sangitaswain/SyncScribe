@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import { nanoid } from "nanoid";
 import {
   can,
@@ -10,6 +10,7 @@ import {
   shareLinkCreateSchema,
   type Capability,
   type Share,
+  type SharedItem,
   type ShareRole,
 } from "@syncscribe/shared";
 import { db } from "../db/db";
@@ -41,6 +42,18 @@ const shareById = (id: string) => {
   const share = byIdStmt.get(id) as Share | undefined;
   if (!share) throw new HttpError(404, "not_found", "Share not found");
   return share;
+};
+
+/** Docs and folders other people shared with me, with their cached titles (G1, `/shared`). */
+export const sharedWithMe: RequestHandler = (_req, res) => {
+  const items = db
+    .prepare(
+      `SELECT d.id, d.type, d.title, s.role, u.name AS ownerName FROM shares s
+       JOIN documents d ON d.id = s.resource_id JOIN users u ON u.id = d.owner_id
+       WHERE s.user_id = ? AND d.deleted_at IS NULL ORDER BY s.created_at DESC`,
+    )
+    .all(currentUser(res).id) as SharedItem[];
+  res.json({ items });
 };
 
 sharesRouter.get("/", (req, res) => {

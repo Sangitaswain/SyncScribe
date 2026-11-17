@@ -22,6 +22,14 @@ export interface AuthResponse {
   workspaces: Workspace[];
 }
 
+export interface Member {
+  userId: string;
+  name: string;
+  email: string;
+  color: string;
+  role: Role;
+}
+
 export interface Share {
   id: string;
   resourceId: string;

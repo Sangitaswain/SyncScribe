@@ -277,7 +277,7 @@
 - [x] **13.4** Add share-link endpoints: create, revoke, accept; revoked → 410 "This link is no longer active" (G3, EC23).
   - Done when: tests cover a valid and a revoked link.
   - Commit: `feat(server): add share links`
-- [ ] **13.5** Add workspaces and members endpoints (B2) and `GET /api/shared-with-me`.
+- [x] **13.5** Add workspaces and members endpoints (B2) and `GET /api/shared-with-me`.
   - Done when: a team workspace can be created and a member invited.
   - Commit: `feat(server): add team workspaces and shared-with-me listing`
 - [ ] **13.6** Add the client outbox (enqueue, persist, ordered flush with retry, 4xx drop with toast) (FP-13).

@@ -3,7 +3,7 @@ import { db } from "../db/db";
 
 // Who may open which Yjs document (BP-4.2).
 
-const workspaceRole = (userId: string, workspaceId: string) =>
+export const workspaceRole = (userId: string, workspaceId: string) =>
   ((db.prepare("SELECT role FROM workspace_members WHERE workspace_id = ? AND user_id = ?").get(workspaceId, userId) as
     | { role: Role }
     | undefined)?.role ?? "none") as Role;
