@@ -20,7 +20,9 @@ export const hocuspocus = new Hocuspocus({
   onChange: async ({ documentName, document, context }) => {
     indexDocument(documentName, document);
     const parsed = parseDocName(documentName);
-    if (parsed?.kind === "doc") noteAuthor(parsed.id, (context as CollabContext | undefined)?.user?.id);
+    if (parsed?.kind !== "doc") return;
+    noteAuthor(parsed.id, (context as CollabContext | undefined)?.user?.id);
+    indexTitle(parsed.id, document); // shared lists show a renamed doc right away
   },
   onStoreDocument: async ({ documentName, document }) => {
     const parsed = parseDocName(documentName);

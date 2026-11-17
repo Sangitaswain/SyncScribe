@@ -39,10 +39,10 @@ export function indexWorkspace(workspaceId: string, ws: Y.Doc) {
   })();
 }
 
-/** Cached title for "Shared with me" lists (C8). */
+/** Cached title for "Shared with me" lists and notifications (C8); written only when it changed. */
 export const indexTitle = (docId: string, doc: Y.Doc) =>
-  db.prepare("UPDATE documents SET title = ?, updated_at = ? WHERE id = ?").run(
-    String(doc.getMap(DOC.meta).get("title") ?? ""), Date.now(), docId,
+  db.prepare("UPDATE documents SET title = ?, updated_at = ? WHERE id = ? AND title IS NOT ?").run(
+    String(doc.getMap(DOC.meta).get("title") ?? ""), Date.now(), docId, String(doc.getMap(DOC.meta).get("title") ?? ""),
   );
 
 /** Hook used on load and on every change of a workspace/doc. */

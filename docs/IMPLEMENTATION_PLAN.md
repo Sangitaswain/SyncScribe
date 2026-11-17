@@ -367,7 +367,7 @@
 - [x] **18.2** Backend sync tests: two-provider merge, viewer update discarded, revoke closes connection, snapshot created.
   - Done when: `npm test -w apps/server` passes.
   - Commit: `test(server): add sync and permission tests`
-- [ ] **18.3** Set up Playwright and write E2E 1–4 from FP-18 (offline reload, close-and-reopen, two-user offline merge, auto reconnect).
+- [x] **18.3** Set up Playwright and write E2E 1–4 from FP-18 (offline reload, close-and-reopen, two-user offline merge, auto reconnect).
   - Done when: `npm run e2e` passes locally.
   - Commit: `test(e2e): add offline and merge end-to-end tests`
 - [ ] **18.4** Write E2E 5–8 (viewer read-only, revoked while offline, two tabs offline, offline search).
