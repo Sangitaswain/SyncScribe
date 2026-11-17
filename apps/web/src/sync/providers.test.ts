@@ -89,3 +89,35 @@ test("on reconnect, closed docs edited offline upload and docs changed elsewhere
   releaseDoc(name);
   other.provider.destroy();
 });
+
+test("Sync now reconnects; repeated refusals show a sync error that Retry clears (E7, EC39)", async () => {
+  const { providerFor, reconnect, syncWhileOpen, whenSynced } = await import("./providers");
+  const { useNetwork } = await import("../stores/network");
+  const { useSession } = await import("../stores/session");
+  const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
+  const socket = tree.configuration.websocketProvider;
+  const reconnected = () => new Promise<void>((resolve) => socket.on("connect", resolve));
+
+  // A forced reconnect of a live socket must come back up
+  let back = reconnected();
+  reconnect(true);
+  await back;
+  await whenSynced(tree);
+
+  // With a doc open, the server refuses all three (user, workspace, doc) → Sync error
+  const docId = [...(tree.document.getMap(WS.items).keys() as Iterable<string>)][0];
+  const stop = syncWhileOpen(docDoc(docId));
+  await helpers.until(() => !!providerFor(docDoc(docId)));
+  await whenSynced(await providerFor(docDoc(docId))!);
+  useSession.setState({ token: "not-a-valid-token" });
+  reconnect(true);
+  await helpers.until(() => !!useNetwork.getState().errorReason);
+
+  // Retry with a working session clears it
+  useSession.setState({ token: auth.token });
+  back = reconnected();
+  reconnect(true);
+  await back;
+  await helpers.until(() => tree.isAuthenticated && useNetwork.getState().errorReason === null);
+  stop();
+});

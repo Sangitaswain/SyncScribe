@@ -5,6 +5,7 @@ import StatusBar from "./StatusBar";
 import Toaster from "./Toaster";
 import ReauthModal from "./ReauthModal";
 import Sidebar from "./Sidebar";
+import OfflineBanner from "./OfflineBanner";
 import { isDesktop, useUi } from "../stores/ui";
 
 /** Sidebar + page header + main area + status bar (FP-7). */
@@ -27,6 +28,7 @@ export default function AppShell() {
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
+        <OfflineBanner />
         <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>

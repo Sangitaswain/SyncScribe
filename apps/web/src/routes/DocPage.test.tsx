@@ -13,6 +13,7 @@ import { useSession } from "../stores/session";
 
 // No sync server in unit tests
 vi.mock("../sync/providers", () => ({ syncWhileOpen: () => () => {} }));
+vi.mock("../sync/network", () => ({ syncNow: () => {} }));
 
 Range.prototype.getClientRects = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;
 Range.prototype.getBoundingClientRect = () => new DOMRect();

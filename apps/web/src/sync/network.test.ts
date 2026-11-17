@@ -8,7 +8,7 @@ const reconnect = vi.fn();
 vi.mock("./providers", () => ({
   onConnect: (fn: () => void) => (socket.connect = fn),
   onDisconnect: (fn: () => void) => (socket.disconnect = fn),
-  reconnect: () => reconnect(),
+  reconnect: (force?: boolean) => reconnect(force),
 }));
 
 let serverUp = true;
@@ -59,6 +59,24 @@ it("goes offline 3 s after the server stops, and back online when it returns", a
   socket.connect();
   await vi.advanceTimersByTimeAsync(0);
   expect(state()).toBe("online");
+});
+
+it("shows syncing while docs are pending or downloading, then synced, and a sync error (E5, EC39)", async () => {
+  useNetwork.setState({ pendingCount: 2 });
+  expect(state()).toBe("syncing");
+  useNetwork.setState({ pendingCount: 0, progress: { done: 1, total: 3 } });
+  expect(state()).toBe("syncing");
+  useNetwork.setState({ progress: null, lastSyncedAt: Date.now() });
+  expect(state()).toBe("synced");
+  useNetwork.setState({ errorReason: "The server refused to sync." });
+  expect(state()).toBe("error");
+});
+
+it("Sync now clears the error and forces a reconnect (E7)", async () => {
+  const { syncNow } = await import("./network");
+  syncNow();
+  expect(state()).toBe("synced");
+  expect(reconnect).toHaveBeenLastCalledWith(true);
 });
 
 it("treats a browser offline event as offline after the debounce", async () => {

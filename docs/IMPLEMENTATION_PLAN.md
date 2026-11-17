@@ -235,7 +235,7 @@
 - [x] **11.4** Implement the Network Monitor: browser events, socket status, `/api/health` ping, 3 s debounce, unreachable-server detection (E1, EC2, EC3, EC6).
   - Done when: stopping the server shows "Can't reach SyncScribe — working offline"; flaky toggling does not flicker.
   - Commit: `feat(web): add network monitor with debounced status`
-- [ ] **11.5** Build `SyncStatusBadge` (Online/Offline/Syncing/Synced/Sync error + pending count), `OfflineBanner`, and **Sync now** button (E5, E6, E7, EC39).
+- [x] **11.5** Build `SyncStatusBadge` (Online/Offline/Syncing/Synced/Sync error + pending count), `OfflineBanner`, and **Sync now** button (E5, E6, E7, EC39).
   - Done when: all five states can be produced and look correct.
   - Commit: `feat(web): add sync status badge and offline banner`
 - [ ] **11.6** Handle provider auth failures: `token-expired` → re-auth modal; `unknown-doc` → retry after `ws:` sync (FP-10.2).

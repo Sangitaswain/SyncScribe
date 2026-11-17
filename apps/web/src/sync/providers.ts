@@ -2,6 +2,7 @@ import { HocuspocusProvider, HocuspocusProviderWebsocket, WebSocketStatus } from
 import { userDoc, wsDoc } from "@syncscribe/shared";
 import { closeAll, getDoc, releaseDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
+import { useNetwork } from "../stores/network";
 import { API_URL } from "../services/api";
 import { clearPending } from "../services/pending";
 import { remoteOrigins } from "./origins";
@@ -21,8 +22,26 @@ export const onConnect = (fn: () => void) => connectListeners.add(fn);
 /** Runs `fn` every time the shared socket loses its connection. */
 export const onDisconnect = (fn: () => void) => disconnectListeners.add(fn);
 
-/** Retries a dropped socket now instead of waiting out its backoff (EC3, E7). */
-export const reconnect = () => socket?.status === WebSocketStatus.Disconnected && socket.connect();
+// Sync error (EC39): the server refused this device's docs three times in a row
+let refusals = 0;
+const refused = () =>
+  ++refusals >= 3 && useNetwork.setState({ errorReason: "The server refused to sync. Your changes are safe on this device." });
+const accepted = () => {
+  refusals = 0;
+  if (useNetwork.getState().errorReason) useNetwork.setState({ errorReason: null });
+};
+
+/**
+ * Retries a dropped socket now instead of waiting out its backoff (EC3). With `force` ("Sync now", E7)
+ * it also drops a live connection, so every doc signs in and syncs again.
+ */
+export function reconnect(force = false) {
+  if (!socket) return;
+  if (force) refusals = 0;
+  // Closing the live socket makes it reopen by itself (disconnect() + connect() would leave it closed)
+  if (force && socket.status === WebSocketStatus.Connected) socket.webSocket?.close();
+  else if (force || socket.status === WebSocketStatus.Disconnected) socket.connect();
+}
 
 /** Resolves once the provider has finished its first sync with the server. */
 export const whenSynced = (p: HocuspocusProvider) =>
@@ -52,6 +71,8 @@ export function attach(name: string): Promise<HocuspocusProvider> {
     remoteOrigins.add(provider); // changes from the server are not local edits
     // The server has everything once the doc is synced with no unconfirmed changes (D4, E6)
     const confirm = () => provider.isSynced && provider.unsyncedChanges === 0 && clearPending(name);
+    provider.on("authenticationFailed", refused);
+    provider.on("authenticated", accepted);
     provider.on("synced", confirm);
     provider.on("unsyncedChanges", confirm);
     provider.attach();
