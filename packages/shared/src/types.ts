@@ -43,7 +43,7 @@ export interface ShareLink {
   id: string;
   resourceId: string;
   role: ShareRole;
-  url: string;
+  url?: string; // only in the response that creates the link (the server keeps a hash)
   revoked: boolean;
 }
 

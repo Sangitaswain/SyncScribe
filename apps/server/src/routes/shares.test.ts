@@ -30,7 +30,9 @@ it("owners and editors invite; only owners change or remove access (G1, G2, G4)"
 
   // Ed can now see who has access and invite up to editor, but not change anyone's access
   const viShare = (await invite(ed, "vi@example.com", "viewer").expect(201)).body;
-  expect((await request(app).get(`/api/shares?resource=${docId}`).set(as(ed)).expect(200)).body.shares).toHaveLength(2);
+  const listed = (await request(app).get(`/api/shares?resource=${docId}`).set(as(ed)).expect(200)).body;
+  expect(listed.role).toBe("editor");
+  expect(listed.shares).toHaveLength(2);
   await invite(ed, "vi@example.com", "owner").expect(400); // share roles stop at editor
   await request(app).patch(`/api/shares/${viShare.id}`).set(as(ed)).send({ role: "editor" }).expect(403);
   await request(app).delete(`/api/shares/${viShare.id}`).set(as(ed)).expect(403);
@@ -85,6 +87,8 @@ it("share links give their role until revoked, then say the link is no longer ac
   const created = (await link("commenter").expect(201)).body;
   expect(created.url).toMatch(/\/s\/[\w-]{20,}$/);
   const token = created.url.split("/s/")[1];
+  const active = () => request(app).get(`/api/share-links?resource=${docId}`).set(as(ana));
+  expect((await active().expect(200)).body.links).toEqual([{ id: created.id, resourceId: docId, role: "commenter", revoked: false }]);
 
   const visitor = await signup("Visitor");
   const accepted = (await request(app).post(`/api/share-links/${token}/accept`).set(as(visitor)).expect(200)).body;
@@ -93,6 +97,7 @@ it("share links give their role until revoked, then say the link is no longer ac
 
   await request(app).delete(`/api/share-links/${created.id}`).set(as(visitor)).expect(403); // only the owner revokes
   await request(app).delete(`/api/share-links/${created.id}`).set(as(ana)).expect(204);
+  expect((await active()).body.links).toEqual([]);
   const late = await signup("Late");
   const gone = await request(app).post(`/api/share-links/${token}/accept`).set(as(late)).expect(410);
   expect(gone.body.error).toEqual({ code: "link_inactive", message: "This link is no longer active" });

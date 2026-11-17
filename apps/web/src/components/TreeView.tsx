@@ -12,7 +12,7 @@ import { duplicateDocument } from "../crdt/actions";
 import { useDocTitle, useEditedAt, useTitles } from "../crdt/titles";
 import { useDocStatus } from "../stores/docStatus";
 import { useSession } from "../stores/session";
-import { toast } from "../stores/ui";
+import { toast, useUi } from "../stores/ui";
 import MoveToDialog from "./MoveToDialog";
 
 interface Ctx {
@@ -75,6 +75,7 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
         <div className="absolute top-full right-0 z-40 w-40 rounded-lg border border-line bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#222]">
           <button className={itemClass} onClick={act(() => setRenaming(item.id))}>Rename</button>
           <button className={itemClass} onClick={act(() => setMoving(true))}>Move to…</button>
+          <button className={itemClass} onClick={act(() => useUi.setState({ modal: `share:${item.id}` }))}>Share…</button>
           {item.type === "doc" && (
             <button className={itemClass} onClick={act(async () => navigate(`/doc/${await duplicateDocument(workspaceId, item.id)}`))}>
               Duplicate

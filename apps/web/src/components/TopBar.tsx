@@ -1,4 +1,4 @@
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, UserPlus } from "lucide-react";
 import { useMatch } from "react-router";
 import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
@@ -49,6 +49,15 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-2">
         {docId && <PresenceAvatars />}
         <SyncStatusBadge />
+        {docId && (
+          <button
+            onClick={() => useUi.setState({ modal: `share:${docId}` })}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white"
+          >
+            <UserPlus className="size-4" />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+        )}
         {docId && <ModeSwitch value={settings.editorMode ?? "edit"} onChange={(m) => prefs && setSetting(prefs, "editorMode", m)} />}
       </div>
     </header>

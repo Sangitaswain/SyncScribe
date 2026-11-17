@@ -283,7 +283,7 @@
 - [x] **13.6** Add the client outbox (enqueue, persist, ordered flush with retry, 4xx drop with toast) (FP-13).
   - Done when: an invite made offline is sent automatically after reconnecting.
   - Commit: `feat(web): add offline outbox for server actions`
-- [ ] **13.7** Build `ShareDialog`: invite with role, link create/copy/revoke, manage access list; controls hidden by capability (G1–G4).
+- [x] **13.7** Build `ShareDialog`: invite with role, link create/copy/revoke, manage access list; controls hidden by capability (G1–G4).
   - Done when: an owner shares a doc and the invitee sees it.
   - Commit: `feat(web): add share dialog`
 - [ ] **13.8** Make the editor read-only with `ReadOnlyBanner` by role; handle `forbidden` with `RevokedBanner`, export of the local copy, removal from the sidebar; reconnect on `role-changed` (G5, EC16, EC17).

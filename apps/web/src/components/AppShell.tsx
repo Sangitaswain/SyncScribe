@@ -6,6 +6,7 @@ import Toaster from "./Toaster";
 import ReauthModal from "./ReauthModal";
 import Sidebar from "./Sidebar";
 import OfflineBanner from "./OfflineBanner";
+import ShareDialog from "./ShareDialog";
 import { isDesktop, useUi } from "../stores/ui";
 
 /** Sidebar + page header + main area + status bar (FP-7). */
@@ -36,6 +37,7 @@ export default function AppShell() {
       </div>
       <Toaster />
       <ReauthModal />
+      <ShareDialog />
     </div>
   );
 }

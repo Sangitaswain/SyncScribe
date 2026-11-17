@@ -10,6 +10,7 @@ import {
   shareLinkCreateSchema,
   type Capability,
   type Share,
+  type ShareLink,
   type SharedItem,
   type ShareRole,
 } from "@syncscribe/shared";
@@ -31,7 +32,8 @@ sharesRouter.use(requireAuth);
 function requireRole(userId: string, resourceId: string, capability: Capability) {
   const role = roleFor(userId, docDoc(resourceId)) ?? "none";
   if (role === "none") throw new HttpError(404, "not_found", "Document not found");
-  if (!can(role, capability)) throw new HttpError(403, "forbidden", "You don't have permission to do that");
+  if (!can(role, capability)) throw new HttpError(403, "forbidden", "Only editors and owners can share this document");
+  return role;
 }
 
 const SELECT = `SELECT s.id, s.resource_id AS resourceId, s.user_id AS userId, COALESCE(u.email, s.invited_email) AS email,
@@ -58,8 +60,8 @@ export const sharedWithMe: RequestHandler = (_req, res) => {
 
 sharesRouter.get("/", (req, res) => {
   const resourceId = String(req.query.resource ?? "");
-  requireRole(currentUser(res).id, resourceId, "invite"); // owners and editors see who has access
-  res.json({ shares: listStmt.all(resourceId) });
+  const role = requireRole(currentUser(res).id, resourceId, "invite"); // owners and editors see who has access
+  res.json({ role, shares: listStmt.all(resourceId) });
 });
 
 // Editors may invite up to editor, owners anyone; share roles never go above editor (BP-4.2)
@@ -117,6 +119,19 @@ export const shareLinksRouter = Router();
 shareLinksRouter.use(requireAuth);
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
+
+/** Active links, so the owner can revoke them; the URL itself is only shown once, when created. */
+shareLinksRouter.get("/", (req, res) => {
+  const resourceId = String(req.query.resource ?? "");
+  requireRole(currentUser(res).id, resourceId, "manageAccess");
+  const links = db
+    .prepare(
+      `SELECT id, resource_id AS resourceId, role FROM share_links
+       WHERE resource_id = ? AND revoked_at IS NULL ORDER BY created_at`,
+    )
+    .all(resourceId) as ShareLink[];
+  res.json({ links: links.map((l) => ({ ...l, revoked: false })) });
+});
 
 shareLinksRouter.post("/", (req, res) => {
   const { resourceId, role } = shareLinkCreateSchema.parse(req.body);
