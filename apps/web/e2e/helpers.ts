@@ -9,6 +9,7 @@ export async function signUp(page: Page, name: string) {
   await page.getByPlaceholder("Email").fill(email);
   await page.getByPlaceholder(/Password/).fill("e2e-test-password");
   await page.getByRole("button", { name: "Sign up" }).click();
+  await page.getByRole("button", { name: "Skip" }).click(); // the first-run tour (J4)
   await expect(page.getByRole("heading", { name: "All docs" })).toBeVisible();
   return email;
 }

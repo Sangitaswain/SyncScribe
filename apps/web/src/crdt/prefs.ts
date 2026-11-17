@@ -15,6 +15,8 @@ export interface Settings {
   editorMode?: "edit" | "split" | "preview";
   focusMode?: boolean;
   sort?: "manual" | "name" | "created" | "edited";
+  /** The first-run tour was finished or skipped (J4) */
+  tourDone?: boolean;
 }
 
 const MAX_RECENTS = 20;

@@ -379,7 +379,7 @@
 
 ## Step 19 — Polish, docs and demo
 
-- [ ] **19.1** Add the onboarding tour (3 steps) shown on first sign-in (J4).
+- [x] **19.1** Add the onboarding tour (3 steps) shown on first sign-in (J4).
   - Done when: it shows once per user.
   - Commit: `feat(web): add first-run onboarding tour`
 - [ ] **19.2** Accessibility and responsive pass: focus states, labels, keyboard navigation of the tree, narrow-screen layout.

@@ -10,6 +10,7 @@ import StorageBanner from "./StorageBanner";
 import ShareDialog from "./ShareDialog";
 import SignOutDialog from "./SignOutDialog";
 import SearchOverlay from "./SearchPanel";
+import WelcomeTour from "./WelcomeTour";
 import { isDesktop, useUi } from "../stores/ui";
 
 /** Sidebar + page header + main area + status bar (FP-7). */
@@ -44,6 +45,7 @@ export default function AppShell() {
       <ShareDialog />
       <SignOutDialog />
       <SearchOverlay />
+      <WelcomeTour />
     </div>
   );
 }
