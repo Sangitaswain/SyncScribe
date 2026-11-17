@@ -1,4 +1,4 @@
-import { del, get, set } from "idb-keyval";
+import { del, delMany, get, keys, set } from "idb-keyval";
 import type { AuthResponse } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { api } from "./api";
@@ -27,6 +27,26 @@ export async function loadSession() {
 export async function clearSession() {
   await del(KEY);
   useSession.setState({ user: null, token: null, workspaces: [], activeWorkspaceId: null, status: "signedOut" });
+}
+
+const deleteDatabase = (name: string) =>
+  new Promise<void>((resolve) => {
+    const req = indexedDB.deleteDatabase(name);
+    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+  });
+
+/**
+ * Deletes everything this user saved on the device (their docs and local lists), then signs out (EC20, EC21).
+ * Open docs must be closed first (stopSync), or the databases can't be deleted.
+ */
+export async function clearDevice() {
+  const uid = useSession.getState().user?.id;
+  if (!uid) return;
+  const mine = (name?: string | IDBValidKey) => String(name).startsWith(`${uid}:`);
+  const dbs = await indexedDB.databases();
+  await Promise.all(dbs.filter((d) => mine(d.name)).map((d) => deleteDatabase(d.name!)));
+  await delMany((await keys()).filter(mine));
+  await clearSession();
 }
 
 const DAY = 24 * 60 * 60 * 1000;

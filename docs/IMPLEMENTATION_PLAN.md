@@ -33,7 +33,7 @@
 | 10 | Sync server (Hocuspocus) | 1–2 | [x] |
 | 11 | Frontend sync engine and network status | 2 | [x] |
 | 12 | Real-time collaboration and presence | 2 | [x] |
-| 13 | Permissions, sharing and workspaces | 2 | [ ] |
+| 13 | Permissions, sharing and workspaces | 2 | [x] |
 | 14 | Trash and structural edge cases | 2 | [ ] |
 | 15 | Search | 2 | [ ] |
 | 16 | Version history | 2 | [ ] |
@@ -292,7 +292,7 @@
 - [x] **13.9** Build `/shared` (cached offline), `/s/:token` accept page, workspace switcher and members page (G1, G3, B2, EC22).
   - Done when: all three screens work.
   - Commit: `feat(web): add shared-with-me, share link and workspace screens`
-- [ ] **13.10** Build the `SignOutDialog` with unsynced-docs warning and "Sign out and clear this device" (A2, EC20, EC21).
+- [x] **13.10** Build the `SignOutDialog` with unsynced-docs warning and "Sign out and clear this device" (A2, EC20, EC21).
   - Done when: signing out with pending changes shows the warning; clearing removes all local data for that user.
   - Commit: `feat(web): add safe sign-out with local data options`
 

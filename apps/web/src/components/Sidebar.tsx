@@ -4,7 +4,6 @@ import { Files, FolderPlus, LogOut, PanelLeftClose, Plus, Search, Settings, Tras
 import { wsDoc } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
-import { clearSession } from "../services/session";
 import { getDoc } from "../crdt/registry";
 import { createFolder } from "../crdt/tree";
 import { newDocument } from "../crdt/actions";
@@ -83,8 +82,7 @@ export default function Sidebar() {
             {user.name.slice(0, 1).toUpperCase()}
           </span>
           <span className="flex-1 truncate">{user.name}</span>
-          {/* Simple sign-out for now; the safe sign-out dialog comes in 13.10 */}
-          <button onClick={clearSession} className={iconButton} aria-label="Sign out" title="Sign out">
+          <button onClick={() => useUi.setState({ modal: "signout" })} className={iconButton} aria-label="Sign out" title="Sign out">
             <LogOut className="size-3.5" />
           </button>
         </div>
