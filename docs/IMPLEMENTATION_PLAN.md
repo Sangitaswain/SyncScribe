@@ -385,7 +385,7 @@
 - [x] **19.2** Accessibility and responsive pass: focus states, labels, keyboard navigation of the tree, narrow-screen layout.
   - Done when: all main flows work with keyboard only.
   - Commit: `fix(web): improve accessibility and responsive layout`
-- [ ] **19.3** Write `README.md`: what it is, features, architecture diagram, setup, scripts, how to demo offline sync.
+- [x] **19.3** Write `README.md`: what it is, features, architecture diagram, setup, scripts, how to demo offline sync.
   - Done when: a fresh clone can be run by following the README.
   - Commit: `docs: add README with setup and demo guide`
   - Note: a first version was written early (after Step 10, on request). Update its features, roadmap and demo section here, then check this substep.
