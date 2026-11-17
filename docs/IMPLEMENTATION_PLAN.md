@@ -340,7 +340,7 @@
 - [x] **17.1** Add import of `.md`/`.txt` files with per-file error messages (J1, EC35).
   - Done when: importing a mix of valid and invalid files imports the valid ones and names the failed ones.
   - Commit: `feat(web): add markdown and text import`
-- [ ] **17.2** Add export: Markdown, HTML, PDF (print view) and workspace zip (J2, EC38).
+- [x] **17.2** Add export: Markdown, HTML, PDF (print view) and workspace zip (J2, EC38).
   - Done when: all four exports work offline.
   - Commit: `feat(web): add document and workspace export`
 - [ ] **17.3** Add notifications on the server (create, list, mark read, live stateless delivery) and `POST /api/mentions` (J3, F5).

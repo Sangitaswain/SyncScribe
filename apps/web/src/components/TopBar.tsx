@@ -7,6 +7,7 @@ import { setSetting, usePrefs } from "../crdt/prefs";
 import ModeSwitch from "../editor/ModeSwitch";
 import SyncStatusBadge from "./SyncStatusBadge";
 import PresenceAvatars from "./PresenceAvatars";
+import ExportMenu from "./ExportMenu";
 
 const PAGE_TITLES: Record<string, string> = { "/": "All docs", "/trash": "Trash", "/shared": "Shared with me", "/search": "Search", "/settings": "Settings" };
 
@@ -58,6 +59,7 @@ export default function TopBar() {
             <span className="hidden sm:inline">Share</span>
           </button>
         )}
+        {docId && <ExportMenu docId={docId} />}
         {docId && (
           <Link
             to={`/doc/${docId}/history`}

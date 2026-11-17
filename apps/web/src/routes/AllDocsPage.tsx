@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { FileText, Plus, Upload } from "lucide-react";
+import { Download, FileText, Plus, Upload } from "lucide-react";
 import { WS, wsDoc } from "@syncscribe/shared";
 import { useDoc, useY } from "../crdt/hooks";
 import { useDocTitle, useEditedAt } from "../crdt/titles";
@@ -8,6 +8,7 @@ import type { TreeItem } from "../crdt/tree";
 import { useSession } from "../stores/session";
 import { primaryButton } from "../components/ui";
 import { importFiles } from "../services/importer";
+import { exportWorkspace } from "../services/exporter";
 import { toast } from "../stores/ui";
 
 const when = (ms: number) =>
@@ -27,6 +28,7 @@ function DocRow({ item, editedAt }: { item: TreeItem; editedAt: number }) {
 /** Home: every document in the workspace, most recently edited first. */
 export default function AllDocsPage() {
   const workspaceId = useSession((s) => s.activeWorkspaceId)!;
+  const workspaceName = useSession((s) => s.workspaces.find((w) => w.id === workspaceId)?.name ?? "Workspace");
   const ws = useDoc(wsDoc(workspaceId));
   const raw = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items)) ?? {};
   const editedAt = useEditedAt();
@@ -42,6 +44,12 @@ export default function AllDocsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-[32px] font-bold tracking-tight">All docs</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportWorkspace(workspaceId, workspaceName)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white"
+          >
+            <Download className="size-4" /> Export all
+          </button>
           <label className="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white">
             <Upload className="size-4" /> Import
             <input

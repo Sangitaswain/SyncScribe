@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router";
 import type * as Y from "yjs";
-import { DOC, docDoc, rank } from "@syncscribe/shared";
+import { docDoc, rank } from "@syncscribe/shared";
 import { useDocStatus, setDocStatus } from "../stores/docStatus";
 import { deleteLocal } from "../crdt/registry";
 import { revokedSet } from "../services/docSets";
-import { downloadText } from "../lib/download";
+import { exportMarkdown } from "../services/exporter";
 
 const action = "font-medium text-brand hover:underline";
 
@@ -15,10 +15,7 @@ export default function AccessBanner({ docId, doc }: { docId: string; doc: Y.Doc
   const navigate = useNavigate();
   if (!status) return null;
 
-  const exportCopy = () => {
-    const title = String(doc.getMap(DOC.meta).get("title") || "Untitled");
-    downloadText(`${title}.md`, doc.getText(DOC.content).toString());
-  };
+  const exportCopy = () => exportMarkdown(doc);
   const remove = async () => {
     navigate("/");
     await deleteLocal(name);
