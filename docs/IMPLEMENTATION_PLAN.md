@@ -337,7 +337,7 @@
 
 ## Step 17 — Import, export, notifications, storage safety · FP-15, BP-5.6
 
-- [ ] **17.1** Add import of `.md`/`.txt` files with per-file error messages (J1, EC35).
+- [x] **17.1** Add import of `.md`/`.txt` files with per-file error messages (J1, EC35).
   - Done when: importing a mix of valid and invalid files imports the valid ones and names the failed ones.
   - Commit: `feat(web): add markdown and text import`
 - [ ] **17.2** Add export: Markdown, HTML, PDF (print view) and workspace zip (J2, EC38).

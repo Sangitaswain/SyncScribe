@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Upload } from "lucide-react";
 import { WS, wsDoc } from "@syncscribe/shared";
 import { useDoc, useY } from "../crdt/hooks";
 import { useDocTitle, useEditedAt } from "../crdt/titles";
@@ -7,6 +7,8 @@ import { newDocument } from "../crdt/actions";
 import type { TreeItem } from "../crdt/tree";
 import { useSession } from "../stores/session";
 import { primaryButton } from "../components/ui";
+import { importFiles } from "../services/importer";
+import { toast } from "../stores/ui";
 
 const when = (ms: number) =>
   new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -39,9 +41,28 @@ export default function AllDocsPage() {
     <div className="mx-auto max-w-[800px] px-6 pt-10 pb-16">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-[32px] font-bold tracking-tight">All docs</h1>
-        <button className={`${primaryButton} flex items-center gap-1.5`} onClick={async () => navigate(`/doc/${await newDocument(workspaceId, null)}`)}>
-          <Plus className="size-4" /> New doc
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white">
+            <Upload className="size-4" /> Import
+            <input
+              type="file"
+              multiple
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              className="sr-only"
+              aria-label="Import Markdown or text files"
+              onChange={async (e) => {
+                const files = [...(e.target.files ?? [])];
+                e.target.value = "";
+                const { imported, failed } = await importFiles(files, workspaceId);
+                if (imported.length) toast(`Imported ${imported.length} ${imported.length === 1 ? "document" : "documents"}`, "success");
+                for (const f of failed) toast(`"${f.name}" ${f.reason}`, "error");
+              }}
+            />
+          </label>
+          <button className={`${primaryButton} flex items-center gap-1.5`} onClick={async () => navigate(`/doc/${await newDocument(workspaceId, null)}`)}>
+            <Plus className="size-4" /> New doc
+          </button>
+        </div>
       </div>
       <div className="flex justify-between border-b border-line px-2 pb-2 text-[12px] text-muted dark:border-white/10">
         <span>Title</span>
