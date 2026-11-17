@@ -343,7 +343,7 @@
 - [x] **17.2** Add export: Markdown, HTML, PDF (print view) and workspace zip (J2, EC38).
   - Done when: all four exports work offline.
   - Commit: `feat(web): add document and workspace export`
-- [ ] **17.3** Add notifications on the server (create, list, mark read, live stateless delivery) and `POST /api/mentions` (J3, F5).
+- [x] **17.3** Add notifications on the server (create, list, mark read, live stateless delivery) and `POST /api/mentions` (J3, F5).
   - Done when: sharing a doc creates a live notification for the invitee.
   - Commit: `feat(server): add notifications and live delivery`
 - [ ] **17.4** Build `NotificationBell` and the list; local toasts for sync finished/failed (J3).

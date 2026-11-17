@@ -22,6 +22,7 @@ import { roleFor } from "../permissions/resolve";
 import { userByEmail } from "../users";
 import { sendMail } from "../mail/mailer";
 import { closeConnectionsFor } from "../collab/access";
+import { notify, titleOf } from "../collab/notify";
 
 // Sharing a document or folder with people (BP-5.3; G1, G2, G4, EC22)
 
@@ -84,7 +85,10 @@ sharesRouter.post("/", async (req, res) => {
       : db.prepare(`${SELECT} WHERE s.resource_id = ? AND s.invited_email = ?`).get(resourceId, email)
   ) as Share;
 
-  if (user) closeConnectionsFor(user.id); // a re-invite may change their role
+  if (user) {
+    closeConnectionsFor(user.id); // a re-invite may change their role
+    notify(user.id, "shared", { resourceId, title: titleOf(resourceId), role, by: me.name });
+  }
   // No account yet: the share waits for them and is attached when they sign up (EC22)
   else
     await sendMail({
@@ -101,7 +105,10 @@ sharesRouter.patch("/:id", (req, res) => {
   const share = shareById(req.params.id);
   requireRole(currentUser(res).id, share.resourceId, "manageAccess");
   db.prepare("UPDATE shares SET role = ? WHERE id = ?").run(role, share.id);
-  if (share.userId) closeConnectionsFor(share.userId);
+  if (share.userId) {
+    closeConnectionsFor(share.userId);
+    notify(share.userId, "role_changed", { resourceId: share.resourceId, title: titleOf(share.resourceId), role });
+  }
   res.json(shareById(share.id));
 });
 
@@ -109,7 +116,10 @@ sharesRouter.delete("/:id", (req, res) => {
   const share = shareById(req.params.id);
   requireRole(currentUser(res).id, share.resourceId, "manageAccess");
   db.prepare("DELETE FROM shares WHERE id = ?").run(share.id);
-  if (share.userId) closeConnectionsFor(share.userId);
+  if (share.userId) {
+    closeConnectionsFor(share.userId);
+    notify(share.userId, "access_removed", { resourceId: share.resourceId, title: titleOf(share.resourceId) });
+  }
   res.status(204).end();
 });
 
