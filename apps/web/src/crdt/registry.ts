@@ -10,6 +10,7 @@ import { remoteOrigins } from "../sync/origins";
 interface Entry {
   doc: Y.Doc;
   persistence: IndexeddbPersistence;
+  channel: BroadcastChannel;
   ready: Promise<Y.Doc>;
   refs: number;
 }
@@ -29,10 +30,18 @@ export function getDoc(name: string): Promise<Y.Doc> {
   if (!entry) {
     const doc = new Y.Doc();
     const persistence = new IndexeddbPersistence(dbName(name), doc);
+    // Other tabs on this device get local edits directly, even offline (EC28, DF16). A tab that opens
+    // the doc sends what it has; the others answer with anything it is missing.
+    const channel = new BroadcastChannel(dbName(name));
+    channel.onmessage = ({ data }: MessageEvent<{ sv?: Uint8Array; update?: Uint8Array }>) => {
+      if (data.sv) channel.postMessage({ update: Y.encodeStateAsUpdate(doc, data.sv) });
+      if (data.update) Y.applyUpdate(doc, data.update, channel);
+    };
     // Local edits only: not state loaded from disk, not changes received from the server
     let editedWritten = 0;
-    doc.on("update", (_u: Uint8Array, origin: unknown) => {
+    doc.on("update", (update: Uint8Array, origin: unknown) => {
       if (origin === persistence || (origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
+      if (origin !== channel) channel.postMessage({ update });
       markPending(name);
       // Record "last edited" for sorting (B6), at most once a minute so it doesn't flood sync
       if (name.startsWith("doc:") && Date.now() - editedWritten > EDITED_EVERY) {
@@ -40,7 +49,11 @@ export function getDoc(name: string): Promise<Y.Doc> {
         setTimeout(() => doc.getMap(DOC.meta).set("editedAt", editedWritten));
       }
     });
-    entry = { doc, persistence, ready: persistence.whenSynced.then(() => doc), refs: 0 };
+    const ready = persistence.whenSynced.then(() => {
+      channel.postMessage({ sv: Y.encodeStateVector(doc) });
+      return doc;
+    });
+    entry = { doc, persistence, channel, ready, refs: 0 };
     entries.set(name, entry);
   }
   entry.refs++;
@@ -52,6 +65,7 @@ export function releaseDoc(name: string) {
   const entry = entries.get(name);
   if (!entry || --entry.refs > 0 || keepOpen(name)) return;
   entries.delete(name);
+  entry.channel.close();
   entry.persistence.destroy();
   entry.doc.destroy();
 }
@@ -62,6 +76,7 @@ export const peekDoc = (name: string) => entries.get(name)?.doc;
 /** Closes everything, e.g. on sign-out. */
 export function closeAll() {
   for (const [name, e] of entries) {
+    e.channel.close();
     e.persistence.destroy();
     e.doc.destroy();
     entries.delete(name);

@@ -241,8 +241,9 @@
 - [x] **11.6** Handle provider auth failures: `token-expired` → re-auth modal; `unknown-doc` → retry after `ws:` sync (FP-10.2).
   - Done when: both cases behave as specified.
   - Commit: `feat(web): handle sync authentication failures`
-- [ ] **11.7** Verify cross-tab sync via provider broadcast, including offline (EC28, DF16).
+- [x] **11.7** Verify cross-tab sync via provider broadcast, including offline (EC28, DF16).
   - Done when: two tabs offline mirror each other's typing.
+  > Note: Hocuspocus provider v4 no longer has the `broadcast` option, so cross-tab sync is done in the Doc Registry with the browser's `BroadcastChannel` (one channel per `${userId}:${docName}`; a tab opening a doc asks the others for anything it is missing).
   - Commit: `test(web): verify cross-tab sync works offline`
 - [ ] **11.8** New-device bootstrap: on sign-in, fetch `/api/sync/all`, download all docs, record `{uid}:offlineSet` and show the offline-available icon (A6, D6, DF13).
   - Done when: signing in on a second browser shows all docs, and they open offline.
