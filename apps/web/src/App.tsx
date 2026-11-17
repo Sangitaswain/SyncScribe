@@ -8,6 +8,9 @@ import DocPage from "./routes/DocPage";
 import AllDocsPage from "./routes/AllDocsPage";
 import LandingPage from "./routes/LandingPage";
 import NotFound from "./routes/NotFound";
+import SharedPage from "./routes/SharedPage";
+import AcceptLinkPage from "./routes/AcceptLinkPage";
+import MembersPage from "./routes/MembersPage";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
 import RequireAuth from "./components/RequireAuth";
@@ -22,7 +25,7 @@ export default function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/forgot" element={<ForgotPage />} />
         <Route path="/reset/:token" element={<ResetPage />} />
-        <Route path="/s/:token" element={<Placeholder title="Accept share link" />} />
+        <Route path="/s/:token" element={<AcceptLinkPage />} />
         <Route
           element={
             <RequireAuth>
@@ -34,10 +37,10 @@ export default function App() {
           <Route path="/doc/:docId" element={<DocPage />} />
           <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />
           <Route path="/trash" element={<Placeholder title="Trash" />} />
-          <Route path="/shared" element={<Placeholder title="Shared with me" />} />
+          <Route path="/shared" element={<SharedPage />} />
           <Route path="/search" element={<Placeholder title="Search" />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/workspaces/:id/members" element={<Placeholder title="Members" />} />
+          <Route path="/workspaces/:id/members" element={<MembersPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router";
-import { ChevronsUpDown, Files, FolderPlus, LogOut, PanelLeftClose, Plus, Search, Settings, Trash2 } from "lucide-react";
+import { Files, FolderPlus, LogOut, PanelLeftClose, Plus, Search, Settings, Trash2, Users } from "lucide-react";
 import { wsDoc } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
@@ -12,6 +12,7 @@ import { setSetting, usePrefs } from "../crdt/prefs";
 import TreeView from "./TreeView";
 import SortMenu from "./SortMenu";
 import RecentSection from "./RecentSection";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { rowClass } from "./ui";
 
 function NavItem({ to, icon: Icon, label, hint }: { to: string; icon: typeof Files; label: string; hint?: string }) {
@@ -30,11 +31,10 @@ export const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 
 /** Workspace switcher, navigation, recent docs, folder tree, trash and profile. */
 export default function Sidebar() {
-  const { workspaces, activeWorkspaceId, user } = useSession();
+  const { activeWorkspaceId, user } = useSession();
   const [renaming, setRenaming] = useState<string | null>(null);
   const { doc: prefs, recents, settings } = usePrefs();
   const navigate = useNavigate();
-  const ws = workspaces.find((w) => w.id === activeWorkspaceId);
   if (!activeWorkspaceId || !user) return null;
 
   const newDoc = async () => navigate(`/doc/${await newDocument(activeWorkspaceId, null)}`);
@@ -44,13 +44,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-full flex-col gap-4 p-2">
       <div className="flex items-center gap-1">
-        <button className={`${rowClass()} h-10 min-w-0 flex-1`} title="Workspace">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-brand text-xs font-semibold text-white">
-            {(ws?.name ?? "W").slice(0, 1).toUpperCase()}
-          </span>
-          <span className="truncate font-medium">{ws?.name ?? "Workspace"}</span>
-          <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-muted" />
-        </button>
+        <WorkspaceSwitcher />
         <button onClick={() => useUi.setState({ sidebarOpen: false })} className={iconButton} aria-label="Collapse sidebar" title="Collapse sidebar">
           <PanelLeftClose className="size-4" />
         </button>
@@ -59,6 +53,7 @@ export default function Sidebar() {
       <nav className="flex flex-col gap-0.5">
         <NavItem to="/search" icon={Search} label="Search" hint="⌘K" />
         <NavItem to="/" icon={Files} label="All docs" />
+        <NavItem to="/shared" icon={Users} label="Shared with me" />
         <NavItem to="/settings" icon={Settings} label="Settings" />
         <button onClick={newDoc} className={rowClass()}>
           <Plus className="size-4 text-muted" /> New doc

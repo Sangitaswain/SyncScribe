@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { NotebookPen } from "lucide-react";
 import { loginSchema, signupSchema, type AuthResponse } from "@syncscribe/shared";
 import { api } from "../services/api";
@@ -33,6 +33,10 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const signup = mode === "signup";
+  // Where to go after signing in, e.g. back to a share link (only paths inside the app)
+  const [params] = useSearchParams();
+  const next = /^\/(?![/\\])/.test(params.get("next") ?? "") ? params.get("next")! : "/";
+  const keepNext = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,7 +50,7 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
     setError("");
     try {
       await saveSession(await api<AuthResponse>(`/auth/${mode}`, { body: parsed.data }));
-      navigate("/");
+      navigate(next);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -73,10 +77,10 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
       </form>
       <div className="mt-6 flex justify-between text-[13px]">
         {signup ? (
-          <Link to="/login" className="text-brand hover:underline">Already have an account? Sign in</Link>
+          <Link to={`/login${keepNext}`} className="text-brand hover:underline">Already have an account? Sign in</Link>
         ) : (
           <>
-            <Link to="/signup" className="text-brand hover:underline">Create an account</Link>
+            <Link to={`/signup${keepNext}`} className="text-brand hover:underline">Create an account</Link>
             <Link to="/forgot" className="text-muted hover:underline">Forgot password?</Link>
           </>
         )}

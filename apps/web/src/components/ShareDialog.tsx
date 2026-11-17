@@ -13,7 +13,7 @@ const ROLES: { role: ShareRole; label: string }[] = [
   { role: "viewer", label: "Viewer" },
 ];
 
-function RoleSelect({ value, onChange, name }: { value?: ShareRole; onChange?: (r: ShareRole) => void; name?: string }) {
+export function RoleSelect({ value, onChange, name }: { value?: ShareRole; onChange?: (r: ShareRole) => void; name?: string }) {
   return (
     <div className="w-32 shrink-0">
       <select name={name} value={value} defaultValue={value ? undefined : "editor"} onChange={(e) => onChange?.(e.target.value as ShareRole)} className={inputClass} aria-label="Role">

@@ -289,7 +289,7 @@
 - [x] **13.8** Make the editor read-only with `ReadOnlyBanner` by role; handle `forbidden` with `RevokedBanner`, export of the local copy, removal from the sidebar; reconnect on `role-changed` (G5, EC16, EC17).
   - Done when: downgrading and removing access behave as specified, including while offline.
   - Commit: `feat(web): enforce roles and handle revoked access`
-- [ ] **13.9** Build `/shared` (cached offline), `/s/:token` accept page, workspace switcher and members page (G1, G3, B2, EC22).
+- [x] **13.9** Build `/shared` (cached offline), `/s/:token` accept page, workspace switcher and members page (G1, G3, B2, EC22).
   - Done when: all three screens work.
   - Commit: `feat(web): add shared-with-me, share link and workspace screens`
 - [ ] **13.10** Build the `SignOutDialog` with unsynced-docs warning and "Sign out and clear this device" (A2, EC20, EC21).
