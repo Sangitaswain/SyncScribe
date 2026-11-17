@@ -93,6 +93,16 @@ function snippetOf(content: string, terms: string[]): SearchResult["snippet"] {
   };
 }
 
+/** Quick open (I2): fuzzy match on titles only. */
+export const quickOpen = (query: string, keep: (id: string) => boolean = () => true): SearchResult[] =>
+  query.trim()
+    ? index
+        .search(query, { fields: ["title"], prefix: true, fuzzy: 0.3 })
+        .filter((r) => keep(r.id))
+        .slice(0, 20)
+        .map((r) => ({ id: r.id, title: texts.get(r.id)!.title, snippet: null }))
+    : [];
+
 /** Best matches first; `keep` filters out documents that shouldn't show (e.g. in Trash). */
 export function search(query: string, keep: (id: string) => boolean = () => true): SearchResult[] {
   if (!query.trim()) return [];

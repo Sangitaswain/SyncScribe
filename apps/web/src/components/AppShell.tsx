@@ -8,6 +8,7 @@ import Sidebar from "./Sidebar";
 import OfflineBanner from "./OfflineBanner";
 import ShareDialog from "./ShareDialog";
 import SignOutDialog from "./SignOutDialog";
+import SearchOverlay from "./SearchPanel";
 import { isDesktop, useUi } from "../stores/ui";
 
 /** Sidebar + page header + main area + status bar (FP-7). */
@@ -40,6 +41,7 @@ export default function AppShell() {
       <ReauthModal />
       <ShareDialog />
       <SignOutDialog />
+      <SearchOverlay />
     </div>
   );
 }

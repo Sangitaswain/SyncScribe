@@ -35,7 +35,7 @@
 | 12 | Real-time collaboration and presence | 2 | [x] |
 | 13 | Permissions, sharing and workspaces | 2 | [x] |
 | 14 | Trash and structural edge cases | 2 | [x] |
-| 15 | Search | 2 | [ ] |
+| 15 | Search | 2 | [x] |
 | 16 | Version history | 2 | [ ] |
 | 17 | Import, export, notifications, storage safety | 2 | [ ] |
 | 18 | Testing | 2 | [ ] |
@@ -319,7 +319,7 @@
 - [x] **15.1** Build the MiniSearch service: index on startup in batches, update on changes (debounced) (I1).
   - Done when: a unit test finds a doc by a word in its content.
   - Commit: `feat(web): add offline full-text search index`
-- [ ] **15.2** Build the search overlay with highlighted snippets and jump-to-match, and quick open (Cmd+P) (I1, I2, 4.11).
+- [x] **15.2** Build the search overlay with highlighted snippets and jump-to-match, and quick open (Cmd+P) (I1, I2, 4.11).
   - Done when: searching offline finds and opens the right doc at the match.
   - Commit: `feat(web): add search overlay and quick open`
 

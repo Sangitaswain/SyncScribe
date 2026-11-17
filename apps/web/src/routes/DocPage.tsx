@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { DOC, docDoc, rank } from "@syncscribe/shared";
 import { addRecent, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
@@ -18,6 +18,7 @@ import { syncWhileOpen } from "../sync/providers";
 /** Document screen: title, editor and preview for one doc, opened from the device (works offline). */
 export default function DocPage() {
   const { docId } = useParams();
+  const [params] = useSearchParams();
   const { doc: prefs, settings } = usePrefs(); // view mode is switched in the page header
   const doc = useDoc(docId ? docDoc(docId) : undefined);
   const mode = settings.editorMode ?? "edit";
@@ -71,7 +72,7 @@ export default function DocPage() {
       <DocDeletedBanner docId={docId!} />
       <DocTitle key={docId} doc={doc} readOnly={readOnly} />
       <div className={`grid min-h-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
-        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} readOnly={readOnly} />}
+        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} readOnly={readOnly} find={params.get("find")} />}
         {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
       </div>
     </div>

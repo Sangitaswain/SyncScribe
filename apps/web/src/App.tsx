@@ -12,6 +12,7 @@ import SharedPage from "./routes/SharedPage";
 import AcceptLinkPage from "./routes/AcceptLinkPage";
 import MembersPage from "./routes/MembersPage";
 import TrashPage from "./routes/TrashPage";
+import { SearchPanel } from "./components/SearchPanel";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
 import RequireAuth from "./components/RequireAuth";
@@ -39,7 +40,7 @@ export default function App() {
           <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />
           <Route path="/trash" element={<TrashPage />} />
           <Route path="/shared" element={<SharedPage />} />
-          <Route path="/search" element={<Placeholder title="Search" />} />
+          <Route path="/search" element={<div className="mx-auto max-w-xl pt-10"><SearchPanel /></div>} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/workspaces/:id/members" element={<MembersPage />} />
         </Route>
