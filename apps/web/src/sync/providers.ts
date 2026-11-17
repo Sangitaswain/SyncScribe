@@ -1,11 +1,12 @@
 import { HocuspocusProvider, HocuspocusProviderWebsocket, WebSocketStatus } from "@hocuspocus/provider";
-import { userDoc, wsDoc } from "@syncscribe/shared";
+import { docDoc, parseDocName, userDoc, wsDoc } from "@syncscribe/shared";
 import { awarenessOf, closeAll, getDoc, releaseDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
 import { useNetwork } from "../stores/network";
 import { API_URL } from "../services/api";
-import { clearPending } from "../services/pending";
-import { markOffline } from "../services/offlineSet";
+import { clearPending, pendingNames } from "../services/pending";
+import { offlineSet, revokedSet } from "../services/docSets";
+import { setDocStatus } from "../stores/docStatus";
 import { remoteOrigins } from "./origins";
 
 // Provider Manager (FP-10.1): the only place network providers are attached to Y.Docs.
@@ -48,6 +49,13 @@ export const whenSynced = (p: HocuspocusProvider) =>
     check();
   });
 
+/** Signs one doc in again on the same socket (after a retry wait or a role change). */
+async function signInAgain(name: string, provider: HocuspocusProvider) {
+  if ((await providers.get(name)) !== provider) return; // detached meanwhile
+  await provider.sendToken();
+  provider.startSync();
+}
+
 // Refused sync connections (FP-10.2): a doc is retried after the workspace trees reach the server
 // (the server doesn't know a doc until the tree listing it arrives); refused 3 times → Sync error (EC39)
 const SESSION_REASONS = ["token-expired", "invalid-token"];
@@ -59,15 +67,30 @@ function onRefused(name: string, provider: HocuspocusProvider, reason: string, a
     if (useSession.getState().status === "signedIn") useSession.setState({ status: "needsReauth" });
     return;
   }
+  const parsed = parseDocName(name);
+  if (reason === "forbidden" && (parsed?.kind === "doc" || parsed?.kind === "cm")) {
+    // Access removed: the local copy stays until the user exports or removes it (EC16)
+    clearPending(name);
+    return revokedSet.add(docDoc(parsed.id));
+  }
   if (attempt + 1 >= RETRIES)
     return useNetwork.setState({ errorReason: "The server refused to sync. Your changes are safe on this device." });
   workspacesSynced()
     .then(() => new Promise((r) => setTimeout(r, 1000 * (attempt + 1))))
-    .then(async () => {
-      if ((await providers.get(name)) !== provider) return; // detached meanwhile
-      await provider.sendToken(); // sign this doc in again on the same socket
-      provider.startSync();
-    });
+    .then(() => signInAgain(name, provider));
+}
+
+/** Read-only docs (viewer, or commenter on a doc) can't be edited; offline edits are refused (G5, EC17). */
+function onAuthenticated(name: string, scope: string) {
+  if (!name.startsWith("doc:")) return;
+  revokedSet.remove(name); // access is back
+  const readOnly = scope === "readonly";
+  // The scope only says read-only or not, so "viewer" stands for any read-only role here
+  setDocStatus(name, { role: readOnly ? "viewer" : "editor" });
+  if (readOnly && pendingNames().includes(name)) {
+    clearPending(name); // the server won't take them; the banner offers an export instead
+    setDocStatus(name, { rejectedEdits: true });
+  }
 }
 
 /** Starts syncing a doc (no-op if it is already attached). */
@@ -93,9 +116,21 @@ export function attach(name: string): Promise<HocuspocusProvider> {
     const confirm = () => provider.isSynced && provider.unsyncedChanges === 0 && clearPending(name);
     let attempt = 0;
     provider.on("authenticationFailed", ({ reason }: { reason: string }) => onRefused(name, provider, reason, attempt++));
-    provider.on("authenticated", () => (attempt = 0));
+    provider.on("authenticated", ({ scope }: { scope: string }) => {
+      attempt = 0;
+      onAuthenticated(name, scope);
+    });
+    // Role changed on the server: it closes this doc, then we sign in again with the new role (EC17)
+    provider.on("stateless", ({ payload }: { payload: string }) => {
+      if (JSON.parse(payload).type !== "role-changed") return;
+      const again = () => {
+        provider.off("close", again);
+        setTimeout(() => signInAgain(name, provider));
+      };
+      provider.on("close", again);
+    });
     provider.on("synced", confirm);
-    if (name.startsWith("doc:")) provider.on("synced", ({ state }: { state: boolean }) => state && markOffline(name));
+    if (name.startsWith("doc:")) provider.on("synced", ({ state }: { state: boolean }) => state && offlineSet.add(name));
     provider.on("unsyncedChanges", confirm);
     provider.attach();
     return provider;

@@ -70,3 +70,26 @@ it("shows who is in the document, and my avatar as offline when I am (F2, 4.6)",
   act(() => useNetwork.setState({ syncState: "offline" }));
   await screen.findByTitle("Ada (offline)");
 });
+
+it("viewers get a read-only editor; removed access offers an export of the local copy (G5, EC16)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  const { setDocStatus } = await import("../stores/docStatus");
+  cleanup();
+  const id = await newDocument("w1", null, "kept on this device", "Notes");
+  setDocStatus(docDoc(id), { role: "viewer" });
+  render(
+    <MemoryRouter initialEntries={[`/doc/${id}`]}>
+      <Routes>
+        <Route path="/doc/:docId" element={<DocPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  await screen.findByText("You can view this document but not edit it.");
+  await waitFor(() => expect(document.querySelector(".cm-content")?.getAttribute("contenteditable")).toBe("false"));
+  expect((screen.getByLabelText("Document title") as HTMLInputElement).readOnly).toBe(true);
+
+  setDocStatus(docDoc(id), { revoked: true });
+  await screen.findByText(/Your access to this document was removed/);
+  expect(screen.getByText("Export my local copy")).toBeTruthy();
+  expect(screen.getByText("Remove from this device")).toBeTruthy();
+});

@@ -20,7 +20,7 @@ const theme = EditorView.theme({
  * CodeMirror bound to the document's Y.Text: every keystroke is a CRDT change saved on the device (C2, C6).
  * Collaborators' cursors and selections show with their name and colour (F1, F3).
  */
-export default function MarkdownEditor({ ytext, awareness }: { ytext: Y.Text; awareness?: Awareness }) {
+export default function MarkdownEditor({ ytext, awareness, readOnly = false }: { ytext: Y.Text; awareness?: Awareness; readOnly?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,12 +37,14 @@ export default function MarkdownEditor({ ytext, awareness }: { ytext: Y.Text; aw
           // Undo/redo only this user's edits, never a collaborator's (C7, EC14)
           keymap.of([...yUndoManagerKeymap, ...defaultKeymap, indentWithTab]),
           yCollab(ytext, awareness ?? null),
+          EditorState.readOnly.of(readOnly), // viewers and commenters (G5)
+          EditorView.editable.of(!readOnly),
           theme,
         ],
       }),
     });
     return () => view.destroy();
-  }, [ytext, awareness]);
+  }, [ytext, awareness, readOnly]);
 
   return <div ref={host} className="h-full px-6 dark:[&_.cm-content]:caret-white" />;
 }

@@ -1,13 +1,15 @@
 import { useEffect } from "react";
 import { useParams } from "react-router";
-import { DOC, docDoc } from "@syncscribe/shared";
+import { DOC, docDoc, rank } from "@syncscribe/shared";
 import { addRecent, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
 import { awarenessOf } from "../crdt/registry";
 import { useEditorStats } from "../stores/editorStats";
 import { usePresence, type PresenceUser } from "../stores/presence";
+import { useDocStatus } from "../stores/docStatus";
 import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
+import AccessBanner from "../editor/AccessBanner";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import DocTitle from "../editor/DocTitle";
 import { syncWhileOpen } from "../sync/providers";
@@ -54,13 +56,20 @@ export default function DocPage() {
   }, [text]);
   useEffect(() => () => useEditorStats.setState({ words: null }), []);
 
+  // Viewers, commenters and people whose access was removed can't edit (G5, EC16)
+  const readOnly = useDocStatus((s) => {
+    const status = docId ? s[docDoc(docId)] : undefined;
+    return !!status && (status.revoked || rank(status.role) < rank("editor"));
+  });
+
   if (!doc) return null;
   const ytext = doc.getText(DOC.content);
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <DocTitle key={docId} doc={doc} />
+      <AccessBanner docId={docId!} doc={doc} />
+      <DocTitle key={docId} doc={doc} readOnly={readOnly} />
       <div className={`grid min-h-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
-        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} />}
+        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} readOnly={readOnly} />}
         {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
       </div>
     </div>

@@ -80,6 +80,17 @@ export function releaseDoc(name: string) {
   entry.doc.destroy();
 }
 
+/** Deletes a doc's local copy from this device, e.g. after access to it was removed (EC16). */
+export async function deleteLocal(name: string) {
+  const entry = entries.get(name);
+  if (!entry) return void indexedDB.deleteDatabase(dbName(name));
+  entries.delete(name);
+  entry.awareness?.destroy();
+  entry.channel.close();
+  await entry.persistence.clearData();
+  entry.doc.destroy();
+}
+
 /** Presence of an open document (null for workspace and user docs). */
 export const awarenessOf = (name: string) => entries.get(name)?.awareness;
 

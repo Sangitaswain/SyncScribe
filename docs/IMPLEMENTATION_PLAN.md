@@ -286,7 +286,7 @@
 - [x] **13.7** Build `ShareDialog`: invite with role, link create/copy/revoke, manage access list; controls hidden by capability (G1–G4).
   - Done when: an owner shares a doc and the invitee sees it.
   - Commit: `feat(web): add share dialog`
-- [ ] **13.8** Make the editor read-only with `ReadOnlyBanner` by role; handle `forbidden` with `RevokedBanner`, export of the local copy, removal from the sidebar; reconnect on `role-changed` (G5, EC16, EC17).
+- [x] **13.8** Make the editor read-only with `ReadOnlyBanner` by role; handle `forbidden` with `RevokedBanner`, export of the local copy, removal from the sidebar; reconnect on `role-changed` (G5, EC16, EC17).
   - Done when: downgrading and removing access behave as specified, including while offline.
   - Commit: `feat(web): enforce roles and handle revoked access`
 - [ ] **13.9** Build `/shared` (cached offline), `/s/:token` accept page, workspace switcher and members page (G1, G3, B2, EC22).

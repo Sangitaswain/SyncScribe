@@ -198,3 +198,50 @@ test("collaborators on an open doc see each other's name, colour and cursor (F1,
   other.provider.destroy();
   stop();
 });
+
+test("a downgrade makes the doc read-only and refuses offline edits; a removal marks it revoked (G5, EC16, EC17)", async () => {
+  const { providerFor, syncWhileOpen, whenSynced } = await import("./providers");
+  const { useDocStatus } = await import("../stores/docStatus");
+  const { pendingNames } = await import("../services/pending");
+  const base = `http://localhost:${server.port}/api`;
+  const call = (path: string, token: string, method = "GET", body?: unknown) =>
+    fetch(`${base}${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, ...(body ? { "content-type": "application/json" } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    }).then((r) => (r.status === 204 ? null : r.json()));
+
+  // Owen shares his Welcome doc with Ada (the Provider Manager's user) as an editor
+  const owen = await fetch(`${base}/auth/signup`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "Owen", email: "owen@example.com", password: "password123" }),
+  }).then((r) => r.json());
+  const docId = (await call("/sync/all", owen.token)).names.find((n: string) => n.startsWith("doc:")).slice(4);
+  const share = await call("/shares", owen.token, "POST", { resourceId: docId, email: "ada@example.com", role: "editor" });
+  const name = docDoc(docId);
+  const status = () => useDocStatus.getState()[name];
+
+  const stop = syncWhileOpen(name);
+  await helpers.until(() => !!providerFor(name));
+  const mine = await providerFor(name)!;
+  await whenSynced(mine);
+  expect(status().role).toBe("editor");
+
+  // Ada goes offline and edits; meanwhile Owen makes her a viewer
+  const socket = mine.configuration.websocketProvider;
+  socket.disconnect();
+  mine.document.getText(DOC.content).insert(0, "offline edit ");
+  expect(pendingNames()).toContain(name);
+  await call(`/shares/${share.id}`, owen.token, "PATCH", { role: "viewer" });
+
+  // Back online: the doc is read-only, the edit was refused and is no longer counted as pending
+  socket.connect();
+  await helpers.until(() => status().role === "viewer" && status().rejectedEdits);
+  expect(pendingNames()).not.toContain(name);
+
+  // Owen removes her access while she has the doc open: the server tells her client, which finds out it's gone
+  await call(`/shares/${share.id}`, owen.token, "DELETE");
+  await helpers.until(() => status().revoked);
+  stop();
+});
