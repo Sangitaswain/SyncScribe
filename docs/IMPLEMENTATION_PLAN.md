@@ -370,7 +370,7 @@
 - [x] **18.3** Set up Playwright and write E2E 1–4 from FP-18 (offline reload, close-and-reopen, two-user offline merge, auto reconnect).
   - Done when: `npm run e2e` passes locally.
   - Commit: `test(e2e): add offline and merge end-to-end tests`
-- [ ] **18.4** Write E2E 5–8 (viewer read-only, revoked while offline, two tabs offline, offline search).
+- [x] **18.4** Write E2E 5–8 (viewer read-only, revoked while offline, two tabs offline, offline search).
   - Done when: all E2E tests pass.
   - Commit: `test(e2e): add permission, multi-tab and search tests`
 - [ ] **18.5** Add a GitHub Actions workflow running lint, unit and E2E tests.

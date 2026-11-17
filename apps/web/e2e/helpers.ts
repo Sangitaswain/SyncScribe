@@ -39,3 +39,27 @@ export const editorText = (page: Page) =>
     copy.querySelectorAll(".cm-ySelectionCaret, .cm-widgetBuffer").forEach((n) => n.remove());
     return [...copy.querySelectorAll(".cm-line")].map((l) => l.textContent).join("\n");
   });
+
+/** The owner creates a doc and shares it; the invitee opens it from "Shared with me". */
+export async function sharedDoc(
+  owner: { page: Page },
+  invitee: { page: Page; email: string },
+  { title, text, role = "editor" }: { title: string; text: string; role?: "editor" | "commenter" | "viewer" },
+) {
+  await owner.page.getByRole("button", { name: "New doc" }).first().click();
+  await owner.page.getByLabel("Document title").fill(title);
+  await typeInEditor(owner.page, text);
+  const docUrl = new URL(owner.page.url()).pathname;
+  await owner.page.getByRole("button", { name: "Share" }).click();
+  await owner.page.getByLabel("Email address").fill(invitee.email);
+  await owner.page.getByLabel("Role").first().selectOption(role);
+  await owner.page.getByRole("button", { name: "Invite" }).click();
+  await expect(owner.page.getByText(`Invited ${invitee.email}`)).toBeVisible();
+  await owner.page.keyboard.press("Escape");
+  await expect(badge(owner.page, "Synced")).toBeVisible({ timeout: 20_000 });
+
+  await invitee.page.goto("/shared");
+  await invitee.page.getByText(title).click();
+  await expect(invitee.page.locator(".cm-content")).toContainText(text);
+  return docUrl;
+}

@@ -1,9 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { API_PORT as API, WEB_PORT as WEB } from "./e2e/ports";
 
 // End-to-end tests (FP-18) against a production build (so the service worker works offline)
 // and a fresh in-memory server, on their own ports so they don't clash with `npm run dev`.
-const API = 4310;
-const WEB = 5310;
 
 export default defineConfig({
   testDir: "e2e",
@@ -15,7 +14,7 @@ export default defineConfig({
     {
       command: "npx tsx src/index.ts",
       cwd: "../server",
-      env: { PORT: String(API), DB_PATH: ":memory:" },
+      env: { PORT: String(API), DB_PATH: ":memory:", AUTH_RATE_LIMIT: "1000" }, // many test accounts per run
       url: `http://localhost:${API}/api/health`,
     },
     {

@@ -13,7 +13,7 @@ import { authResponse, userByEmail, userById } from "../users";
 import { currentUser, requireAuth } from "../auth/middleware";
 
 export const authRouter = Router();
-const limiter = rateLimit({ windowMs: 60_000, limit: 10 });
+const limiter = rateLimit({ windowMs: 60_000, limit: config.AUTH_RATE_LIMIT });
 
 authRouter.post("/signup", limiter, async (req, res) => {
   const { name, email, password } = signupSchema.parse(req.body);

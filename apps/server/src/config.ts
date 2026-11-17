@@ -7,6 +7,8 @@ const env = z
     JWT_SECRET: z.string().min(16).default("dev-only-secret-change-me"),
     DB_PATH: z.string().default("./data/syncscribe.db"),
     SMTP_URL: z.string().optional(),
+    // Sign-up / sign-in attempts per minute per address; end-to-end tests raise it
+    AUTH_RATE_LIMIT: z.coerce.number().default(10),
   })
   .parse(process.env);
 
