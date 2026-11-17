@@ -22,6 +22,10 @@ interface Entry {
 const entries = new Map<string, Entry>();
 const EDITED_EVERY = 60_000;
 
+const changeListeners = new Set<(name: string, doc: Y.Doc) => void>();
+/** Runs `fn` after any change to an open document, local or remote (used by search, FP-14). */
+export const onDocChange = (fn: (name: string, doc: Y.Doc) => void) => changeListeners.add(fn);
+
 /** Workspace and user docs stay open for the whole session. */
 const keepOpen = (name: string) => name.startsWith("ws:") || name.startsWith("user:");
 
@@ -52,6 +56,9 @@ export function getDoc(name: string): Promise<Y.Doc> {
         editedWritten = Date.now();
         setTimeout(() => doc.getMap(DOC.meta).set("editedAt", editedWritten));
       }
+    });
+    doc.on("update", (_u: Uint8Array, origin: unknown) => {
+      if (origin !== persistence) changeListeners.forEach((fn) => fn(name, doc));
     });
     // Tree conflicts that only appear when changes from others arrive (FP-8.3)
     if (name.startsWith("ws:"))

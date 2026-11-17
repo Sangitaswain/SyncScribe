@@ -19,6 +19,7 @@ function docSet(suffix: string, field: "offlineAvailable" | "revoked") {
       setDocStatus(name, { [field]: true });
       return save();
     },
+    list: () => [...names],
     remove(name: string) {
       if (!names.delete(name)) return;
       setDocStatus(name, { [field]: false });

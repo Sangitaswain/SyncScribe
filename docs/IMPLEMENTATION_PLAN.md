@@ -316,7 +316,7 @@
 
 ## Step 15 — Search · FP-14
 
-- [ ] **15.1** Build the MiniSearch service: index on startup in batches, update on changes (debounced) (I1).
+- [x] **15.1** Build the MiniSearch service: index on startup in batches, update on changes (debounced) (I1).
   - Done when: a unit test finds a doc by a word in its content.
   - Commit: `feat(web): add offline full-text search index`
 - [ ] **15.2** Build the search overlay with highlighted snippets and jump-to-match, and quick open (Cmd+P) (I1, I2, 4.11).

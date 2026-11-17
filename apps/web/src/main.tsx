@@ -7,6 +7,7 @@ import { loadSession, refreshIfNeeded } from "./services/session";
 import { loadPending } from "./services/pending";
 import { offlineSet, revokedSet } from "./services/docSets";
 import { loadOutbox } from "./services/outbox";
+import { buildIndex } from "./services/search";
 import { useSession } from "./stores/session";
 import { reconnect, startSync, stopSync } from "./sync/providers";
 import "./sync/background";
@@ -22,8 +23,9 @@ useSession.subscribe((s, prev) => {
 // Restore the cached session before anything touches the network (A3), then refresh the token if needed
 loadSession().then(async () => {
   loadPending();
-  offlineSet.load();
-  revokedSet.load();
+  await revokedSet.load();
+  await offlineSet.load();
+  buildIndex(); // offline search over everything on the device (FP-14)
   loadOutbox();
   await refreshIfNeeded();
 });
