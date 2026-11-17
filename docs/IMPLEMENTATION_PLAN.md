@@ -268,7 +268,7 @@
 - [x] **13.1** Implement full `roleFor` (owner, workspace role, doc share, ancestor folder share) with unit tests (BP-4.2).
   - Done when: tests cover every rule.
   - Commit: `feat(server): resolve roles from workspaces and shares`
-- [ ] **13.2** Enforce read-only connections for viewers/commenters on `doc:`, viewers on `cm:` (G5, EC18).
+- [x] **13.2** Enforce read-only connections for viewers/commenters on `doc:`, viewers on `cm:` (G5, EC18).
   - Done when: a test viewer's update is discarded by the server.
   - Commit: `feat(server): enforce read-only sync for viewers and commenters`
 - [ ] **13.3** Add shares endpoints (list, invite, change role, remove) with the editor-up-to-editor rule, pending email invites attached at sign-up, and socket closing on change (G1, G2, G4, EC16, EC17, EC22).

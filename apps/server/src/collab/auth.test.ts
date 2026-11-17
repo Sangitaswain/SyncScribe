@@ -39,3 +39,38 @@ it("asks to retry for documents the server doesn't know yet, and checks known on
   (await connect(srv.port, "doc:d1", me.token)).provider.destroy();
   await expect(connect(srv.port, "doc:d1", other.token)).rejects.toThrow("forbidden");
 });
+
+it("discards edits from read-only connections: viewers and commenters on docs, viewers on comments (G5, EC18)", async () => {
+  const share = (user: string, role: string) =>
+    db.prepare("INSERT OR REPLACE INTO shares (id, resource_id, user_id, role, created_by, created_at) VALUES (?, 'd1', ?, ?, ?, 0)").run(
+      `d1-${user}`,
+      user,
+      role,
+      me.user.id,
+    );
+  const settle = () => new Promise((r) => setTimeout(r, 300));
+  const triesToWrite = async (name: string, text: string) => {
+    const owner = await connect(srv.port, name, me.token);
+    const guest = await connect(srv.port, name, other.token);
+    guest.doc.getText("content").insert(0, text);
+    await settle();
+    const relayed = owner.doc.getText("content").toString().includes(text);
+    owner.provider.destroy();
+    guest.provider.destroy();
+    const fresh = await connect(srv.port, name, me.token); // what the server kept
+    const stored = fresh.doc.getText("content").toString().includes(text);
+    fresh.provider.destroy();
+    return relayed || stored;
+  };
+
+  share(other.user.id, "viewer");
+  expect(await triesToWrite("doc:d1", "viewer edit")).toBe(false);
+  expect(await triesToWrite("cm:d1", "viewer comment")).toBe(false);
+
+  share(other.user.id, "commenter");
+  expect(await triesToWrite("doc:d1", "commenter edit")).toBe(false);
+  expect(await triesToWrite("cm:d1", "commenter comment")).toBe(true);
+
+  share(other.user.id, "editor");
+  expect(await triesToWrite("doc:d1", "editor edit")).toBe(true);
+});
