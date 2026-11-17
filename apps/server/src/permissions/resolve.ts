@@ -1,7 +1,7 @@
 import { maxRole, parseDocName, type Role } from "@syncscribe/shared";
 import { db } from "../db/db";
 
-// Who may open which Yjs document (BP-4.2). Shares are added in Step 13.
+// Who may open which Yjs document (BP-4.2).
 
 const workspaceRole = (userId: string, workspaceId: string) =>
   ((db.prepare("SELECT role FROM workspace_members WHERE workspace_id = ? AND user_id = ?").get(workspaceId, userId) as
@@ -13,6 +13,21 @@ export const docRow = (id: string) =>
     | { workspace_id: string; owner_id: string; parent_id: string | null }
     | undefined;
 
+const shareStmt = db.prepare("SELECT role FROM shares WHERE resource_id = ? AND user_id = ?");
+const shareRole = (userId: string, resourceId: string) =>
+  ((shareStmt.get(resourceId, userId) as { role: Role } | undefined)?.role ?? "none") as Role;
+
+/** Highest share on the doc or on any folder above it (folder loops are cut off by `seen`). */
+function sharedRole(userId: string, docId: string, parentId: string | null) {
+  let role = shareRole(userId, docId);
+  const seen = new Set([docId]);
+  for (let id = parentId; id && !seen.has(id); id = docRow(id)?.parent_id ?? null) {
+    seen.add(id);
+    role = maxRole(role, shareRole(userId, id));
+  }
+  return role;
+}
+
 /** Role of a user on a document name; null if the doc is not known to the server yet. */
 export function roleFor(userId: string, name: string): Role | null {
   const parsed = parseDocName(name);
@@ -22,5 +37,9 @@ export function roleFor(userId: string, name: string): Role | null {
   if (kind === "ws") return workspaceRole(userId, id);
   const row = docRow(id);
   if (!row) return null;
-  return maxRole(row.owner_id === userId ? "owner" : "none", workspaceRole(userId, row.workspace_id));
+  return maxRole(
+    row.owner_id === userId ? "owner" : "none",
+    workspaceRole(userId, row.workspace_id),
+    sharedRole(userId, id, row.parent_id),
+  );
 }

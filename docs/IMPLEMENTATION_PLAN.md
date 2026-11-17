@@ -265,7 +265,7 @@
 
 ## Step 13 — Permissions, sharing and workspaces · BP-4.2, BP-5.2, BP-5.3, BP-6.2, FP-12, FP-13
 
-- [ ] **13.1** Implement full `roleFor` (owner, workspace role, doc share, ancestor folder share) with unit tests (BP-4.2).
+- [x] **13.1** Implement full `roleFor` (owner, workspace role, doc share, ancestor folder share) with unit tests (BP-4.2).
   - Done when: tests cover every rule.
   - Commit: `feat(server): resolve roles from workspaces and shares`
 - [ ] **13.2** Enforce read-only connections for viewers/commenters on `doc:`, viewers on `cm:` (G5, EC18).
