@@ -307,7 +307,7 @@
 - [x] **14.3** Add the daily Trash purge job (30 days) and automatic version pruning (BP-9).
   - Done when: a test with a faked old `deletedAt` purges the item.
   - Commit: `feat(server): add scheduled trash purge`
-- [ ] **14.4** Add `DocDeletedBanner` for docs deleted remotely while open (EC9) and auto-move to root when editing inside a deleted folder (EC13).
+- [x] **14.4** Add `DocDeletedBanner` for docs deleted remotely while open (EC9) and auto-move to root when editing inside a deleted folder (EC13).
   - Done when: both scenarios behave as specified with two users.
   - Commit: `feat(web): handle edits to deleted documents and folders`
 - [ ] **14.5** Add the cycle-fix writer and notice for conflicting folder moves (EC12).

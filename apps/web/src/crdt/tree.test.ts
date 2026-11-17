@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, purge, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
+import { copyDoc, createDocItem, createFolder, initDoc, itemsOf, move, readItem, renameFolder, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -113,4 +113,26 @@ it("purge removes an item and everything inside it from the tree", () => {
   const keep = createDocItem(ws, null, "u1");
   expect(purge(ws, folder).sort()).toEqual([folder, doc].sort());
   expect([...itemsOf(ws).keys()]).toEqual([keep]);
+});
+
+it("keeps docs I edited when someone else trashes their folder (EC13)", () => {
+  const ws = new Y.Doc();
+  const folder = createFolder(ws, null, "Shared", "me");
+  const edited = createDocItem(ws, folder, "me");
+  const untouched = createDocItem(ws, folder, "me");
+  const mine = createDocItem(ws, null, "me");
+  trash(ws, folder, "them", "Them");
+  trash(ws, mine, "them", "Them"); // deleted on its own, not with a folder: the banner handles that (EC9)
+  const edits = (id: string) => id === edited || id === mine;
+
+  expect(rescueEditedDocs(ws, edits, "me")).toBe(1);
+  expect(readItem(ws, edited)).toMatchObject({ parentId: null, deletedAt: null });
+  expect(readItem(ws, untouched)!.deletedAt).not.toBeNull();
+  expect(readItem(ws, mine)!.deletedAt).not.toBeNull();
+
+  const own = createFolder(ws, null, "Mine", "me");
+  const doc = createDocItem(ws, own, "me");
+  trash(ws, own, "me");
+  expect(rescueEditedDocs(ws, (id) => id === doc, "me")).toBe(0); // I deleted it myself
+  expect(readItem(ws, doc)!.deletedAt).not.toBeNull();
 });

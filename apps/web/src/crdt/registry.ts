@@ -1,9 +1,11 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { Awareness } from "y-protocols/awareness";
-import { DOC } from "@syncscribe/shared";
+import { DOC, docDoc } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
-import { markPending } from "../services/pending";
+import { markPending, pendingNames } from "../services/pending";
+import { toast } from "../stores/ui";
+import { rescueEditedDocs } from "./tree";
 import { remoteOrigins } from "../sync/origins";
 
 // The only place Y.Docs are created (FP-8.1). Every doc is persisted to IndexedDB so it opens offline.
@@ -51,6 +53,16 @@ export function getDoc(name: string): Promise<Y.Doc> {
         setTimeout(() => doc.getMap(DOC.meta).set("editedAt", editedWritten));
       }
     });
+    // EC13: a folder deleted elsewhere doesn't take my unsynced edits with it (FP-8.3)
+    if (name.startsWith("ws:"))
+      doc.on("update", (_u: Uint8Array, origin: unknown) => {
+        if (!(origin && typeof origin === "object" && remoteOrigins.has(origin))) return;
+        setTimeout(() => {
+          const me = useSession.getState().user?.id;
+          if (me && rescueEditedDocs(doc, (id) => pendingNames().includes(docDoc(id)), me))
+            toast("Moved to top level because its folder was deleted");
+        });
+      });
     const ready = persistence.whenSynced.then(() => {
       channel.postMessage({ sv: Y.encodeStateVector(doc) });
       return doc;
@@ -80,15 +92,24 @@ export function releaseDoc(name: string) {
   entry.doc.destroy();
 }
 
-/** Deletes a doc's local copy from this device, e.g. after access to it was removed (EC16). */
+/** Deletes an IndexedDB database and waits until it is gone. */
+export const deleteDatabase = (db: string) =>
+  new Promise<void>((resolve) => {
+    const req = indexedDB.deleteDatabase(db);
+    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+  });
+
+/** Deletes a doc's local copy from this device, e.g. after access was removed (EC16) or a permanent delete. */
 export async function deleteLocal(name: string) {
   const entry = entries.get(name);
-  if (!entry) return void indexedDB.deleteDatabase(dbName(name));
-  entries.delete(name);
-  entry.awareness?.destroy();
-  entry.channel.close();
-  await entry.persistence.clearData();
-  entry.doc.destroy();
+  if (entry) {
+    entries.delete(name);
+    entry.awareness?.destroy();
+    entry.channel.close();
+    await entry.persistence.destroy(); // closes the database (y-indexeddb's clearData doesn't wait for the delete)
+    entry.doc.destroy();
+  }
+  await deleteDatabase(dbName(name));
 }
 
 /** Presence of an open document (null for workspace and user docs). */

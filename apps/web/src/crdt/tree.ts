@@ -18,6 +18,7 @@ export interface TreeItem {
   createdBy: string;
   deletedAt: number | null;
   deletedBy: string | null;
+  deletedByName?: string; // shown in "deleted by …" without a network lookup (EC9)
   trashParentId: string | null;
 }
 
@@ -124,7 +125,7 @@ function descendants(ws: Y.Doc, id: string, deletedAt: number | null | undefined
  * Moves an item to Trash; nothing is erased (B10). A folder's contents get the same `deletedAt`,
  * so they come back together on restore.
  */
-export function trash(ws: Y.Doc, id: string, userId: string) {
+export function trash(ws: Y.Doc, id: string, userId: string, userName = "") {
   const item = itemsOf(ws).get(id);
   if (!item || item.get("deletedAt")) return;
   const deletedAt = Date.now();
@@ -133,6 +134,7 @@ export function trash(ws: Y.Doc, id: string, userId: string) {
     for (const it of [item, ...descendants(ws, id).map(([, d]) => d)]) {
       it.set("deletedAt", deletedAt);
       it.set("deletedBy", userId);
+      it.set("deletedByName", userName);
     }
   });
 }
@@ -152,6 +154,27 @@ export function restore(ws: Y.Doc, id: string) {
       it.set("deletedBy", null);
     }
   });
+}
+
+/**
+ * EC13: docs I still have unsynced edits in, whose folder someone else put in Trash, move to the top level
+ * instead of disappearing with it. Returns how many were moved.
+ */
+export function rescueEditedDocs(ws: Y.Doc, hasLocalEdits: (docId: string) => boolean, me: string) {
+  const items = itemsOf(ws);
+  const rescued: Y.Map<unknown>[] = [];
+  for (const [id, item] of items) {
+    const parent = items.get(item.get("parentId") as string);
+    const deletedWithFolder = !!item.get("deletedAt") && parent?.get("deletedAt") === item.get("deletedAt");
+    if (item.get("type") === "doc" && deletedWithFolder && item.get("deletedBy") !== me && hasLocalEdits(id)) rescued.push(item);
+  }
+  if (rescued.length)
+    ws.transact(() => {
+      for (const item of rescued)
+        for (const [k, v] of Object.entries({ parentId: null, order: lastOrder(ws, null), deletedAt: null, deletedBy: null, trashParentId: null }))
+          item.set(k, v);
+    });
+  return rescued.length;
 }
 
 /** Removes an item and everything inside it from the tree for good; returns the removed ids (B10, owner only). */

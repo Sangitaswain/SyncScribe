@@ -1,6 +1,7 @@
 import { del, delMany, get, keys, set } from "idb-keyval";
 import type { AuthResponse } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
+import { deleteDatabase } from "../crdt/registry";
 import { api } from "./api";
 
 // Cached in IndexedDB so the app can start signed in with no network (A3, FP-4.7)
@@ -28,12 +29,6 @@ export async function clearSession() {
   await del(KEY);
   useSession.setState({ user: null, token: null, workspaces: [], activeWorkspaceId: null, status: "signedOut" });
 }
-
-const deleteDatabase = (name: string) =>
-  new Promise<void>((resolve) => {
-    const req = indexedDB.deleteDatabase(name);
-    req.onsuccess = req.onerror = req.onblocked = () => resolve();
-  });
 
 /**
  * Deletes everything this user saved on the device (their docs and local lists), then signs out (EC20, EC21).

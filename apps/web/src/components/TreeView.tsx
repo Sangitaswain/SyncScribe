@@ -57,6 +57,7 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
   const navigate = useNavigate();
   const { docId } = useParams();
   const userId = useSession((s) => s.user!.id);
+  const userName = useSession((s) => s.user!.name);
   const act = (fn: () => void) => () => {
     setOpen(false);
     fn();
@@ -84,7 +85,7 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
           <button
             className={`${itemClass} text-rose-600`}
             onClick={act(() => {
-              trash(ws, item.id, userId);
+              trash(ws, item.id, userId, userName);
               toast(`"${title}" moved to Trash`);
               if (item.id === docId) navigate("/");
             })}

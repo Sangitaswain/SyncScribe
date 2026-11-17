@@ -245,3 +245,44 @@ test("a downgrade makes the doc read-only and refuses offline edits; a removal m
   await helpers.until(() => status().revoked);
   stop();
 });
+
+test("when another user trashes a folder, my doc with unsynced edits moves to the top level (EC13)", async () => {
+  const { providerFor, startSync, whenSynced } = await import("./providers");
+  const { api } = await import("../services/api");
+  const { saveSession } = await import("../services/session");
+  const { getDoc, releaseDoc } = await import("../crdt/registry");
+  const { createDocItem, createFolder, readItem, trash } = await import("../crdt/tree");
+  const { useUi } = await import("../stores/ui");
+
+  // Ada (this device) and Owen share a team workspace
+  const team = await api<{ id: string }>("/workspaces", { body: { name: "Lab" } });
+  await api(`/workspaces/${team.id}/members`, { body: { email: "owen@example.com", role: "editor" } });
+  await saveSession(await api("/me"));
+  startSync();
+  await helpers.until(() => !!providerFor(wsDoc(team.id)));
+  const mine = await providerFor(wsDoc(team.id))!;
+  await whenSynced(mine);
+
+  const folder = createFolder(mine.document, null, "Week 3", auth.user.id);
+  const docId = createDocItem(mine.document, folder, auth.user.id);
+  await whenSynced(mine);
+  const doc = await getDoc(docDoc(docId)); // edited here, not synced yet (the doc isn't open)
+  doc.getText(DOC.content).insert(0, "my notes");
+  releaseDoc(docDoc(docId));
+
+  // Owen deletes the folder from his device
+  const owen = await fetch(`http://localhost:${server.port}/api/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "owen@example.com", password: "password123" }),
+  }).then((r) => r.json());
+  const theirs = await helpers.connect(server.port, wsDoc(team.id), owen.token);
+  await helpers.until(() => !!readItem(theirs.doc, docId));
+  trash(theirs.doc, folder, owen.user.id, "Owen");
+
+  await helpers.until(() => readItem(mine.document, docId)?.parentId === null && readItem(mine.document, docId)?.deletedAt === null);
+  expect(readItem(mine.document, folder)!.deletedAt).not.toBeNull(); // the folder itself stays in Trash
+  expect(useUi.getState().toasts.map((t) => t.message)).toContain("Moved to top level because its folder was deleted");
+  await helpers.until(() => readItem(theirs.doc, docId)?.deletedAt === null); // Owen sees it come back too
+  theirs.provider.destroy();
+});

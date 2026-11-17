@@ -10,6 +10,7 @@ import { useDocStatus } from "../stores/docStatus";
 import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import AccessBanner from "../editor/AccessBanner";
+import DocDeletedBanner from "../editor/DocDeletedBanner";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import DocTitle from "../editor/DocTitle";
 import { syncWhileOpen } from "../sync/providers";
@@ -67,6 +68,7 @@ export default function DocPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <AccessBanner docId={docId!} doc={doc} />
+      <DocDeletedBanner docId={docId!} />
       <DocTitle key={docId} doc={doc} readOnly={readOnly} />
       <div className={`grid min-h-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
         {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} readOnly={readOnly} />}

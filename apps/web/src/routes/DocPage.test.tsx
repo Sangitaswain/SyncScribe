@@ -93,3 +93,26 @@ it("viewers get a read-only editor; removed access offers an export of the local
   expect(screen.getByText("Export my local copy")).toBeTruthy();
   expect(screen.getByText("Remove from this device")).toBeTruthy();
 });
+
+it("shows who deleted the open doc and restores it (EC9)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  const { wsDoc } = await import("@syncscribe/shared");
+  const { trash, readItem } = await import("../crdt/tree");
+  cleanup();
+  useSession.setState({ activeWorkspaceId: "w1" });
+  const id = await newDocument("w1", null, "still here", "Plan");
+  render(
+    <MemoryRouter initialEntries={[`/doc/${id}`]}>
+      <Routes>
+        <Route path="/doc/:docId" element={<DocPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  await screen.findByLabelText("Document title");
+  const ws = await getDoc(wsDoc("w1"));
+  trash(ws, id, "u2", "Owen");
+  await screen.findByText("This document was deleted by Owen. Your changes are still saved.");
+  fireEvent.click(screen.getByText("Restore"));
+  await waitFor(() => expect(screen.queryByText(/This document was deleted/)).toBeNull());
+  expect(readItem(ws, id)!.deletedAt).toBeNull();
+});
