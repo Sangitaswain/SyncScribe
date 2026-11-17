@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, fixCycles, initDoc, itemsOf, move, readItem, renameFolder, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
+import { copyDoc, createDocItem, createFolder, fixCycles, initDoc, itemsOf, move, readItem, renameFolder, replaceContent, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -158,4 +158,14 @@ it("two devices moving folders into each other offline end with the same tree an
   expect(readItem(a, victim)!.parentId).toBeNull();
   expect(readItem(a, victim === x ? y : x)!.parentId).toBe(victim);
   expect(fixCycles(a)).toEqual([]);
+});
+
+it("a restore is a normal change that reaches collaborators (H3, DF12)", () => {
+  const mine = new Y.Doc();
+  mine.getText(DOC.content).insert(0, "today");
+  const theirs = new Y.Doc();
+  Y.applyUpdate(theirs, Y.encodeStateAsUpdate(mine));
+  replaceContent(mine, "last week");
+  Y.applyUpdate(theirs, Y.encodeStateAsUpdate(mine, Y.encodeStateVector(theirs)));
+  expect(theirs.getText(DOC.content).toString()).toBe("last week");
 });

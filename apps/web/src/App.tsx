@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import Placeholder from "./routes/Placeholder";
 import AuthPage from "./routes/AuthPage";
 import ForgotPage from "./routes/ForgotPage";
 import ResetPage from "./routes/ResetPage";
@@ -12,6 +11,7 @@ import SharedPage from "./routes/SharedPage";
 import AcceptLinkPage from "./routes/AcceptLinkPage";
 import MembersPage from "./routes/MembersPage";
 import TrashPage from "./routes/TrashPage";
+import HistoryPage from "./routes/HistoryPage";
 import { SearchPanel } from "./components/SearchPanel";
 import AppShell from "./components/AppShell";
 import UpdateAvailableToast from "./components/UpdateAvailableToast";
@@ -37,7 +37,7 @@ export default function App() {
         >
           <Route path="/" element={<AllDocsPage />} />
           <Route path="/doc/:docId" element={<DocPage />} />
-          <Route path="/doc/:docId/history" element={<Placeholder title="Version history" />} />
+          <Route path="/doc/:docId/history" element={<HistoryPage />} />
           <Route path="/trash" element={<TrashPage />} />
           <Route path="/shared" element={<SharedPage />} />
           <Route path="/search" element={<div className="mx-auto max-w-xl pt-10"><SearchPanel /></div>} />

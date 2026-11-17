@@ -103,6 +103,15 @@ export function copyDoc(src: Y.Doc, dst: Y.Doc) {
   });
 }
 
+/** Restore (H3, DF12): the doc's text becomes `text` as a new change on top, so today's text stays in history. */
+export function replaceContent(doc: Y.Doc, text: string) {
+  const content = doc.getText(DOC.content);
+  doc.transact(() => {
+    content.delete(0, content.length);
+    content.insert(0, text);
+  });
+}
+
 export const readItem = (ws: Y.Doc, id: string) => {
   const item = itemsOf(ws).get(id);
   return item ? ({ id, ...item.toJSON() } as TreeItem) : undefined;

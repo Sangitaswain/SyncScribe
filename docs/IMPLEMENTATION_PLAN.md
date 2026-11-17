@@ -36,7 +36,7 @@
 | 13 | Permissions, sharing and workspaces | 2 | [x] |
 | 14 | Trash and structural edge cases | 2 | [x] |
 | 15 | Search | 2 | [x] |
-| 16 | Version history | 2 | [ ] |
+| 16 | Version history | 2 | [x] |
 | 17 | Import, export, notifications, storage safety | 2 | [ ] |
 | 18 | Testing | 2 | [ ] |
 | 19 | Polish, docs and demo | 2 | [ ] |
@@ -331,7 +331,7 @@
 - [x] **16.2** Add versions endpoints: list, get state, create named, rename (H1, H4).
   - Done when: supertest covers all four.
   - Commit: `feat(server): add version history endpoints`
-- [ ] **16.3** Build the history panel: list, read-only preview, restore as a new change, name a version (H1, H3, H4, DF12).
+- [x] **16.3** Build the history panel: list, read-only preview, restore as a new change, name a version (H1, H3, H4, DF12).
   - Done when: restoring a version updates collaborators and keeps the current version recoverable.
   - Commit: `feat(web): add version history panel with restore`
 

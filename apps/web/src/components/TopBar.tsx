@@ -1,5 +1,5 @@
-import { PanelLeft, UserPlus } from "lucide-react";
-import { useMatch } from "react-router";
+import { History, PanelLeft, UserPlus } from "lucide-react";
+import { Link, useMatch } from "react-router";
 import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
 import { useDocTitle } from "../crdt/titles";
@@ -57,6 +57,16 @@ export default function TopBar() {
             <UserPlus className="size-4" />
             <span className="hidden sm:inline">Share</span>
           </button>
+        )}
+        {docId && (
+          <Link
+            to={`/doc/${docId}/history`}
+            aria-label="Version history"
+            title="Version history"
+            className="rounded-md p-1.5 text-muted hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white"
+          >
+            <History className="size-4" />
+          </Link>
         )}
         {docId && <ModeSwitch value={settings.editorMode ?? "edit"} onChange={(m) => prefs && setSetting(prefs, "editorMode", m)} />}
       </div>

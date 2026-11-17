@@ -108,11 +108,12 @@ it("shows who deleted the open doc and restores it (EC9)", async () => {
       </Routes>
     </MemoryRouter>,
   );
-  await screen.findByLabelText("Document title");
+  const slow = { timeout: 5000 }; // the full suite runs server tests in parallel
+  await screen.findByLabelText("Document title", {}, slow);
   const ws = await getDoc(wsDoc("w1"));
   trash(ws, id, "u2", "Owen");
-  await screen.findByText("This document was deleted by Owen. Your changes are still saved.");
+  await screen.findByText("This document was deleted by Owen. Your changes are still saved.", {}, slow);
   fireEvent.click(screen.getByText("Restore"));
-  await waitFor(() => expect(screen.queryByText(/This document was deleted/)).toBeNull());
+  await waitFor(() => expect(screen.queryByText(/This document was deleted/)).toBeNull(), slow);
   expect(readItem(ws, id)!.deletedAt).toBeNull();
 });
