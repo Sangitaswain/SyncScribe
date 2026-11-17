@@ -122,7 +122,9 @@ AUTH_RATE_LIMIT=10                     # sign-up / sign-in attempts per minute p
 
 **On one device**
 
-1. Run `npm run dev`, open <http://localhost:5173> and create an account.
+1. Build and serve the app, so the service worker can cache it for offline use (`npm run dev` doesn't install it):
+   `npm run dev -w apps/server` in one terminal, `npm run build -w apps/web && npm run preview -w apps/web` in another.
+   Open <http://localhost:4173> and create an account.
 2. Open DevTools → **Network** and choose **Offline**. Within a few seconds the badge says **Offline** and a banner explains that your work is saved on this device.
 3. Create folders and documents and edit them. Each one shows a small dot while it has unsynced changes. Reload the page: everything is still there.
 4. Switch back to **Online**. The badge goes to **Syncing**, then **Synced**, and the dots disappear. No clicks needed.
@@ -163,6 +165,7 @@ SyncScribe/
 | [Backend Plan](docs/BACKEND_PLAN.md)                   | Database schema, API, sync hooks, permissions         |
 | [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)     | Every step and substep, with progress                 |
 | [Test notes](docs/TEST_NOTES.md)                       | Results of the manual and scripted verification runs  |
+| [Demo script](docs/DEMO_SCRIPT.md)                     | A 5-minute demo: offline, merge, sharing, history     |
 | [Contributing](CONTRIBUTING.md)                        | How teammates set up, take turns and commit           |
 
 ---

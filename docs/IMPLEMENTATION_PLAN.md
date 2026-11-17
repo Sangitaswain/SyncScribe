@@ -389,7 +389,7 @@
   - Done when: a fresh clone can be run by following the README.
   - Commit: `docs: add README with setup and demo guide`
   - Note: a first version was written early (after Step 10, on request). Update its features, roadmap and demo section here, then check this substep.
-- [ ] **19.4** Write `docs/DEMO_SCRIPT.md`: 5-minute demo (offline edit, two-user merge, status changes, sharing, history).
+- [x] **19.4** Write `docs/DEMO_SCRIPT.md`: 5-minute demo (offline edit, two-user merge, status changes, sharing, history).
   - Done when: rehearsed once end to end.
   - Commit: `docs: add demo script`
 - [ ] **19.5** Optional: deploy frontend (Netlify/Vercel) and backend (Render free) and add URLs to the README.
