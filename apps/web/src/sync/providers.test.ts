@@ -175,3 +175,26 @@ test("a device that never synced downloads every document and marks it available
   otherTree.provider.destroy();
   otherDoc.provider.destroy();
 }, 20_000);
+
+test("collaborators on an open doc see each other's name, colour and cursor (F1, F3)", async () => {
+  const { providerFor, syncWhileOpen, whenSynced } = await import("./providers");
+  const { awarenessOf } = await import("../crdt/registry");
+  const tree = await providerFor(wsDoc(auth.user.personalWorkspaceId))!;
+  const name = docDoc([...(tree.document.getMap(WS.items).keys() as Iterable<string>)][0]);
+  const stop = syncWhileOpen(name);
+  await helpers.until(() => !!providerFor(name));
+  await whenSynced(await providerFor(name)!);
+
+  const mine = awarenessOf(name)!;
+  mine.setLocalStateField("cursor", { anchor: 3, head: 7 });
+  const other = await helpers.connect(server.port, name, auth.token);
+  other.provider.awareness!.setLocalStateField("user", { id: "x", name: "Bo", color: "#2563eb" });
+
+  const states = (a: typeof mine) => [...a.getStates().values()] as { user?: { name: string; color: string }; cursor?: unknown }[];
+  await helpers.until(() =>
+    states(other.provider.awareness!).some((s) => s.user?.name === auth.user.name && s.user.color === auth.user.color && !!s.cursor),
+  );
+  await helpers.until(() => states(mine).some((s) => s.user?.name === "Bo"));
+  other.provider.destroy();
+  stop();
+});

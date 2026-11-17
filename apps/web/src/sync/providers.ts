@@ -1,6 +1,6 @@
 import { HocuspocusProvider, HocuspocusProviderWebsocket, WebSocketStatus } from "@hocuspocus/provider";
 import { userDoc, wsDoc } from "@syncscribe/shared";
-import { closeAll, getDoc, releaseDoc } from "../crdt/registry";
+import { awarenessOf, closeAll, getDoc, releaseDoc } from "../crdt/registry";
 import { useSession } from "../stores/session";
 import { useNetwork } from "../stores/network";
 import { API_URL } from "../services/api";
@@ -85,6 +85,7 @@ export function attach(name: string): Promise<HocuspocusProvider> {
       websocketProvider: ws,
       name,
       document,
+      awareness: awarenessOf(name), // the doc's own presence, so cursors show as soon as it connects
       token: () => useSession.getState().token ?? "",
     });
     remoteOrigins.add(provider); // changes from the server are not local edits

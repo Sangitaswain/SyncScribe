@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { DOC, docDoc } from "@syncscribe/shared";
 import { addRecent, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
+import { awarenessOf } from "../crdt/registry";
 import { useEditorStats } from "../stores/editorStats";
 import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
@@ -41,7 +42,7 @@ export default function DocPage() {
     <div className="flex h-full flex-col overflow-hidden">
       <DocTitle key={docId} doc={doc} />
       <div className={`grid min-h-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
-        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} />}
+        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} />}
         {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
       </div>
     </div>

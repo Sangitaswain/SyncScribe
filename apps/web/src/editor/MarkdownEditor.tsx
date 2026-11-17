@@ -6,6 +6,7 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type * as Y from "yjs";
+import type { Awareness } from "y-protocols/awareness";
 
 const theme = EditorView.theme({
   "&": { height: "100%", fontSize: "16px" },
@@ -15,8 +16,11 @@ const theme = EditorView.theme({
   "&.cm-focused": { outline: "none" },
 });
 
-/** CodeMirror bound to the document's Y.Text: every keystroke is a CRDT change saved on the device (C2, C6). */
-export default function MarkdownEditor({ ytext }: { ytext: Y.Text }) {
+/**
+ * CodeMirror bound to the document's Y.Text: every keystroke is a CRDT change saved on the device (C2, C6).
+ * Collaborators' cursors and selections show with their name and colour (F1, F3).
+ */
+export default function MarkdownEditor({ ytext, awareness }: { ytext: Y.Text; awareness?: Awareness }) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,13 +36,13 @@ export default function MarkdownEditor({ ytext }: { ytext: Y.Text }) {
           placeholder("Start writing in markdown…"),
           // Undo/redo only this user's edits, never a collaborator's (C7, EC14)
           keymap.of([...yUndoManagerKeymap, ...defaultKeymap, indentWithTab]),
-          yCollab(ytext, null),
+          yCollab(ytext, awareness ?? null),
           theme,
         ],
       }),
     });
     return () => view.destroy();
-  }, [ytext]);
+  }, [ytext, awareness]);
 
   return <div ref={host} className="h-full px-6 dark:[&_.cm-content]:caret-white" />;
 }

@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
+import { Awareness } from "y-protocols/awareness";
 import { DOC } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { markPending } from "../services/pending";
@@ -11,6 +12,7 @@ interface Entry {
   doc: Y.Doc;
   persistence: IndexeddbPersistence;
   channel: BroadcastChannel;
+  awareness?: Awareness;
   ready: Promise<Y.Doc>;
   refs: number;
 }
@@ -53,7 +55,14 @@ export function getDoc(name: string): Promise<Y.Doc> {
       channel.postMessage({ sv: Y.encodeStateVector(doc) });
       return doc;
     });
-    entry = { doc, persistence, channel, ready, refs: 0 };
+    // Who is here and where their cursor is (F2, F3); the Provider Manager relays it while online
+    let awareness: Awareness | undefined;
+    const user = useSession.getState().user;
+    if (name.startsWith("doc:") && user) {
+      awareness = new Awareness(doc);
+      awareness.setLocalStateField("user", { id: user.id, name: user.name, color: user.color });
+    }
+    entry = { doc, persistence, channel, awareness, ready, refs: 0 };
     entries.set(name, entry);
   }
   entry.refs++;
@@ -65,10 +74,14 @@ export function releaseDoc(name: string) {
   const entry = entries.get(name);
   if (!entry || --entry.refs > 0 || keepOpen(name)) return;
   entries.delete(name);
+  entry.awareness?.destroy();
   entry.channel.close();
   entry.persistence.destroy();
   entry.doc.destroy();
 }
+
+/** Presence of an open document (null for workspace and user docs). */
+export const awarenessOf = (name: string) => entries.get(name)?.awareness;
 
 /** Already-open doc, if any (used by the sync layer). */
 export const peekDoc = (name: string) => entries.get(name)?.doc;
@@ -76,6 +89,7 @@ export const peekDoc = (name: string) => entries.get(name)?.doc;
 /** Closes everything, e.g. on sign-out. */
 export function closeAll() {
   for (const [name, e] of entries) {
+    e.awareness?.destroy();
     e.channel.close();
     e.persistence.destroy();
     e.doc.destroy();

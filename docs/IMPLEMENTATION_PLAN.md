@@ -252,7 +252,7 @@
 
 ## Step 12 — Real-time collaboration and presence · FP-10.4, BP-6.6
 
-- [ ] **12.1** Pass awareness to `yCollab` so remote cursors and selections show with name and colour (F1, F3).
+- [x] **12.1** Pass awareness to `yCollab` so remote cursors and selections show with name and colour (F1, F3).
   - Done when: two users see each other's cursor and typing within about a second.
   - Commit: `feat(web): show live cursors and selections`
 - [ ] **12.2** Build `PresenceAvatars` from awareness, with an offline indicator for the local user (F2, 4.6).
