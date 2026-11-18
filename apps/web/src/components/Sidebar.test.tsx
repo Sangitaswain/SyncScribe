@@ -51,3 +51,24 @@ it("Cmd/Ctrl+Alt+N creates a new document and opens it (C5)", async () => {
   fireEvent.keyDown(window, { key: "n", code: "KeyN", ctrlKey: true, altKey: true });
   await screen.findByText("New doc opened");
 });
+
+it("tags documents from the row menu and filters the tree by tag (B7)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  cleanup();
+  await newDocument("w1", null, "", "Exam prep");
+  await newDocument("w1", null, "", "Shopping list");
+  render(<MemoryRouter><Sidebar /></MemoryRouter>);
+  fireEvent.click(await screen.findByLabelText("Actions for Exam prep"));
+  fireEvent.click(screen.getByText("Tags…"));
+  const input = screen.getByLabelText("Tags, separated by commas");
+  fireEvent.change(input, { target: { value: "exam, revision" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+  fireEvent.blur(input);
+
+  const filter = await screen.findByLabelText("Filter by tag");
+  fireEvent.change(filter, { target: { value: "exam" } });
+  await waitFor(() => expect(screen.queryByText("Shopping list")).toBeNull());
+  expect(screen.getAllByText("Exam prep").length).toBeGreaterThan(0);
+  fireEvent.change(filter, { target: { value: "" } }); // All tags
+  await screen.findByText("Shopping list");
+});

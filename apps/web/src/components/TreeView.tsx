@@ -7,7 +7,7 @@ import { WS, docDoc, wsDoc } from "@syncscribe/shared";
 import { useDoc, useY } from "../crdt/hooks";
 import { getDoc, releaseDoc } from "../crdt/registry";
 import { resolveTree, type SortMode, type TreeNode } from "../crdt/resolveTree";
-import { dropParent, move, renameFolder, setTitle, trash, type TreeItem } from "../crdt/tree";
+import { dropParent, filterByTag, move, renameFolder, setTags, setTitle, trash, type TreeItem } from "../crdt/tree";
 import { duplicateDocument } from "../crdt/actions";
 import { useDocTitle, useEditedAt, useTitles } from "../crdt/titles";
 import { useDocStatus } from "../stores/docStatus";
@@ -31,14 +31,14 @@ const stop = (e: React.MouseEvent) => {
 };
 
 /** Inline rename box; Enter or blur saves, Escape cancels. */
-function RenameInput({ initial, onDone }: { initial: string; onDone: (value: string | null) => void }) {
+function RenameInput({ initial, onDone, label = "New name" }: { initial: string; onDone: (value: string | null) => void; label?: string }) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.select(), []);
   return (
     <input
       ref={ref}
       defaultValue={initial}
-      aria-label="New name"
+      aria-label={label}
       className="min-w-0 flex-1 rounded border border-brand bg-white px-1 text-sm outline-none dark:bg-[#141414]"
       onBlur={(e) => onDone(e.target.value)}
       onKeyDown={(e) => {
@@ -76,6 +76,11 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
         <div className="absolute top-full right-0 z-40 w-40 rounded-lg border border-line bg-white py-1 shadow-lg dark:border-white/10 dark:bg-[#222]">
           <button className={itemClass} onClick={act(() => setRenaming(item.id))}>Rename</button>
           <button className={itemClass} onClick={act(() => setMoving(true))}>Move to…</button>
+          {item.type === "doc" && (
+            <button className={itemClass} onClick={act(() => setRenaming(`tags:${item.id}`))}>
+              Tags…
+            </button>
+          )}
           <button className={itemClass} onClick={act(() => useUi.setState({ modal: `share:${item.id}` }))}>Share…</button>
           {item.type === "doc" && (
             <button className={itemClass} onClick={act(async () => navigate(`/doc/${await duplicateDocument(workspaceId, item.id)}`))}>
@@ -138,6 +143,15 @@ function Row({ item, depth, children, after }: { item: TreeItem; depth: number; 
       {children}
       {renaming === item.id ? (
         <RenameInput initial={item.type === "doc" ? docTitle : item.name ?? ""} onDone={rename} />
+      ) : renaming === `tags:${item.id}` ? (
+        <RenameInput
+          label="Tags, separated by commas"
+          initial={(item.tags ?? []).join(", ")}
+          onDone={(value) => {
+            setRenaming(null);
+            if (value !== null) setTags(ws, item.id, value.split(",")); // B7
+          }}
+        />
       ) : (
         <span className="truncate">{title}</span>
       )}
@@ -204,11 +218,14 @@ export default function TreeView({
   sort = "manual",
   renaming,
   setRenaming,
+  tag = null,
 }: {
   workspaceId: string;
   sort?: SortMode;
   renaming: string | null;
   setRenaming: (id: string | null) => void;
+  /** Show only docs with this tag (B7) */
+  tag?: string | null;
 }) {
   const { docId } = useParams();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -219,12 +236,12 @@ export default function TreeView({
   const editedAt = useEditedAt();
   if (!ws || !raw) return null;
   const items = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
-  const { roots } = resolveTree(items, {
+  const { roots } = resolveTree(filterByTag(items, tag), {
     sort,
     nameOf: (i) => (i.type === "doc" ? titles[i.id] ?? "" : i.name ?? ""),
     editedAt: (i) => editedAt[i.id],
   });
-  if (!roots.length) return <p className="px-2 py-1 text-[13px] text-muted">No documents yet</p>;
+  if (!roots.length) return <p className="px-2 py-1 text-[13px] text-muted">{tag ? `No documents tagged "${tag}"` : "No documents yet"}</p>;
 
   // Drop on a folder = move into it; drop on empty space = move to top level (B5)
   const onDragEnd = ({ active, over }: DragEndEvent) => {

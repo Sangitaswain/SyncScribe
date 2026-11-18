@@ -216,6 +216,22 @@ export const trashedItems = (items: TreeItem[]) => {
     .sort((a, b) => b.deletedAt! - a.deletedAt!);
 };
 
+/** Docs with `tag` and the folders that lead to them (B7); everything when there's no tag. */
+export function filterByTag(items: TreeItem[], tag: string | null) {
+  if (!tag) return items;
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const keep = new Set<string>();
+  for (const i of items)
+    if (i.type === "doc" && i.tags?.includes(tag))
+      for (let cur: TreeItem | undefined = i; cur && !keep.has(cur.id); cur = cur.parentId ? byId.get(cur.parentId) : undefined)
+        keep.add(cur.id);
+  return items.filter((i) => keep.has(i.id));
+}
+
+/** Every tag used by live docs, alphabetically. */
+export const allTags = (items: TreeItem[]) =>
+  [...new Set(items.filter((i) => i.type === "doc" && !i.deletedAt).flatMap((i) => i.tags ?? []))].sort((a, b) => a.localeCompare(b));
+
 /** True if `targetId` is `itemId` itself or somewhere inside it (a folder can't move into its own subtree). */
 export function isInside(items: TreeItem[], targetId: string, itemId: string) {
   const byId = new Map(items.map((i) => [i.id, i]));

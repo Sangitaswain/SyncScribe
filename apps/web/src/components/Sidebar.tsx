@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { Files, FolderPlus, LogOut, PanelLeftClose, Plus, Search, Settings, Trash2, Users } from "lucide-react";
-import { wsDoc } from "@syncscribe/shared";
+import { WS, wsDoc } from "@syncscribe/shared";
 import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 import { getDoc } from "../crdt/registry";
@@ -10,6 +10,9 @@ import { newDocument } from "../crdt/actions";
 import { setSetting, usePrefs } from "../crdt/prefs";
 import TreeView from "./TreeView";
 import SortMenu from "./SortMenu";
+import TagFilter from "./TagFilter";
+import { useDoc, useY } from "../crdt/hooks";
+import { allTags, type TreeItem } from "../crdt/tree";
 import RecentSection from "./RecentSection";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { rowClass } from "./ui";
@@ -34,6 +37,10 @@ export default function Sidebar() {
   const [renaming, setRenaming] = useState<string | null>(null);
   const { doc: prefs, recents, settings } = usePrefs();
   const navigate = useNavigate();
+  const tag = useUi((s) => s.tagFilter);
+  const ws = useDoc(activeWorkspaceId ? wsDoc(activeWorkspaceId) : undefined);
+  const items = useY<Record<string, Omit<TreeItem, "id">>>(ws?.getMap(WS.items)) ?? {};
+  const tags = allTags(Object.entries(items).map(([id, v]) => ({ id, ...v })));
   // Cmd/Ctrl+Alt+N makes a new document (C5)
   useEffect(() => {
     const onKey = async (e: KeyboardEvent) => {
@@ -76,13 +83,20 @@ export default function Sidebar() {
           <div className="flex items-center justify-between pr-1">
             <SectionTitle>Organize</SectionTitle>
             <div className="flex items-center gap-1">
+              <TagFilter tags={tags} value={tag} onChange={(t) => useUi.setState({ tagFilter: t })} />
               <SortMenu value={settings.sort ?? "manual"} onChange={(m) => prefs && setSetting(prefs, "sort", m)} />
               <button onClick={newFolder} className={iconButton} aria-label="New folder" title="New folder">
                 <FolderPlus className="size-3.5" />
               </button>
             </div>
           </div>
-          <TreeView workspaceId={activeWorkspaceId} sort={settings.sort ?? "manual"} renaming={renaming} setRenaming={setRenaming} />
+          <TreeView
+            workspaceId={activeWorkspaceId}
+            sort={settings.sort ?? "manual"}
+            renaming={renaming}
+            setRenaming={setRenaming}
+            tag={tag && tags.includes(tag) ? tag : null}
+          />
         </section>
       </div>
 

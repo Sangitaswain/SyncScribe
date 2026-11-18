@@ -13,12 +13,14 @@ interface UiState {
   toasts: Toast[];
   /** The comments panel next to the document (F4) */
   commentsOpen: boolean;
+  /** Sidebar shows only docs with this tag (B7) */
+  tagFilter: string | null;
 }
 
 export const isDesktop = () => typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
 
 /** Sidebar starts open on desktop and closed on phones. */
-export const useUi = create<UiState>(() => ({ sidebarOpen: !!isDesktop(), focusMode: false, modal: null, toasts: [], commentsOpen: false }));
+export const useUi = create<UiState>(() => ({ sidebarOpen: !!isDesktop(), focusMode: false, modal: null, toasts: [], commentsOpen: false, tagFilter: null }));
 
 let nextId = 1;
 export const toast = (message: string, kind: Toast["kind"] = "info") => {

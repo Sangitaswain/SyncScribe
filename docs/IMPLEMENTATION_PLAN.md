@@ -407,7 +407,7 @@ In scope. Start after Step 19 is complete, per the critical rule.
 - [x] **20.2** Mentions in comments via outbox → `POST /api/mentions` (F5).
   - Done when: mentioning a collaborator creates a notification for them, including when sent offline.
   - Commit: `feat(web): add mentions in comments`
-- [ ] **20.3** Tags and tag filter (B7).
+- [x] **20.3** Tags and tag filter (B7).
   - Done when: tags can be added/removed and the sidebar filters by tag.
   - Commit: `feat(web): add document tags and filtering`
 - [ ] **20.4** Pin to top (B8).

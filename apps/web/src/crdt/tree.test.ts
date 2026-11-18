@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import * as Y from "yjs";
 import { DOC } from "@syncscribe/shared";
-import { copyDoc, createDocItem, createFolder, fixCycles, initDoc, itemsOf, move, readItem, renameFolder, replaceContent, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
+import { allTags, copyDoc, createDocItem, createFolder, filterByTag, fixCycles, initDoc, itemsOf, move, readItem, renameFolder, replaceContent, purge, rescueEditedDocs, restore, setTags, setTitle, trash, trashedItems, type TreeItem } from "./tree";
 
 it("creates folders and docs in order under a parent", () => {
   const ws = new Y.Doc();
@@ -168,4 +168,20 @@ it("a restore is a normal change that reaches collaborators (H3, DF12)", () => {
   replaceContent(mine, "last week");
   Y.applyUpdate(theirs, Y.encodeStateAsUpdate(mine, Y.encodeStateVector(theirs)));
   expect(theirs.getText(DOC.content).toString()).toBe("last week");
+});
+
+it("filters the tree by tag, keeping the folders that lead to tagged docs (B7)", () => {
+  const ws = new Y.Doc();
+  const course = createFolder(ws, null, "Course", "u1");
+  const week = createFolder(ws, course, "Week 1", "u1");
+  const lecture = createDocItem(ws, week, "u1");
+  const other = createDocItem(ws, null, "u1");
+  createFolder(ws, null, "Empty", "u1");
+  setTags(ws, lecture, ["exam", "notes"]);
+  setTags(ws, other, ["notes"]);
+  const items = [...itemsOf(ws).keys()].map((id) => readItem(ws, id)!);
+  expect(allTags(items)).toEqual(["exam", "notes"]);
+  expect(filterByTag(items, "exam").map((i) => i.id).sort()).toEqual([course, week, lecture].sort());
+  expect(filterByTag(items, "notes").map((i) => i.id).sort()).toEqual([course, week, lecture, other].sort());
+  expect(filterByTag(items, null)).toHaveLength(5);
 });
