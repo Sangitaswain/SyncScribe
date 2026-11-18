@@ -12,6 +12,7 @@ import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import AccessBanner from "../editor/AccessBanner";
 import CommentsPanel from "../editor/CommentsPanel";
+import TableOfContents from "../editor/TableOfContents";
 import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
 import DocDeletedBanner from "../editor/DocDeletedBanner";
@@ -51,6 +52,7 @@ export default function DocPage() {
   }, [docId]);
   const cm = useDoc(docId ? cmDoc(docId) : undefined);
   const commentsOpen = useUi((s) => s.commentsOpen);
+  const tocOpen = useUi((s) => s.tocOpen);
   const user = useSession((s) => s.user);
   const [view, setView] = useState<EditorView | null>(null);
 
@@ -98,6 +100,7 @@ export default function DocPage() {
       <DocDeletedBanner docId={docId!} />
       <DocTitle key={docId} doc={doc} readOnly={readOnly} />
       <div className="flex min-h-0 flex-1">
+        {tocOpen && <TableOfContents ytext={ytext} view={view} />}
         <div className={`grid min-h-0 min-w-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
           {mode !== "preview" && (
             <MarkdownEditor

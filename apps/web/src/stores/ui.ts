@@ -15,12 +15,14 @@ interface UiState {
   commentsOpen: boolean;
   /** Sidebar shows only docs with this tag (B7) */
   tagFilter: string | null;
+  /** Table of contents next to the document (C13) */
+  tocOpen: boolean;
 }
 
 export const isDesktop = () => typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
 
 /** Sidebar starts open on desktop and closed on phones. */
-export const useUi = create<UiState>(() => ({ sidebarOpen: !!isDesktop(), focusMode: false, modal: null, toasts: [], commentsOpen: false, tagFilter: null }));
+export const useUi = create<UiState>(() => ({ sidebarOpen: !!isDesktop(), focusMode: false, modal: null, toasts: [], commentsOpen: false, tagFilter: null, tocOpen: false }));
 
 let nextId = 1;
 export const toast = (message: string, kind: Toast["kind"] = "info") => {

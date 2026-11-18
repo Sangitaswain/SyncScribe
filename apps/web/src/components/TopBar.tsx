@@ -1,4 +1,4 @@
-import { History, MessageSquare, PanelLeft, UserPlus } from "lucide-react";
+import { History, ListTree, MessageSquare, PanelLeft, UserPlus } from "lucide-react";
 import { Link, useMatch } from "react-router";
 import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
@@ -20,6 +20,7 @@ function DocCrumb({ id }: { id: string }) {
 export default function TopBar() {
   const sidebarOpen = useUi((s) => s.sidebarOpen);
   const commentsOpen = useUi((s) => s.commentsOpen);
+  const tocOpen = useUi((s) => s.tocOpen);
   const docMatch = useMatch("/doc/:docId");
   const page = useMatch("/:page")?.pathname ?? "/";
   const ws = useSession((s) => s.workspaces.find((w) => w.id === s.activeWorkspaceId));
@@ -64,6 +65,17 @@ export default function TopBar() {
           >
             <UserPlus className="size-4" />
             <span className="hidden sm:inline">Share</span>
+          </button>
+        )}
+        {docId && (
+          <button
+            onClick={() => useUi.setState((s) => ({ tocOpen: !s.tocOpen }))}
+            aria-label="Contents"
+            title="Table of contents"
+            aria-pressed={tocOpen}
+            className={`hidden rounded-md p-1.5 hover:bg-hover hover:text-ink md:block dark:hover:bg-white/5 dark:hover:text-white ${tocOpen ? "text-brand" : "text-muted"}`}
+          >
+            <ListTree className="size-4" />
           </button>
         )}
         {docId && (
