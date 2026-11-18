@@ -28,11 +28,17 @@ export default function MarkdownEditor({
   ytext,
   awareness,
   readOnly = false,
+  selectable = false,
   find,
+  onView,
 }: {
   ytext: Y.Text;
   awareness?: Awareness;
   readOnly?: boolean;
+  /** Read-only but text can still be selected, e.g. to comment on it */
+  selectable?: boolean;
+  /** Called with the editor once it exists (the comments panel uses its selection) */
+  onView?: (view: EditorView | null) => void;
   /** Text to select and scroll to on open, e.g. a search match (4.11) */
   find?: string | null;
 }) {
@@ -64,16 +70,20 @@ export default function MarkdownEditor({
             drop: (e, view) =>
               !readOnly && insertImages(view, [...(e.dataTransfer?.files ?? [])], view.posAtCoords({ x: e.clientX, y: e.clientY }) ?? undefined),
           }),
-          EditorView.editable.of(!readOnly),
+          EditorView.editable.of(!readOnly || selectable),
           theme,
         ],
       }),
     });
     viewRef.current = view;
     setView(view);
+    onView?.(view);
     if (ytext.doc) rememberDoc(view, ytext.doc);
-    return () => view.destroy();
-  }, [ytext, awareness, readOnly]);
+    return () => {
+      onView?.(null);
+      view.destroy();
+    };
+  }, [ytext, awareness, readOnly, selectable]);
 
   // Jump to a search match
   useEffect(() => {

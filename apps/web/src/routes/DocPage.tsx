@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { EditorView } from "@codemirror/view";
 import { useParams, useSearchParams } from "react-router";
-import { DOC, docDoc, rank } from "@syncscribe/shared";
+import { DOC, cmDoc, docDoc, rank } from "@syncscribe/shared";
 import { addRecent, setSetting, usePrefs } from "../crdt/prefs";
 import { useDoc, useY } from "../crdt/hooks";
 import { awarenessOf } from "../crdt/registry";
@@ -10,6 +11,9 @@ import { useDocStatus } from "../stores/docStatus";
 import { countWords } from "../lib/text";
 import MarkdownEditor from "../editor/MarkdownEditor";
 import AccessBanner from "../editor/AccessBanner";
+import CommentsPanel from "../editor/CommentsPanel";
+import { useUi } from "../stores/ui";
+import { useSession } from "../stores/session";
 import DocDeletedBanner from "../editor/DocDeletedBanner";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import DocTitle from "../editor/DocTitle";
@@ -38,10 +42,17 @@ export default function DocPage() {
     if (prefs && docId) addRecent(prefs, docId);
   }, [prefs, docId]);
 
-  // Live sync with the server while the doc is open (E2)
+  // Live sync with the server while the doc is open (E2), comments included (F4)
   useEffect(() => {
     if (docId) return syncWhileOpen(docDoc(docId));
   }, [docId]);
+  useEffect(() => {
+    if (docId) return syncWhileOpen(cmDoc(docId));
+  }, [docId]);
+  const cm = useDoc(docId ? cmDoc(docId) : undefined);
+  const commentsOpen = useUi((s) => s.commentsOpen);
+  const user = useSession((s) => s.user);
+  const [view, setView] = useState<EditorView | null>(null);
 
   // Who has this doc open, one avatar per person even with several tabs (F2)
   useEffect(() => {
@@ -74,6 +85,10 @@ export default function DocPage() {
     const status = docId ? s[docDoc(docId)] : undefined;
     return !!status && (status.revoked || rank(status.role) < rank("editor"));
   });
+  const canComment = useDocStatus((s) => {
+    const status = docId ? s[docDoc(docId)] : undefined;
+    return !status || (!status.revoked && status.canComment);
+  });
 
   if (!doc) return null;
   const ytext = doc.getText(DOC.content);
@@ -82,9 +97,22 @@ export default function DocPage() {
       <AccessBanner docId={docId!} doc={doc} />
       <DocDeletedBanner docId={docId!} />
       <DocTitle key={docId} doc={doc} readOnly={readOnly} />
-      <div className={`grid min-h-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
-        {mode !== "preview" && <MarkdownEditor key={docId} ytext={ytext} awareness={awarenessOf(docDoc(docId!))} readOnly={readOnly} find={params.get("find")} />}
-        {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
+      <div className="flex min-h-0 flex-1">
+        <div className={`grid min-h-0 min-w-0 flex-1 ${mode === "split" ? "grid-cols-2 divide-x divide-line dark:divide-white/10" : "grid-cols-1"}`}>
+          {mode !== "preview" && (
+            <MarkdownEditor
+              key={docId}
+              ytext={ytext}
+              awareness={awarenessOf(docDoc(docId!))}
+              readOnly={readOnly}
+              selectable={readOnly && canComment} // commenters select text to comment on
+              find={params.get("find")}
+              onView={setView}
+            />
+          )}
+          {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
+        </div>
+        {commentsOpen && cm && user && <CommentsPanel cm={cm} doc={doc} view={view} me={{ id: user.id, name: user.name }} canComment={canComment} />}
       </div>
     </div>
   );

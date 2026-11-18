@@ -401,7 +401,7 @@
 
 In scope. Start after Step 19 is complete, per the critical rule.
 
-- [ ] **20.1** Comments: `cm:` doc threads anchored with relative positions; reply, resolve, reopen; commenters can write (F4).
+- [x] **20.1** Comments: `cm:` doc threads anchored with relative positions; reply, resolve, reopen; commenters can write (F4).
   - Done when: a commenter adds a comment offline, it stays anchored while others edit, and it syncs.
   - Commit: `feat(web): add comments on selected text`
 - [ ] **20.2** Mentions in comments via outbox → `POST /api/mentions` (F5).

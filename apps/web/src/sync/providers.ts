@@ -83,6 +83,8 @@ function onRefused(name: string, provider: HocuspocusProvider, reason: string, a
 
 /** Read-only docs (viewer, or commenter on a doc) can't be edited; offline edits are refused (G5, EC17). */
 function onAuthenticated(name: string, scope: string) {
+  // Comments are read-only only for viewers, so this tells commenters apart from viewers (F4)
+  if (name.startsWith("cm:")) return setDocStatus(docDoc(name.slice(3)), { canComment: scope !== "readonly" });
   if (!name.startsWith("doc:")) return;
   revokedSet.remove(name); // access is back
   const readOnly = scope === "readonly";

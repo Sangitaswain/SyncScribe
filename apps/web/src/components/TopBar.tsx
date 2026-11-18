@@ -1,4 +1,4 @@
-import { History, PanelLeft, UserPlus } from "lucide-react";
+import { History, MessageSquare, PanelLeft, UserPlus } from "lucide-react";
 import { Link, useMatch } from "react-router";
 import { useUi } from "../stores/ui";
 import { useSession } from "../stores/session";
@@ -19,6 +19,7 @@ function DocCrumb({ id }: { id: string }) {
 /** Page header: sidebar toggle, where you are, and page actions (view mode on documents). */
 export default function TopBar() {
   const sidebarOpen = useUi((s) => s.sidebarOpen);
+  const commentsOpen = useUi((s) => s.commentsOpen);
   const docMatch = useMatch("/doc/:docId");
   const page = useMatch("/:page")?.pathname ?? "/";
   const ws = useSession((s) => s.workspaces.find((w) => w.id === s.activeWorkspaceId));
@@ -63,6 +64,17 @@ export default function TopBar() {
           >
             <UserPlus className="size-4" />
             <span className="hidden sm:inline">Share</span>
+          </button>
+        )}
+        {docId && (
+          <button
+            onClick={() => useUi.setState((s) => ({ commentsOpen: !s.commentsOpen }))}
+            aria-label="Comments"
+            title="Comments"
+            aria-pressed={commentsOpen}
+            className={`rounded-md p-1.5 hover:bg-hover hover:text-ink dark:hover:bg-white/5 dark:hover:text-white ${commentsOpen ? "text-brand" : "text-muted"}`}
+          >
+            <MessageSquare className="size-4" />
           </button>
         )}
         {docId && <ExportMenu docId={docId} />}

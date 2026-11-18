@@ -76,7 +76,7 @@ it("viewers get a read-only editor; removed access offers an export of the local
   const { setDocStatus } = await import("../stores/docStatus");
   cleanup();
   const id = await newDocument("w1", null, "kept on this device", "Notes");
-  setDocStatus(docDoc(id), { role: "viewer" });
+  setDocStatus(docDoc(id), { role: "viewer", canComment: false }); // a viewer: comments are read-only too
   render(
     <MemoryRouter initialEntries={[`/doc/${id}`]}>
       <Routes>
