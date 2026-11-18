@@ -39,7 +39,7 @@
 | 16 | Version history | 2 | [x] |
 | 17 | Import, export, notifications, storage safety | 2 | [x] |
 | 18 | Testing | 2 | [x] |
-| 19 | Polish, docs and demo | 2 | [ ] |
+| 19 | Polish, docs and demo | 2 | [x] |
 | 20 | Could features: comments, mentions, tags, pins, TOC, templates, focus mode, attribution, tab-hide flush | 2 | [ ] |
 
 ---
@@ -392,8 +392,9 @@
 - [x] **19.4** Write `docs/DEMO_SCRIPT.md`: 5-minute demo (offline edit, two-user merge, status changes, sharing, history).
   - Done when: rehearsed once end to end.
   - Commit: `docs: add demo script`
-- [ ] **19.5** Optional: deploy frontend (Netlify/Vercel) and backend (Render free) and add URLs to the README.
+- [x] **19.5** Optional: deploy frontend (Netlify/Vercel) and backend (Render free) and add URLs to the README.
   - Done when: the deployed app works with two browsers.
+  > Skipped (2026-11-18): optional, and the project owner chose not to deploy for now. The app runs locally (README).
   - Commit: `chore: add deployment configuration`
 
 ## Step 20 — Could features · FP-4.4, FP-4.5, FP-9.4, FP-10.5, FP-15.3, BP-5.6

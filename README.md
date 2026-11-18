@@ -179,5 +179,5 @@ SyncScribe/
 | 13–14 | Permissions, sharing, workspaces, Trash and structural edge cases                                 | ✅ Done |
 | 15–17 | Search, version history, import, export, notifications, storage safety                            | ✅ Done |
 | 18    | Testing: unit, integration, Playwright end-to-end, CI                                             | ✅ Done |
-| 19    | Polish, docs and demo                                                                             | ⏳ Now  |
-| 20    | Extras: comments, mentions, tags, pins, table of contents, templates, focus mode                  | ⬜      |
+| 19    | Polish, docs and demo                                                                             | ✅ Done |
+| 20    | Extras: comments, mentions, tags, pins, table of contents, templates, focus mode                  | ⏳ Now  |
