@@ -112,7 +112,7 @@ export default function DocPage() {
           )}
           {mode !== "edit" && <MarkdownPreview ytext={ytext} />}
         </div>
-        {commentsOpen && cm && user && <CommentsPanel cm={cm} doc={doc} view={view} me={{ id: user.id, name: user.name }} canComment={canComment} />}
+        {commentsOpen && cm && user && <CommentsPanel cm={cm} doc={doc} docId={docId!} view={view} me={{ id: user.id, name: user.name }} canComment={canComment} />}
       </div>
     </div>
   );

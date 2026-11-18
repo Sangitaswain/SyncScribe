@@ -12,6 +12,8 @@ import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 
 vi.mock("../sync/providers", () => ({ syncWhileOpen: () => () => {} }));
+const outbox: unknown[][] = [];
+vi.mock("../services/outbox", () => ({ sendOrQueue: async (...args: unknown[]) => void outbox.push(args) }));
 Range.prototype.getClientRects = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
 
@@ -72,4 +74,29 @@ it("commenters can select text but not edit it; viewers only read comments (G5, 
   setDocStatus(docDoc(id), { canComment: false }); // a viewer
   await screen.findByText("You can read comments but not add them.");
   await waitFor(() => expect(document.querySelector(".cm-content")?.getAttribute("contenteditable")).toBe("false"));
+});
+
+it("mentioning someone stores it on the comment and sends it, later if offline (F5)", async () => {
+  const { usePresence } = await import("../stores/presence");
+  const { useNetwork } = await import("../stores/network");
+  const { listThreads } = await import("../crdt/comments");
+  const { getDoc } = await import("../crdt/registry");
+  const { cmDoc } = await import("@syncscribe/shared");
+  useNetwork.setState({ serverReachable: false });
+  const { id, view } = await open("Budget: 400 pounds.");
+  // Ali has the doc open too (the page fills this from live presence)
+  usePresence.setState({ users: [{ id: "c1", name: "Cleo", color: "#2563eb" }, { id: "a9", name: "Ali", color: "#16a34a" }] });
+  await screen.findByText("@Ali");
+
+  view.dispatch({ selection: { anchor: 8, head: 18 } });
+  fireEvent.change(screen.getByLabelText("New comment"), { target: { value: "Can you check this " } });
+  fireEvent.click(screen.getByText("@Ali")); // the name chip; Cleo (me) isn't offered
+  expect(screen.queryByText("@Cleo")).toBeNull();
+  expect((screen.getByLabelText("New comment") as HTMLTextAreaElement).value).toBe("Can you check this @Ali ");
+  fireEvent.click(screen.getByText("Comment"));
+  await screen.findByText("Can you check this @Ali");
+
+  const [thread] = listThreads(await getDoc(cmDoc(id)));
+  expect(thread.replies[0].mentions).toEqual(["a9"]);
+  expect(outbox).toContainEqual(["Sending a mention", "POST", "/mentions", { docId: id, threadId: thread.id, userIds: ["a9"] }]);
 });

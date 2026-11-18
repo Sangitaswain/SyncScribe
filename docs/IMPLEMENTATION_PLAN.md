@@ -404,7 +404,7 @@ In scope. Start after Step 19 is complete, per the critical rule.
 - [x] **20.1** Comments: `cm:` doc threads anchored with relative positions; reply, resolve, reopen; commenters can write (F4).
   - Done when: a commenter adds a comment offline, it stays anchored while others edit, and it syncs.
   - Commit: `feat(web): add comments on selected text`
-- [ ] **20.2** Mentions in comments via outbox → `POST /api/mentions` (F5).
+- [x] **20.2** Mentions in comments via outbox → `POST /api/mentions` (F5).
   - Done when: mentioning a collaborator creates a notification for them, including when sent offline.
   - Commit: `feat(web): add mentions in comments`
 - [ ] **20.3** Tags and tag filter (B7).
