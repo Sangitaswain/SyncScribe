@@ -13,7 +13,7 @@ import SortMenu from "./SortMenu";
 import TagFilter from "./TagFilter";
 import { useDoc, useY } from "../crdt/hooks";
 import { allTags, type TreeItem } from "../crdt/tree";
-import RecentSection from "./RecentSection";
+import DocSection from "./RecentSection";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { rowClass } from "./ui";
 
@@ -35,7 +35,7 @@ export const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 export default function Sidebar() {
   const { activeWorkspaceId, user } = useSession();
   const [renaming, setRenaming] = useState<string | null>(null);
-  const { doc: prefs, recents, settings } = usePrefs();
+  const { doc: prefs, pins, recents, settings } = usePrefs();
   const navigate = useNavigate();
   const tag = useUi((s) => s.tagFilter);
   const ws = useDoc(activeWorkspaceId ? wsDoc(activeWorkspaceId) : undefined);
@@ -78,7 +78,8 @@ export default function Sidebar() {
       </nav>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-        <RecentSection workspaceId={activeWorkspaceId} recents={recents} />
+        <DocSection title="Pinned" workspaceId={activeWorkspaceId} ids={pins} />
+        <DocSection title="Recent" workspaceId={activeWorkspaceId} ids={recents.map((r) => r.docId)} limit={5} />
         <section className="flex flex-1 flex-col gap-1">
           <div className="flex items-center justify-between pr-1">
             <SectionTitle>Organize</SectionTitle>

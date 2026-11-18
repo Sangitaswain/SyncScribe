@@ -22,3 +22,17 @@ it("toggles pins and stores settings", () => {
   setSetting(prefs, "sort", "name");
   expect(prefs.getMap(USER.settings).get("sort")).toBe("name");
 });
+
+it("pins stay pinned on the user's other devices (B8)", async () => {
+  const Y = await import("yjs");
+  const { USER } = await import("@syncscribe/shared");
+  const { togglePin } = await import("./prefs");
+  const laptop = new Y.Doc();
+  const phone = new Y.Doc();
+  togglePin(laptop, "doc-1");
+  Y.applyUpdate(phone, Y.encodeStateAsUpdate(laptop));
+  expect(phone.getArray(USER.pins).toArray()).toEqual(["doc-1"]);
+  togglePin(phone, "doc-1");
+  Y.applyUpdate(laptop, Y.encodeStateAsUpdate(phone));
+  expect(laptop.getArray(USER.pins).toArray()).toEqual([]);
+});

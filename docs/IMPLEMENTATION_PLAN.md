@@ -410,7 +410,7 @@ In scope. Start after Step 19 is complete, per the critical rule.
 - [x] **20.3** Tags and tag filter (B7).
   - Done when: tags can be added/removed and the sidebar filters by tag.
   - Commit: `feat(web): add document tags and filtering`
-- [ ] **20.4** Pin to top (B8).
+- [x] **20.4** Pin to top (B8).
   - Done when: pinned docs show at the top and stay pinned on another device.
   - Commit: `feat(web): add pinned documents`
 - [ ] **20.5** Table of contents (C13).

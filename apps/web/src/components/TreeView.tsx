@@ -10,6 +10,7 @@ import { resolveTree, type SortMode, type TreeNode } from "../crdt/resolveTree";
 import { dropParent, filterByTag, move, renameFolder, setTags, setTitle, trash, type TreeItem } from "../crdt/tree";
 import { duplicateDocument } from "../crdt/actions";
 import { useDocTitle, useEditedAt, useTitles } from "../crdt/titles";
+import { togglePin, usePrefs } from "../crdt/prefs";
 import { useDocStatus } from "../stores/docStatus";
 import { useSession } from "../stores/session";
 import { toast, useUi } from "../stores/ui";
@@ -54,6 +55,7 @@ function RenameInput({ initial, onDone, label = "New name" }: { initial: string;
 function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string; open: boolean; setOpen: (o: boolean) => void }) {
   const { ws, workspaceId, items, setRenaming } = useContext(TreeCtx);
   const [moving, setMoving] = useState(false);
+  const { doc: prefs, pins } = usePrefs(); // pins sync to all my devices (B8)
   const navigate = useNavigate();
   const { docId } = useParams();
   const userId = useSession((s) => s.user!.id);
@@ -79,6 +81,11 @@ function RowMenu({ item, title, open, setOpen }: { item: TreeItem; title: string
           {item.type === "doc" && (
             <button className={itemClass} onClick={act(() => setRenaming(`tags:${item.id}`))}>
               Tags…
+            </button>
+          )}
+          {item.type === "doc" && prefs && (
+            <button className={itemClass} onClick={act(() => togglePin(prefs, item.id))}>
+              {pins.includes(item.id) ? "Unpin" : "Pin to top"}
             </button>
           )}
           <button className={itemClass} onClick={act(() => useUi.setState({ modal: `share:${item.id}` }))}>Share…</button>

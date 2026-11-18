@@ -72,3 +72,16 @@ it("tags documents from the row menu and filters the tree by tag (B7)", async ()
   fireEvent.change(filter, { target: { value: "" } }); // All tags
   await screen.findByText("Shopping list");
 });
+
+it("pins a document to the top from its row menu (B8)", async () => {
+  const { cleanup } = await import("@testing-library/react");
+  cleanup();
+  await newDocument("w1", null, "", "Pin me");
+  render(<MemoryRouter><Sidebar /></MemoryRouter>);
+  fireEvent.click(await screen.findByLabelText("Actions for Pin me"));
+  fireEvent.click(screen.getByText("Pin to top"));
+  await screen.findByText("Pinned");
+  fireEvent.click(screen.getByLabelText("Actions for Pin me"));
+  fireEvent.click(screen.getByText("Unpin"));
+  await waitFor(() => expect(screen.queryByText("Pinned")).toBeNull());
+});
